@@ -82,7 +82,7 @@
 html,body{height:100%;overflow:hidden}
 body{
   font-family:var(--ff);background:var(--bg);color:var(--ink);
-  font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;
+  font-size:13.5px;line-height:1.6;-webkit-font-smoothing:antialiased;
   transition:background .3s,color .3s;
 }
 
@@ -176,7 +176,7 @@ body{
 
 /* ── Buttons ── */
 .btn{
-  display:inline-flex;align-items:center;gap:5px;padding:8px 16px;
+  display:inline-flex;align-items:center;gap:5px;padding:6.5px 13px;
   border-radius:var(--r);border:1px solid var(--bd);background:var(--sur);color:var(--ink2);
   font-family:var(--ff);font-size:12.5px;font-weight:500;cursor:pointer;
   transition:all .15s;white-space:nowrap;line-height:1.4;
@@ -192,7 +192,7 @@ body{
 }
 .btnp:hover{background:var(--ac2);border-color:var(--ac2);box-shadow:0 2px 8px rgba(184,98,26,.35)}
 
-.btns{padding:6px 12px;font-size:12px}
+.btns{padding:5px 10px;font-size:11.5px}
 .btnxs{padding:2px 7px;font-size:11px;border-radius:4px}
 .btng{background:transparent;border-color:transparent;color:var(--ink4);box-shadow:none}
 .btng:hover{background:var(--bg3);border-color:var(--bd);color:var(--ink);box-shadow:none;transform:none}
@@ -304,7 +304,7 @@ select option{background:var(--sur)}
 
 /* ── Page headers ── */
 .ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:10px}
-.ptit{font-family:var(--fd);font-size:26px;font-weight:400;font-style:italic;color:var(--ink);line-height:1.15;letter-spacing:-.3px}
+.ptit{font-family:var(--fd);font-size:24px;font-weight:400;font-style:italic;color:var(--ink);line-height:1.15;letter-spacing:-.3px}
 .psub{font-size:11.5px;color:var(--ink4);margin-top:3px;font-family:var(--fm)}
 
 /* ── Grids ── */
@@ -339,7 +339,7 @@ select option{background:var(--sur)}
 /* ── Table ── */
 table{width:100%;border-collapse:collapse}
 th{text-align:left;padding:9px 13px;font-size:9px;font-weight:700;color:var(--ink5);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--bd);font-family:var(--fm)}
-td{padding:11px 14px;border-bottom:1px solid var(--bg3);font-size:13.5px;vertical-align:middle}
+td{padding:10px 13px;border-bottom:1px solid var(--bg3);font-size:13px;vertical-align:middle}
 tr:last-child td{border:none}
 tbody tr{transition:background .1s}
 tbody tr:hover td{background:var(--bg2)}
@@ -621,212 +621,46 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--ac);outline-offset:
 
 
 </style>
-
-<input id="_lu" type="text" placeholder="Kullanıcı adı">
-<input id="_lp" type="password" placeholder="Şifre">
-<button id="_btn">Giriş Yap</button>
-<div id="_le">Hatalı giriş</div>
-</div>
-</div>
-<script type="text/javascript">
-var _USERS={'baran202690':{password:'HeZ*202690',role:'admin',name:'Admin',permissions:['dashboard','goals','todos','habits','kanban','books','journal','notes','quotes','routines','coaching','bookmarks','review','coach','challenges']}};
-try{var _sx=localStorage.getItem('_fu_users');if(_sx)Object.assign(_USERS,JSON.parse(_sx));}catch(e){}
-function _chk(){
-  var u=document.getElementById('_lu').value.trim();
-  var p=document.getElementById('_lp').value;
-  var usr=_USERS[u];
-  if(usr&&usr.password===p){
-    document.getElementById('_ls').style.display='none';
-    sessionStorage.setItem('auth','1');
-    sessionStorage.setItem('_u',u);
-    sessionStorage.setItem('_role',usr.role);
-    sessionStorage.setItem('_perms',JSON.stringify(usr.permissions||[]));
-  } else {
-    document.getElementById('_le').style.display='block';
-  }
-}
-document.getElementById('_btn').addEventListener('click',_chk);
-document.getElementById('_lp').addEventListener('keydown',function(e){if(e.key==='Enter')_chk();});
-document.getElementById('_lu').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('_lp').focus();});
-if(sessionStorage.getItem('auth')==='1'){document.getElementById('_ls').style.display='none';}
-window._isAdmin=function(){return sessionStorage.getItem('_role')==='admin';};
-window._hasPermission=function(tab){if(window._isAdmin())return true;try{return JSON.parse(sessionStorage.getItem('_perms')||'[]').includes(tab);}catch(e){return false;}};
-window._getUsers=function(){return _USERS;};
-window._saveUser=function(uname,data){_USERS[uname]=data;var s={};Object.keys(_USERS).forEach(function(k){if(k!=='baran202690')s[k]=_USERS[k];});localStorage.setItem('_fu_users',JSON.stringify(s));};
-window._deleteUser=function(uname){if(uname==='baran202690')return false;delete _USERS[uname];var s={};Object.keys(_USERS).forEach(function(k){if(k!=='baran202690')s[k]=_USERS[k];});localStorage.setItem('_fu_users',JSON.stringify(s));return true;};
-window.focusupChangePassword=function(cur,nw){var u=sessionStorage.getItem('_u');if(!_USERS[u]||_USERS[u].password!==cur)return{ok:false,msg:'Mevcut şifre hatalı'};if(nw.length<4)return{ok:false,msg:'En az 4 karakter'};_USERS[u].password=nw;if(u!=='baran202690'){var s={};Object.keys(_USERS).forEach(function(k){if(k!=='baran202690')s[k]=_USERS[k];});localStorage.setItem('_fu_users',JSON.stringify(s));}return{ok:true};};
-</script>
 </head>
 <body>
-
-
-
-<script>
-
-
 <style>
-#auth-overlay{position:fixed;inset:0;background:#0f0e09;display:flex;align-items:center;justify-content:center;z-index:999999;font-family:'Cabinet Grotesk',sans-serif}
-.auth-box{background:#1c1a12;border:1px solid #2a281e;border-radius:16px;padding:40px;width:360px;display:flex;flex-direction:column;gap:16px}
-.auth-logo{text-align:center;margin-bottom:4px}
-.auth-logo h1{font-family:'Instrument Serif',serif;font-style:italic;font-size:26px;color:#f0ede4;margin:0}
-.auth-ver{font-size:10px;color:#5c5848;font-family:'Commit Mono',monospace;text-align:center;letter-spacing:.5px}
-.auth-clock{font-size:12px;color:#b8621a;font-family:'Commit Mono',monospace;text-align:center;margin-top:2px}
-.auth-input{padding:11px 14px;background:#28261c;border:1px solid #3a3828;border-radius:8px;color:#f0ede4;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s}
-.auth-input:focus{border-color:#b8621a;box-shadow:0 0 0 3px rgba(184,98,26,.15)}
-.auth-input::placeholder{color:#5c5848}
-.auth-btn{padding:12px;background:#b8621a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
-.auth-btn:hover{background:#d4782a}
-.auth-err{color:#d84030;font-size:12px;text-align:center;display:none;padding:8px;background:#1e0c0a;border-radius:6px;border:1px solid #4a1814}
-.auth-loading{color:#8a8474;font-size:12px;text-align:center;display:none}
-.lang-switch{display:flex;gap:6px;justify-content:center}
-.lang-btn{padding:3px 10px;border-radius:20px;border:1px solid #3a3828;background:transparent;color:#8a8474;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
-.lang-btn.active{background:#b8621a;color:#fff;border-color:#b8621a}
+#_L{position:fixed;inset:0;background:#0f0e09;display:flex;align-items:center;justify-content:center;z-index:999999;font-family:sans-serif}
+#_LB{background:#1c1a12;border:1px solid #3a3828;border-radius:16px;padding:40px;width:340px;display:flex;flex-direction:column;gap:14px}
+#_LB h2{margin:0;font-size:22px;text-align:center;color:#f0ede4;font-family:Georgia,serif;font-style:italic}
+#_LV{font-size:10px;color:#5c5848;text-align:center;font-family:monospace;letter-spacing:.5px}
+#_LC{font-size:12px;color:#b8621a;text-align:center;font-family:monospace}
+#_LU,#_LP{padding:11px 14px;background:#28261c;border:1px solid #3a3828;border-radius:8px;color:#f0ede4;font-size:14px;outline:none}
+#_LU:focus,#_LP:focus{border-color:#b8621a}
+#_LU::placeholder,#_LP::placeholder{color:#5c5848}
+#_LBTN{padding:12px;background:#b8621a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
+#_LBTN:hover{background:#d4782a}
+#_LE{color:#d84030;font-size:12px;text-align:center;display:none;background:#1e0c0a;padding:8px;border-radius:6px}
 </style>
-
-<div id="auth-overlay">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#b8621a,#d4782a);display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
-        <svg width="20" height="20" viewBox="0 0 18 18" fill="none"><path d="M9 2L11.2 7H16.5L12.2 10.3L13.9 15.5L9 12.2L4.1 15.5L5.8 10.3L1.5 7H6.8L9 2Z" fill="white"/></svg>
-      </div>
-      <h1>FocusUp Pro</h1>
-    </div>
-    <div class="auth-ver" id="auth-ver">v6.2 · 16 Mar 2026</div>
-    <div class="auth-clock" id="auth-clock"></div>
-    <div class="lang-switch">
-      <button class="lang-btn active" onclick="setLang('tr')">TR</button>
-      <button class="lang-btn" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" onclick="setLang('fr')">FR</button>
-    </div>
-    <input class="auth-input" id="auth-user" type="text" placeholder="Kullanıcı adı" autocomplete="username"/>
-    <input class="auth-input" id="auth-pass" type="password" placeholder="Şifre" autocomplete="current-password"/>
-    <button class="auth-btn" id="auth-submit">Giriş Yap</button>
-    <div class="auth-err" id="auth-err">Hatalı kullanıcı adı veya şifre</div>
-    <div class="auth-loading" id="auth-loading">Doğrulanıyor...</div>
-  </div>
-</div>
-
-<script type="text/javascript">
-// ── Dil sistemi ──
-var LANG = 'tr';
-var LANGS = {
-  tr: {login:'Giriş Yap',user:'Kullanıcı adı',pass:'Şifre',err:'Hatalı kullanıcı adı veya şifre',loading:'Doğrulanıyor...'},
-  en: {login:'Sign In',user:'Username',pass:'Password',err:'Invalid username or password',loading:'Verifying...'},
-  fr: {login:'Se connecter',user:"Nom d'utilisateur",pass:'Mot de passe',err:'Identifiant ou mot de passe incorrect',loading:'Vérification...'}
-};
-function setLang(l){
-  LANG=l;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));
-  var L=LANGS[l];
-  document.getElementById('auth-submit').textContent=L.login;
-  document.getElementById('auth-user').placeholder=L.user;
-  document.getElementById('auth-pass').placeholder=L.pass;
-}
-
-// ── Saat ──
-(function(){
-  var c=document.getElementById('auth-clock');
-  function t(){if(c)c.textContent=new Date().toLocaleString('tr-TR');}
-  t();setInterval(t,1000);
-})();
-
-// ── Kullanıcı sistemi ──
-var DB='https://focusup-879b7-default-rtdb.europe-west1.firebasedatabase.app';
-var AUTH_USER=null;
-var AUTH_ROLE=null;
-var AUTH_PERMS=null;
-
-// Varsayılan admin (Firebase olmadan da çalışsın)
-var LOCAL_USERS={
-  'baran202690':{pass:'HeZ*202690',role:'admin',name:'Admin',active:true,
-    perms:{dashboard:true,goals:true,todos:true,habits:true,kanban:true,books:true,journal:true,notes:true,quotes:true,routines:true,coaching:true,bookmarks:true,coach:true,challenges:true,review:true}
+<div id="_L"><div id="_LB">
+  <h2>⚡ FocusUp Pro</h2>
+  <div id="_LV">v6.2 · 16 Mar 2026</div>
+  <div id="_LC"></div>
+  <input id="_LU" type="text" placeholder="Kullanıcı adı">
+  <input id="_LP" type="password" placeholder="Şifre">
+  <button id="_LBTN">Giriş Yap</button>
+  <div id="_LE">Hatalı kullanıcı adı veya şifre</div>
+</div></div>
+<script>
+!function(){
+  var U={'baran202690':'HeZ*202690'};
+  var c=document.getElementById('_LC');
+  setInterval(function(){if(c)c.textContent=new Date().toLocaleString('tr-TR');},1000);
+  function go(){
+    var u=document.getElementById('_LU').value.trim();
+    var p=document.getElementById('_LP').value;
+    if(U[u]&&U[u]===p){document.getElementById('_L').style.display='none';sessionStorage.setItem('_ok','1');}
+    else{document.getElementById('_LE').style.display='block';}
   }
-};
-
-async function doLogin(){
-  var u=document.getElementById('auth-user').value.trim();
-  var p=document.getElementById('auth-pass').value;
-  var err=document.getElementById('auth-err');
-  var loading=document.getElementById('auth-loading');
-  var L=LANGS[LANG];
-  
-  err.style.display='none';
-  loading.style.display='block';
-  loading.textContent=L.loading;
-  
-  // Önce Firebase'den kullanıcıları yükle
-  var users=LOCAL_USERS;
-  try{
-    var r=await fetch(DB+'/focusup_users.json');
-    var d=await r.json();
-    if(d&&typeof d==='object')users={...LOCAL_USERS,...d};
-  }catch(e){}
-  
-  loading.style.display='none';
-  
-  var usr=users[u];
-  if(usr&&usr.pass===p&&usr.active!==false){
-    AUTH_USER=u;
-    AUTH_ROLE=usr.role||'user';
-    AUTH_PERMS=usr.perms||{};
-    sessionStorage.setItem('_au',u);
-    sessionStorage.setItem('_ar',AUTH_ROLE);
-    sessionStorage.setItem('_ap',JSON.stringify(AUTH_PERMS));
-    document.getElementById('auth-overlay').style.display='none';
-    if(window._onAuthSuccess)window._onAuthSuccess(u,AUTH_ROLE,AUTH_PERMS);
-  }else{
-    err.textContent=L.err;
-    err.style.display='block';
-    document.getElementById('auth-pass').value='';
-  }
-}
-
-document.getElementById('auth-submit').addEventListener('click',doLogin);
-document.getElementById('auth-pass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
-document.getElementById('auth-user').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('auth-pass').focus();});
-
-// Session kontrolü
-if(sessionStorage.getItem('_au')){
-  AUTH_USER=sessionStorage.getItem('_au');
-  AUTH_ROLE=sessionStorage.getItem('_ar');
-  try{AUTH_PERMS=JSON.parse(sessionStorage.getItem('_ap')||'{}');}catch(e){AUTH_PERMS={};}
-  document.getElementById('auth-overlay').style.display='none';
-}
-
-// Şifre değiştirme
-window.focusupChangePassword=async function(cur,nw){
-  if(!AUTH_USER)return{ok:false,msg:'Oturum yok'};
-  var users=LOCAL_USERS;
-  try{var r=await fetch(DB+'/focusup_users.json');var d=await r.json();if(d)users={...LOCAL_USERS,...d};}catch(e){}
-  var usr=users[AUTH_USER];
-  if(!usr||usr.pass!==cur)return{ok:false,msg:'Mevcut şifre hatalı'};
-  if(nw.length<4)return{ok:false,msg:'En az 4 karakter'};
-  usr.pass=nw;
-  try{
-    await fetch(DB+'/focusup_users/'+AUTH_USER+'.json',{method:'PUT',body:JSON.stringify(usr),headers:{'Content-Type':'application/json'}});
-  }catch(e){}
-  LOCAL_USERS[AUTH_USER].pass=nw;
-  return{ok:true};
-};
-
-// Kullanıcı yönetimi (admin)
-window.focusupUserMgmt={
-  async getUsers(){
-    var users={...LOCAL_USERS};
-    try{var r=await fetch(DB+'/focusup_users.json');var d=await r.json();if(d)users={...users,...d};}catch(e){}
-    return users;
-  },
-  async saveUser(uname,data){
-    try{await fetch(DB+'/focusup_users/'+uname+'.json',{method:'PUT',body:JSON.stringify(data),headers:{'Content-Type':'application/json'}});}catch(e){}
-    LOCAL_USERS[uname]=data;
-  },
-  async deleteUser(uname){
-    if(uname===AUTH_USER)return{ok:false,msg:'Kendinizi silemezsiniz'};
-    try{await fetch(DB+'/focusup_users/'+uname+'.json',{method:'DELETE'});}catch(e){}
-    delete LOCAL_USERS[uname];
-    return{ok:true};
-  }
-};
+  document.getElementById('_LBTN').onclick=go;
+  document.getElementById('_LP').onkeydown=function(e){if(e.key==='Enter')go();};
+  document.getElementById('_LU').onkeydown=function(e){if(e.key==='Enter')document.getElementById('_LP').focus();};
+  if(sessionStorage.getItem('_ok')==='1')document.getElementById('_L').style.display='none';
+}();
 </script>
 <div id="root"></div>
 <script type="text/babel">
@@ -930,7 +764,11 @@ const INIT={
      subtasks:[{id:1061,text:'CRM araştır ve karşılaştır',done:true,assignee:'Mehmet Demir',updatedAt:now_ts()},{id:1062,text:'CRM seç ve satın al',done:false,assignee:'Mehmet Demir',updatedAt:now_ts()},{id:1063,text:'Mevcut müşteri verilerini aktar',done:false,assignee:'Ayşe Kaya',updatedAt:now_ts()},{id:1064,text:'Ekibe eğitim ver',done:false,assignee:'Ali Yılmaz',updatedAt:now_ts()}]},
   ],
   todoCats:[...TODO_CATS_DEFAULT],
-  books:[{"id":1,"title":"Atomik Alışkanlıklar","author":"James Clear","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2563EB"},{"id":2,"title":"Derin Odaklanma","author":"Cal Newport","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1F6B42"},{"id":3,"title":"Şimdi Kurbağayı Ye","author":"Brian Tracy","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":4,"title":"Düşün ve Zengin Ol","author":"Napoleon Hill","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#6B28C8"},{"id":5,"title":"Başlangıç Noktası","author":"Simon Sinek","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#0F6B6B"},{"id":6,"title":"Mindset","author":"Carol Dweck","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B52B1E"},{"id":7,"title":"Etki","author":"Robert Cialdini","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1A52B8"},{"id":8,"title":"Grit","author":"Angela Duckworth","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#C4873A"},{"id":9,"title":"Karar Noktaları","author":"Chip & Dan Heath","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2D7A4F"},{"id":10,"title":"Odak","author":"Daniel Goleman","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#7C3AED"},{"id":11,"title":"İyi'den Mükemmele","author":"Jim Collins","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":12,"title":"Lean Startup","author":"Eric Ries","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1F6B42"},{"id":13,"title":"Zero to One","author":"Peter Thiel","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#18160F"},{"id":14,"title":"Hooked","author":"Nir Eyal","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B52B1E"},{"id":15,"title":"Ölçeği Bul","author":"Verne Harnish","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1A52B8"},{"id":16,"title":"E-Myth Revisited","author":"Michael Gerber","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#6B28C8"},{"id":17,"title":"Etki Yaratmak","author":"Seth Godin","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":18,"title":"Cashflow Quadrant","author":"Robert Kiyosaki","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1F6B42"},{"id":19,"title":"Para: 7 Adım","author":"Tony Robbins","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#C4873A"},{"id":20,"title":"Sapiens","author":"Yuval Noah Harari","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#0F6B6B"},{"id":21,"title":"Antifragile","author":"Nassim Taleb","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#18160F"},{"id":22,"title":"Deep Work","author":"Cal Newport","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1A52B8"},{"id":23,"title":"So Good They Can't Ignore You","author":"Cal Newport","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2D7A4F"},{"id":24,"title":"The One Thing","author":"Gary Keller","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":25,"title":"Essentialism","author":"Greg McKeown","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#6B28C8"},{"id":26,"title":"Eat That Frog","author":"Brian Tracy","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B52B1E"},{"id":27,"title":"The 4-Hour Workweek","author":"Tim Ferriss","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1F6B42"},{"id":28,"title":"Tools of Titans","author":"Tim Ferriss","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#7C3AED"},{"id":29,"title":"Man's Search for Meaning","author":"Viktor Frankl","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#18160F"},{"id":30,"title":"The Power of Now","author":"Eckhart Tolle","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#0F6B6B"},{"id":31,"title":"Daring Greatly","author":"Brené Brown","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":32,"title":"Thinking Fast and Slow","author":"Daniel Kahneman","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1A52B8"},{"id":33,"title":"Predictably Irrational","author":"Dan Ariely","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#C4873A"},{"id":34,"title":"Never Split the Difference","author":"Chris Voss","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B52B1E"},{"id":35,"title":"How to Win Friends","author":"Dale Carnegie","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2D7A4F"},{"id":36,"title":"The 48 Laws of Power","author":"Robert Greene","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#18160F"},{"id":37,"title":"Mastery","author":"Robert Greene","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#6B28C8"},{"id":38,"title":"The War of Art","author":"Steven Pressfield","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":39,"title":"Big Magic","author":"Elizabeth Gilbert","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#7C3AED"},{"id":40,"title":"The Alchemist","author":"Paulo Coelho","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#C4873A"},{"id":41,"title":"Siddhartha","author":"Hermann Hesse","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2D7A4F"},{"id":42,"title":"Ikigai","author":"Héctor García","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1F6B42"},{"id":43,"title":"The Daily Stoic","author":"Ryan Holiday","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#18160F"},{"id":44,"title":"Ego is the Enemy","author":"Ryan Holiday","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B52B1E"},{"id":45,"title":"Obstacle is the Way","author":"Ryan Holiday","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#B8621A"},{"id":46,"title":"Can't Hurt Me","author":"David Goggins","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#1A52B8"},{"id":47,"title":"Extreme Ownership","author":"Jocko Willink","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#6B28C8"},{"id":48,"title":"The Checklist Manifesto","author":"Atul Gawande","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#0F6B6B"},{"id":49,"title":"Outliers","author":"Malcolm Gladwell","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2D7A4F"},{"id":50,"title":"The Tipping Point","author":"Malcolm Gladwell","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#C4873A"},{"id":51,"title":"Blink","author":"Malcolm Gladwell","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#7C3AED"},{"id":52,"title":"Meditations","author":"Marcus Aurelius","startDate":"","endDate":"","status":"Kuyruk","rating":null,"pagesTotal":300,"pagesDone":0,"notes":"","color":"#2563EB"}],
+  books:[
+    {id:201,title:'The Lean Startup',author:'Eric Ries',startDate:'2026-02-15',endDate:'2026-03-20',status:'Okunuyor',rating:null,pagesTotal:299,pagesDone:180,notes:'Doğrulanmış öğrenme.',color:'#C4873A'},
+    {id:202,title:'Meditations',author:'Marcus Aurelius',startDate:'',endDate:'2026-03-31',status:'Kuyruk',rating:null,pagesTotal:254,pagesDone:0,notes:'',color:'#2D7A4F'},
+    {id:203,title:'Atomic Habits',author:'James Clear',startDate:'2025-12-01',endDate:'2026-01-31',status:'Bitti',rating:5,pagesTotal:320,pagesDone:320,notes:'Uygulama niyetleri en iyi çerçeve.',color:'#2563EB'},
+  ],
   habits:[
     {id:301,name:'Sabah günlüğü',emoji:'✍️',color:'#7c3aed',logs:mkLogs(22)},
     {id:302,name:'Egzersiz',emoji:'🏋️',color:'#1F6B42',logs:mkLogs(14)},
@@ -1018,66 +856,7 @@ const exportTodosExcel=(todos)=>{
 };
 const exportTodosPDF=(todos)=>{
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Görevler</title>
-  <style>body{font-family:Georgia,serif;font-size:12px;color:#18160f;padding:24px}h1{font-size:20px;margin-bottom:16px;color:#B8621A;font-style:italic}table{width:100%;border-collapse:collapse}th{background:#f5f2ec;padding:8px;text-align:left;border:1px solid #ddd8ce;font-size:10px;letter-spacing:.5px;text-transform:uppercase}td{padding:7px 8px;border:1px solid #ddd8ce;vertical-align:top}.done{color:#8c8674;text-decoration:line-through}</style>
-<input id="_lu" type="text" placeholder="Kullanıcı adı">
-<input id="_lp" type="password" placeholder="Şifre">
-<button id="_btn">Giriş Yap</button>
-<div id="_le">Hatalı giriş</div>
-</div>
-</div>
-<script type="text/javascript">
-function _chk(){
-  var u=document.getElementById('_lu').value.trim();
-  var p=document.getElementById('_lp').value;
-  if(u==='baran202690' && p==='HeZ*202690'){
-    document.getElementById('_ls').style.display='none';
-    sessionStorage.setItem('auth','1');
-  } else {
-    document.getElementById('_le').style.display='block';
-  }
-}
-document.getElementById('_btn').addEventListener('click',_chk);
-document.getElementById('_lp').addEventListener('keydown',function(e){if(e.key==='Enter')_chk();});
-document.getElementById('_lu').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('_lp').focus();});
-if(sessionStorage.getItem('auth')==='1'){document.getElementById('_ls').style.display='none';}
-</script>
-</head><body>
-
-
-
-<script>
-(function(){
-  var U={'baran202690':'HeZ*202690'};
-  function go(){
-    var u=document.getElementById('lu').value.trim();
-    var p=document.getElementById('lp').value;
-    if(U[u]&&U[u]===p){document.getElementById('ls').remove();sessionStorage.setItem('ok','1');}
-    else document.getElementById('lerr').style.display='block';
-  }
-  document.getElementById('lbtn').onclick=go;
-  document.getElementById('lp').onkeydown=function(e){if(e.key==='Enter')go();};
-  document.getElementById('lu').onkeydown=function(e){if(e.key==='Enter')document.getElementById('lp').focus();};
-  if(sessionStorage.getItem('ok')==='1')document.getElementById('ls').remove();
-  
-  // Şifre değiştirme
-  window.focusupChangePassword=function(cur,nw){
-    var u=sessionStorage.getItem('focusup_user')||Object.keys(U)[0];
-    if(!U[u]||U[u]!==cur)return{ok:false,msg:'Mevcut şifre hatalı'};
-    if(nw.length<4)return{ok:false,msg:'En az 4 karakter gerekli'};
-    U[u]=nw;
-    return{ok:true};
-  };
-  
-  // Kullanıcıyı kaydet
-  var _origGo=go;
-  go=function(){
-    var u=document.getElementById('lu').value.trim();
-    var p=document.getElementById('lp').value;
-    if(U[u]&&U[u]===p){sessionStorage.setItem('focusup_user',u);}
-    _origGo();
-  };
-})();
-</script>
+  <style>body{font-family:Georgia,serif;font-size:12px;color:#18160f;padding:24px}h1{font-size:20px;margin-bottom:16px;color:#B8621A;font-style:italic}table{width:100%;border-collapse:collapse}th{background:#f5f2ec;padding:8px;text-align:left;border:1px solid #ddd8ce;font-size:10px;letter-spacing:.5px;text-transform:uppercase}td{padding:7px 8px;border:1px solid #ddd8ce;vertical-align:top}.done{color:#8c8674;text-decoration:line-through}</style></head><body>
   <h1>Görevler — ${new Date().toLocaleDateString('tr-TR')}</h1>
   <table><thead><tr><th>Görev</th><th>Öncelik</th><th>Kategori</th><th>Sorumlu</th><th>Bitiş</th><th>Durum</th></tr></thead>
   <tbody>${todos.map(t=>`<tr><td class="${t.done?'done':''}">${t.text}</td><td>${t.priority}</td><td>${t.category}</td><td>${t.mainAssignee||'—'}</td><td>${t.end||'—'}</td><td>${t.done?'✓ Tamamlandı':'Bekliyor'}</td></tr>`).join('')}</tbody></table></body></html>`;
@@ -1086,10 +865,10 @@ if(sessionStorage.getItem('auth')==='1'){document.getElementById('_ls').style.di
 const exportActionPlanPDF=(goal)=>{
   const steps=goal.actionPlan||[];
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Eylem Planı</title>
-  <style>body{font-family:Georgia,serif;font-size:12px;color:#18160f;padding:30px;max-width:700px;margin:0 auto}h1{font-size:22px;color:#B8621A;font-style:italic;margin-bottom:4px}.sub{color:#8c8674;font-size:12px;margin-bottom:24px;font-family:monospace}.step{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #ddd8ce;display:flex;gap:16px}.num{width:32px;height:32px;border-radius:50%;background:#B8621A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;margin-top:2px;font-family:monospace}.done .num{background:#1F6B42}.action{font-weight:600;font-size:13px;margin-bottom:4px}.meta{color:#8c8674;font-size:10px;font-family:monospace;margin-bottom:4px}.result{background:#fbf2e8;padding:6px 10px;border-radius:5px;font-size:11.5px;color:#5c5848;border-left:3px solid #B8621A;margin-top:6px}.substep{margin-top:8px;padding:6px 10px;background:#f5f2ec;border-radius:4px;font-size:11px}.substep-item{padding:3px 0;border-bottom:1px solid #e8e4dc;display:flex;gap:8px}.substep-item:last-child{border:none}</style></head><body>
+  <style>body{font-family:Georgia,serif;font-size:12px;color:#18160f;padding:30px;max-width:700px;margin:0 auto}h1{font-size:22px;color:#B8621A;font-style:italic;margin-bottom:4px}.sub{color:#8c8674;font-size:12px;margin-bottom:24px;font-family:monospace}.step{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #ddd8ce;display:flex;gap:16px}.num{width:32px;height:32px;border-radius:50%;background:#B8621A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;margin-top:2px;font-family:monospace}.done .num{background:#1F6B42}.action{font-weight:600;font-size:13px;margin-bottom:4px}.date{color:#8c8674;font-size:10px;font-family:monospace}.result{background:#fbf2e8;padding:6px 10px;border-radius:5px;font-size:11.5px;color:#5c5848;border-left:3px solid #B8621A;margin-top:6px}</style></head><body>
   <h1>${goal.isFrog?'🐸 ':''}${goal.title}</h1>
   <div class="sub">${goal.desc||''} · Son tarih: ${goal.deadline||'—'}</div>
-  ${steps.map((s,i)=>`<div class="step ${s.done?'done':''}"><div class="num">${i+1}</div><div style="flex:1"><div class="action">${s.action} ${s.done?'<span style="color:#1F6B42;font-size:10px">✓ Tamamlandı</span>':'<span style="color:#B8621A;font-size:10px">Bekliyor</span>'}</div><div class="meta">${s.date?'📅 '+s.date:''}${s.responsible?' · 👤 '+s.responsible:''}</div>${s.result?'<div class="result">'+s.result+'</div>':''}${(s.subSteps||[]).length>0?'<div class="substep"><div style="font-size:10px;font-weight:700;margin-bottom:4px;color:#8c8674">ALT ADIMLAR ('+s.subSteps.filter(ss=>ss.done).length+'/'+s.subSteps.length+')</div>'+(s.subSteps||[]).map(ss=>'<div class="substep-item"><span style="color:'+(ss.done?'#1F6B42':'#B8621A')+'">'+(ss.done?'✓':'○')+'</span><span style="'+(ss.done?'text-decoration:line-through;color:#8c8674':'')+'">'+ss.text+'</span>'+(ss.startDate?'<span style="color:#8c8674;font-size:9px;margin-left:auto">'+ss.startDate+'</span>':'')+(ss.endDate?'<span style="color:#8c8674;font-size:9px"> → '+ss.endDate+'</span>':'')+(ss.responsible?'<span style="color:#1A52B8;font-size:9px"> 👤'+ss.responsible+'</span>':'')+'</div>').join('')+'</div>':''}</div></div>`).join('')}
+  ${steps.map((s,i)=>`<div class="step ${s.done?'done':''}"><div class="num">${i+1}</div><div style="flex:1"><div class="action">${s.action} ${s.done?'<span style="color:#1F6B42;font-size:10px">✓ Tamamlandı</span>':'<span style="color:#B8621A;font-size:10px">Bekliyor</span>'}</div><div class="date">📅 ${s.date||'—'}</div>${s.result?`<div class="result">${s.result}</div>`:''}</div></div>`).join('')}
   </body></html>`;
   const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);
 };
@@ -1277,49 +1056,22 @@ function TimeBlockTab({D,setD}){
 
 function App(){
   const [D,setD]=useState(INIT);
-  // Firebase - kullanıcı bazlı izole depolama
-  const authUser = typeof AUTH_USER !== 'undefined' ? AUTH_USER : 'guest';
-  const authRole = typeof AUTH_ROLE !== 'undefined' ? AUTH_ROLE : 'user';
-  const authPerms = typeof AUTH_PERMS !== 'undefined' ? AUTH_PERMS : {};
-  const DB_URL = 'https://focusup-879b7-default-rtdb.europe-west1.firebasedatabase.app/focusup_data_'+authUser+'.json';
-  const [dbReady,setDbReady]=useState(false);
-  const [dbStatus,setDbStatus]=useState('loading');
-  const dbTimer=useRef(null);
-  const [currentLang,setCurrentLang]=useState(typeof LANG!=='undefined'?LANG:'tr');
-
-  useEffect(()=>{
-    // Auth callback
-    if(typeof window!=='undefined'){
-      window._onAuthSuccess=(u,role,perms)=>{
-        // Sayfa yenile - kullanıcı verisini yükle
-        window.location.reload();
-      };
-    }
-    const url='https://focusup-879b7-default-rtdb.europe-west1.firebasedatabase.app/focusup_data_'+authUser+'.json';
-    fetch(url)
-      .then(r=>r.json())
-      .then(saved=>{
-        if(saved&&typeof saved==='object'&&Object.keys(saved).length>0){
-          setD(prev=>{...prev,...saved});
-        }
-        setDbReady(true);
-        setDbStatus('ok');
-      })
-      .catch(()=>{setDbReady(true);setDbStatus('error');});
+  const _DB='https://focusup-879b7-default-rtdb.europe-west1.firebasedatabase.app/data.json';
+  const [_dbReady,_setDbReady]=React.useState(false);
+  const _dbTimer=React.useRef(null);
+  React.useEffect(()=>{
+    fetch(_DB).then(r=>r.json()).then(s=>{
+      if(s&&typeof s==='object'&&Object.keys(s).length>0)setD(p=>({...p,...s}));
+      _setDbReady(true);
+    }).catch(()=>_setDbReady(true));
   },[]);
-
-  useEffect(()=>{
-    if(!dbReady)return;
-    if(dbTimer.current)clearTimeout(dbTimer.current);
-    dbTimer.current=setTimeout(()=>{
-      setDbStatus('saving');
-      const url='https://focusup-879b7-default-rtdb.europe-west1.firebasedatabase.app/focusup_data_'+authUser+'.json';
-      fetch(url,{method:'PUT',body:JSON.stringify(D),headers:{'Content-Type':'application/json'}})
-        .then(()=>setDbStatus('ok'))
-        .catch(()=>setDbStatus('error'));
+  React.useEffect(()=>{
+    if(!_dbReady)return;
+    clearTimeout(_dbTimer.current);
+    _dbTimer.current=setTimeout(()=>{
+      fetch(_DB,{method:'PUT',body:JSON.stringify(D),headers:{'Content-Type':'application/json'}}).catch(()=>{});
     },2000);
-    return()=>{if(dbTimer.current)clearTimeout(dbTimer.current);};
-  },[D,dbReady]);
+  },[D,_dbReady]);
 
   const [tab,setTab]=useState('dashboard');
   const [modal,setModal]=useState(null);
@@ -1335,11 +1087,6 @@ function App(){
   const [printQ,setPrintQ]=useState(null);
   const [bmView,setBmView]=useState('grid');
   const [expTask,setExpTask]=useState(null);
-  const [showPwModal,setShowPwModal]=useState(false);
-  const [showAdminPanel,setShowAdminPanel]=useState(false);
-  const [showVersionHistory,setShowVersionHistory]=useState(false);
-  const [showUserMgmt,setShowUserMgmt]=useState(false);
-  const [showRoadmap,setShowRoadmap]=useState(false);
   const [quoteIdx,setQuoteIdx]=useState(0);
   const [chatIn,setChatIn]=useState('');
   const [chatWait,setChatWait]=useState(false);
@@ -1445,18 +1192,14 @@ Bugün alışkanlık: ${todayH}/${D.habits.length}`;
   };
 
   /* Nav item */
-  const Nav=({id,label,ic,badge,soft})=>{
-    const allowed=window._hasPermission?window._hasPermission(id):true;
-    if(!allowed)return null;
-    return(
+  const Nav=({id,label,ic,badge,soft})=>(
     <button className={`ni${tab===id?' on':''}`} onClick={()=>setTab(id)}>
       <span className="ni-ic">{ic}</span>
       <span style={{flex:1}}>{label}</span>
       {badge>0&&<span className="ni-bd">{badge}</span>}
       {soft!==undefined&&<span className="ni-soft">{soft}</span>}
     </button>
-    );
-  };
+  );
 
   const curQ=D.quotes[quoteIdx%(D.quotes.length||1)];
 
@@ -1853,7 +1596,6 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
             <div style={{display:'flex',gap:6}}>
               <button className={`btn btns ${gView==='cards'?'btnp':'btng'}`} onClick={()=>setGView('cards')} title="Kart görünümü">⊞</button>
               <button className={`btn btns ${gView==='list'?'btnp':'btng'}`} onClick={()=>setGView('list')} title="Liste görünümü">☰</button>
-              <button className="btn btns btng" onClick={()=>setShowRoadmap(true)}>🗺 Yol Haritası</button>
               <button className="btn btnp" onClick={()=>setModal({type:'goal'})}>+ Yeni Hedef</button>
             </div>
           </div>
@@ -2574,9 +2316,6 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
       return(
         <div className="afu">
           <div className="ph"><div><div className="ptit">Journal</div><div className="psub">{D.journal.length} giriş</div></div><button className="btn btnp" onClick={()=>setModal({type:'journal'})}>+ Yeni</button></div>
-          <div style={{marginBottom:10}}>
-            <input value={bmSearch} onChange={e=>setBmSearch(e.target.value)} placeholder="🔍 Yer imlerinde ara..." style={{width:'100%',padding:'8px 14px',border:'1px solid var(--bd)',borderRadius:20,fontSize:13,background:'var(--bg2)',color:'var(--ink)',boxSizing:'border-box'}}/>
-          </div>
           <div className="fbar">{cats.map(c=><button key={c} className={`chip${fCat===c?' on':''}`} onClick={()=>setFCat(c)}>{c}</button>)}</div>
           <div style={{display:'flex',flexDirection:'column',gap:9}}>
             {entries.filter(e=>fCat==='Tümü'||e.category===fCat).map(e=>(
@@ -2704,11 +2443,8 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
     /* ── BOOKMARKS ── */
     case 'bookmarks':{
       const bms=D.bookmarks||[];
-      const [bmSearch,setBmSearch]=React.useState('');
       const cats=['Tümü',...new Set(bms.map(b=>b.category))].filter(Boolean);
-      let filtered=bms;
-      if(bmSearch.trim()){const q=bmSearch.toLowerCase();filtered=filtered.filter(b=>(b.title+b.url+b.purpose+b.category+b.notes).toLowerCase().includes(q));}
-      else filtered=fl(bms,['title','url','purpose','notes','category']);
+      let filtered=fl(bms,['title','url','purpose','notes','category']);
       if(fCat!=='Tümü')filtered=filtered.filter(b=>b.category===fCat);
       return(
         <div className="afu">
@@ -2719,9 +2455,6 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
               <button className={`btn btns${bmView==='list'?' btnp':''}`} onClick={()=>setBmView('list')}>≡</button>
               <button className="btn btnp btns" onClick={()=>setModal({type:'bookmark'})}>+ Ekle</button>
             </div>
-          </div>
-          <div style={{marginBottom:10}}>
-            <input value={bmSearch} onChange={e=>setBmSearch(e.target.value)} placeholder="🔍 Yer imlerinde ara..." style={{width:'100%',padding:'8px 14px',border:'1px solid var(--bd)',borderRadius:20,fontSize:13,background:'var(--bg2)',color:'var(--ink)',boxSizing:'border-box'}}/>
           </div>
           <div className="fbar">{cats.map(c=><button key={c} className={`chip${fCat===c?' on':''}`} onClick={()=>setFCat(c)}>{c}</button>)}</div>
           {bmView==='grid'?(
@@ -2761,69 +2494,6 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
     }
 
     /* ── AI COACH ── */
-
-    case 'challenges':{
-      const CLIST=[
-        {id:'c1',emoji:'🗣',title:'Yabancıyla Konuş',desc:'Bir kafede veya sokakta tamamen yabancı biriyle en az 5 dakika gerçek bir sohbet başlat.',cat:'Sosyal',level:'Orta',dur:'1 gün'},
-        {id:'c2',emoji:'📵',title:'72 Saat Dijital Detoks',desc:'Telefon, sosyal medya ve internet olmadan 72 saat geçir. Gerçek hayatı hisset.',cat:'Zihin',level:'Zor',dur:'3 gün'},
-        {id:'c3',emoji:'🧊',title:'Soğuk Duş 30 Gün',desc:'30 gün boyunca sabah kalkar kalkmaz 3 dakika soğuk duş al. Konfor alanını parçala.',cat:'Beden',level:'Orta',dur:'30 gün'},
-        {id:'c4',emoji:'🎤',title:'Yabancı Dilde Sunum',desc:'İngilizce veya başka bir dilde 10 kişilik bir gruba 5 dakikalık sunum yap.',cat:'Cesaret',level:'Çok Zor',dur:'1 gün'},
-        {id:'c5',emoji:'🚫🍬',title:'90 Gün Şeker Yok',desc:'90 gün boyunca işlenmiş şeker tüketme. Vücudun ve zihninle yeni bir sözleşme imzala.',cat:'Beden',level:'Zor',dur:'90 gün'},
-        {id:'c6',emoji:'🚀',title:'Bir İş Kur',desc:'90 gün içinde sıfırdan küçük de olsa gerçek bir müşterisi olan bir iş kur ve ilk satışını yap.',cat:'Girişim',level:'Çok Zor',dur:'90 gün'},
-        {id:'c7',emoji:'😱',title:'Korkunu Yüzüne Gül',desc:'En büyük korkunu belirle (sahne korkusu, yükseklik, reddedilme…) ve ona bilinçli olarak maruz kal.',cat:'Cesaret',level:'Çok Zor',dur:'1 gün'},
-        {id:'c8',emoji:'✍️',title:'Günde 500 Kelime',desc:'90 gün boyunca her gün 500 kelime yaz. Konu önemli değil. Yazar disiplinini kazan.',cat:'Zihin',level:'Orta',dur:'90 gün'},
-        {id:'c9',emoji:'🤐',title:'Sıfır Şikayet 21 Gün',desc:'21 gün boyunca tek bir şikayet etme. Her şikayeti fark ettiğinde başa dön.',cat:'Zihin',level:'Zor',dur:'21 gün'},
-        {id:'c10',emoji:'💪',title:'50 Ret Topla',desc:'Bir ürün, fikir veya teklifle 50 kez ret al. Reddi normalleştir, korkuyu öldür.',cat:'Girişim',level:'Çok Zor',dur:'90 gün'},
-        {id:'c11',emoji:'🤝',title:'Bir Yabancıya İyilik',desc:'Her gün 30 gün boyunca tanımadığın birine somut bir iyilik yap. Empatiyi çalıştır.',cat:'Sosyal',level:'Kolay',dur:'30 gün'},
-        {id:'c12',emoji:'💰',title:'Finansal X-Ray',desc:'Tüm varlık ve borçlarını, gelir ve giderlerini eksiksiz belgele. Finansal gerçeklikle yüzleş.',cat:'Finans',level:'Orta',dur:'1 hafta'},
-      ];
-      const LC={Kolay:'var(--gn)',Orta:'var(--ac)',Zor:'var(--rd)','Çok Zor':'#7c3aed'};
-      const myC=D.challenges||[];
-      const started=myC.filter(c=>c.status==='started').length;
-      const done=myC.filter(c=>c.status==='done').length;
-      const getStatus=id=>{const f=myC.find(c=>c.id===id);return f?f.status:null;};
-      const setStatus=(id,status)=>setD(prev=>({...prev,challenges:
-        (prev.challenges||[]).some(c=>c.id===id)
-          ?(prev.challenges||[]).map(c=>c.id===id?{...c,status,updatedAt:today()}:c)
-          [...(prev.challenges||[]),{id,status,startedAt:today(),updatedAt:today()}]
-      }));
-      return(
-        <div className="afu">
-          <div className="ph">
-            <div><div className="ptit">⚡ Meydan Okumalar</div><div className="psub">90 günde bir büyük meydan okuma seç. Konfor alanını parçala.</div></div>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,marginBottom:20}}>
-            {[{l:'Toplam',v:CLIST.length,ic:'⚡'},{l:'Başladım',v:started,ic:'🔥'},{l:'Tamamladım',v:done,ic:'🏆'}].map(s=>(
-              <div key={s.l} className="card scard"><div style={{fontSize:22,marginBottom:4}}>{s.ic}</div><div className="snum">{s.v}</div><div className="slbl">{s.l}</div></div>
-            ))}
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
-            {CLIST.map(c=>{
-              const st=getStatus(c.id);
-              return(
-                <div key={c.id} style={{background:'var(--sur)',border:'1px solid var(--bd)',borderRadius:'var(--r3)',padding:'18px',borderLeft:`3px solid ${LC[c.level]||'var(--bd)'}`,opacity:st==='done'?.75:1}}>
-                  <div style={{fontSize:28,marginBottom:8}}>{c.emoji}</div>
-                  <div style={{fontWeight:700,fontSize:14,marginBottom:4}}>{c.title}</div>
-                  <div style={{fontSize:12,color:'var(--ink3)',lineHeight:1.6,marginBottom:12}}>{c.desc}</div>
-                  <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:12}}>
-                    <span className="tag" style={{fontSize:10}}>{c.cat}</span>
-                    <span style={{fontSize:10,padding:'2px 7px',borderRadius:99,background:LC[c.level]+'22',color:LC[c.level],border:`1px solid ${LC[c.level]}44`,fontWeight:700}}>{c.level}</span>
-                    <span className="tag" style={{fontSize:10}}>⏱ {c.dur}</span>
-                  </div>
-                  <div style={{display:'flex',gap:6}}>
-                    {!st&&<button className="btn btnp btnxs" onClick={()=>setStatus(c.id,'started')}>🔥 Başla</button>}
-                    {st==='started'&&<button className="btn btng btnxs" style={{background:'var(--gnb)',color:'var(--gn)',borderColor:'var(--gnbd)'}} onClick={()=>setStatus(c.id,'done')}>✓ Tamamlandı</button>}
-                    {st==='done'&&<span style={{fontSize:12,color:'var(--gn)',fontWeight:700}}>🏆 Tamamlandı!</span>}
-                    {st&&st!=='done'&&<button className="btn btns btnxs" onClick={()=>setStatus(c.id,null)}>↩</button>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-
     case 'coach':{
       return(
         <div className="afu" style={{display:'flex',flexDirection:'column',height:'calc(100vh - 100px)'}}>
@@ -3326,40 +2996,21 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
                                 <div key={ss.id} className="sub-step">
                                   <input type="checkbox" className="chk" checked={ss.done}
                                     onChange={()=>setD(prev=>({...prev,goals:prev.goals.map(x=>x.id===cur.id?{...x,actionPlan:(x.actionPlan||[]).map(y=>y.id===step.id?{...y,subSteps:(y.subSteps||[]).map(z=>z.id===ss.id?{...z,done:!z.done}:z)}:y)}:x)}))}/>
-                                  <div style={{flex:1}}>
-                                    <span style={{fontSize:12,color:ss.done?'var(--ink4)':'var(--ink)',textDecoration:ss.done?'line-through':'none'}}>{ss.text}</span>
-                                    <div style={{display:'flex',gap:5,marginTop:2,flexWrap:'wrap'}}>
-                                      {ss.startDate&&<span className="mono" style={{fontSize:9,color:'var(--ink5)'}}>▶ {fmtShort(ss.startDate)}</span>}
-                                      {ss.endDate&&<span className="mono" style={{fontSize:9,color:daysLeft(ss.endDate)<0?'var(--rd)':'var(--ink5)'}}>◼ {fmtShort(ss.endDate)}</span>}
-                                      {ss.responsible&&<span style={{fontSize:9,color:'var(--ink4)',background:'var(--bg2)',padding:'1px 5px',borderRadius:20,border:'1px solid var(--bd)'}}>👤 {ss.responsible}</span>}
-                                    </div>
-                                  </div>
+                                  <span style={{fontSize:12,color:ss.done?'var(--ink4)':'var(--ink)',textDecoration:ss.done?'line-through':'none',flex:1}}>{ss.text}</span>
                                   <button className="ibtn" style={{width:16,height:16,fontSize:9}}
                                     onClick={()=>setD(prev=>({...prev,goals:prev.goals.map(x=>x.id===cur.id?{...x,actionPlan:(x.actionPlan||[]).map(y=>y.id===step.id?{...y,subSteps:(y.subSteps||[]).filter(z=>z.id!==ss.id)}:y)}:x)}))}>×</button>
                                 </div>
                               ))}
-                              <div style={{marginTop:5,display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
-                                <input id={`ssi_${step.id}`} placeholder="+ Alt adım ekle (Enter)" style={{flex:1,minWidth:120,fontSize:11.5,padding:'4px 8px',borderRadius:'var(--r)',border:'1px dashed var(--bd)',fontFamily:'var(--ff)',background:'transparent'}}
-                                  onKeyDown={ev=>{if(ev.key==='Enter'&&ev.target.value.trim()){
-                                    const txt=ev.target.value.trim();
-                                    const sd=document.getElementById(`ssi_s_${step.id}`)?.value||'';
-                                    const ed=document.getElementById(`ssi_e_${step.id}`)?.value||'';
-                                    const re=document.getElementById(`ssi_r_${step.id}`)?.value||'';
-                                    setD(prev=>({...prev,goals:prev.goals.map(x=>x.id===cur.id?{...x,actionPlan:(x.actionPlan||[]).map(y=>y.id===step.id?{...y,subSteps:[...(y.subSteps||[]),{id:uid(),text:txt,done:false,startDate:sd,endDate:ed,responsible:re}]}:y)}:x)}));
-                                    ev.target.value='';
-                                  }}}/>
-                                <input id={`ssi_s_${step.id}`} type="date" title="Başlangıç" style={{fontSize:10,padding:'3px',border:'1px solid var(--bd)',borderRadius:'var(--r)',background:'var(--bg2)',width:105}}/>
-                                <input id={`ssi_e_${step.id}`} type="date" title="Bitiş" style={{fontSize:10,padding:'3px',border:'1px solid var(--bd)',borderRadius:'var(--r)',background:'var(--bg2)',width:105}}/>
-                                <select id={`ssi_r_${step.id}`} title="Sorumlu" style={{fontSize:10,padding:'3px',border:'1px solid var(--bd)',borderRadius:'var(--r)',background:'var(--bg2)'}}>
-                                  <option value="">👤</option>
-                                  {(D.teamMembers||TEAM_MEMBERS).map(m=><option key={m} value={m}>{m.split(' ')[0]}</option>)}
-                                </select>
+                              <div style={{marginTop:5}}>
+                                <input placeholder="Alt adım ekle… (Enter)"
+                                  style={{width:'100%',fontSize:11.5,padding:'4px 8px',borderRadius:'var(--r)',border:'1px dashed var(--bd)',fontFamily:'var(--ff)',background:'transparent'}}
+                                  onKeyDown={ev=>{if(ev.key==='Enter'&&ev.target.value.trim()){const txt=ev.target.value.trim();setD(prev=>({...prev,goals:prev.goals.map(x=>x.id===cur.id?{...x,actionPlan:(x.actionPlan||[]).map(y=>y.id===step.id?{...y,subSteps:[...(y.subSteps||[]),{id:uid(),text:txt,done:false}]}:y)}:x)}));ev.target.value='';}}}/>
                               </div>
                             </div>
                           )}
                           {(step.subSteps||[]).length===0&&(
                             <div style={{marginLeft:22,marginTop:4}}>
-<input placeholder="+ alt adım ekle… (Enter)"
+                              <input placeholder="+ alt adım ekle… (Enter)"
                                 style={{fontSize:11,padding:'3px 8px',borderRadius:'var(--r)',border:'1px dashed var(--bd)',fontFamily:'var(--ff)',background:'transparent',width:'100%'}}
                                 onKeyDown={ev=>{if(ev.key==='Enter'&&ev.target.value.trim()){const txt=ev.target.value.trim();setD(prev=>({...prev,goals:prev.goals.map(x=>x.id===cur.id?{...x,actionPlan:(x.actionPlan||[]).map(y=>y.id===step.id?{...y,subSteps:[...(y.subSteps||[]),{id:uid(),text:txt,done:false}]}:y)}:x)}));ev.target.value='';}}}/>
                             </div>
@@ -3447,12 +3098,9 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
         <div className={`modal${t==='goal'||t==='coaching'||t==='todo'?' mlg':''}`}>
           <div className="mhd">
             <span className="mtit">{TITLES[t]||t}</span>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              {(t==='goal'||t==='goalEdit')&&<button type="submit" form="focusup-modal-form" className="btn btnp btns" style={{fontSize:12}}>💾 Kaydet</button>}
-              <button className="ibtn" onClick={()=>setModal(null)}>×</button>
-            </div>
+            <button className="ibtn" onClick={()=>setModal(null)}>×</button>
           </div>
-          <form id="focusup-modal-form" onSubmit={submit}>
+          <form onSubmit={submit}>
             <div className="mbd">
               {t==='goal'&&<>
                 <div className="fr2"><div className="field"><label>Hedef Başlığı *</label><input name="title" required placeholder="Hedefiniz nedir?"/></div><div className="field"><label>Kategori</label><select name="category"><option>İş</option><option>Sağlık</option><option>Finans</option><option>Kişisel</option><option>Diğer</option></select></div></div>
@@ -3465,8 +3113,7 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
                   <div className="field"><label>S — Özgül (Specific)</label><input name="specificText" placeholder="Hedef tam olarak nedir? Ne, kim, nerede, nasıl?"/></div>
                   <div className="field"><label>M — Ölçülebilir (Measurable)</label><input name="measurableText" placeholder="Başarıyı nasıl ölçeceksiniz? Hangi metrik?"/></div>
                   <div className="field"><label>A — Ulaşılabilir (Achievable)</label><input name="achievableText" placeholder="Bu hedef gerçekçi mi? Hangi kaynaklar mevcut?"/></div>
-                  <div className="field"><label>R — İlgili (Relevant)</label><input name="relevantText" placeholder="Bu hedef genel stratejinizle nasıl bağlantılı?"/></div>
-                  <div className="field" style={{marginBottom:0}}><label>🐸 Neden yapıyorum? (Eat the Frog)</label><textarea name="why" rows={2} placeholder="Bu hedef neden önemli? Beni motive eden asıl sebep nedir?"/></div>
+                  <div className="field" style={{marginBottom:0}}><label>R — İlgili (Relevant)</label><input name="relevantText" placeholder="Bu hedef genel stratejinizle nasıl bağlantılı?"/></div>
                 </div>
               </>}
               {t==='todo'&&<>
@@ -3547,7 +3194,7 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
               {t==='apStep'&&<>
                 <div className="field"><label>Aksiyon Adımı *</label><textarea name="action" rows={2} required placeholder="Bu adımda ne yapılacak?"/></div>
                 <div className="fr2"><div className="field"><label>Öncelik</label><select name="priority"><option>Yüksek</option><option>Orta</option><option>Düşük</option></select></div><div className="field"><label>Sorumlu</label><select name="responsible"><option value="">— Seç</option>{(D.teamMembers||TEAM_MEMBERS).map(m=><option key={m}>{m}</option>)}</select></div></div>
-                <div className="fr3"><div className="field"><label>Başlangıç Tarihi</label><input type="date" name="startDate"/></div><div className="field"><label>Hedef Tarih</label><input type="date" name="date"/></div><div className="field"><label>Beklenen Sonuç</label><input name="result" placeholder="Ne elde edilecek?"/></div></div>
+                <div className="fr2"><div className="field"><label>Hedef Tarih</label><input type="date" name="date"/></div><div className="field"><label>Beklenen Sonuç</label><input name="result" placeholder="Ne elde edilecek?"/></div></div>
                 <div className="field"><label>Notlar</label><textarea name="notes" rows={2}/></div>
               </>}
               {t==='apStepEdit'&&(()=>{const s=modal.step||{};return(<>
@@ -3646,7 +3293,7 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
           </div>
           <div>
             <div className="lname">FocusUp Pro</div>
-            <div className="lver">PERSONAL OS · V6.2 · 16 MAR 2026</div>
+            <div className="lver">PERSONAL OS · V6</div>
           </div>
         </div>
         <div className="sbody">
@@ -3667,30 +3314,8 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
           <Nav id="quotes" label="Alıntılar" ic="❝"/>
           <Nav id="routines" label="Rutinler" ic="🔄"/>
           <Nav id="coaching" label="Koçluk Merkezi" ic="🧭"/>
-          <Nav id="challenges" label="Meydan Okumalar" ic="⚡"/>
         </div>
         <div className="sfoot">
-          {window._isAdmin&&window._isAdmin()&&<button style={{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderRadius:'var(--r)',cursor:'pointer',width:'100%',border:'none',background:'none',color:'var(--ink4)',fontSize:12.5,fontFamily:'var(--ff)',transition:'all .15s'}}
-            onClick={()=>setShowUserMgmt(true)}
-            onMouseEnter={ev=>ev.currentTarget.style.background='var(--bg3)'}
-            onMouseLeave={ev=>ev.currentTarget.style.background='none'}>
-            <span style={{fontSize:13}}>👥</span>
-            <span>Kullanıcı Yönetimi</span>
-          </button>}
-          {authRole==='admin'&&<button style={{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderRadius:'var(--r)',cursor:'pointer',width:'100%',border:'none',background:'none',color:'var(--ink4)',fontSize:12.5,fontFamily:'var(--ff)',transition:'all .15s'}}
-            onClick={()=>setShowAdminPanel(true)}
-            onMouseEnter={ev=>ev.currentTarget.style.background='var(--bg3)'}
-            onMouseLeave={ev=>ev.currentTarget.style.background='none'}>
-            <span style={{fontSize:13}}>👥</span>
-            <span>Kullanıcı Yönetimi</span>
-          </button>}
-          <button style={{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderRadius:'var(--r)',cursor:'pointer',width:'100%',border:'none',background:'none',color:'var(--ink4)',fontSize:12.5,fontFamily:'var(--ff)',transition:'all .15s'}}
-            onClick={()=>setShowPwModal(true)}
-            onMouseEnter={ev=>ev.currentTarget.style.background='var(--bg3)'}
-            onMouseLeave={ev=>ev.currentTarget.style.background='none'}>
-            <span style={{fontSize:13}}>🔑</span>
-            <span>Şifre Değiştir</span>
-          </button>
           <button style={{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderRadius:'var(--r)',cursor:'pointer',width:'100%',border:'none',background:'none',color:'var(--ink4)',fontSize:12.5,fontFamily:'var(--ff)',transition:'all .15s'}}
             onClick={()=>setDark(d=>!d)}
             onMouseEnter={ev=>ev.currentTarget.style.background='var(--bg3)'}
@@ -3698,21 +3323,6 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
             <span style={{fontSize:13}}>{dark?'☀️':'🌙'}</span>
             <span>{dark?'Aydınlık':'Karanlık'} Mod</span>
             <span className="mono" style={{marginLeft:'auto',fontSize:9,letterSpacing:.5,opacity:.5}}>{dark?'LIGHT':'DARK'}</span>
-          </button>
-          <button style={{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderRadius:'var(--r)',cursor:'pointer',width:'100%',border:'none',background:'none',color:'var(--ink4)',fontSize:12.5,fontFamily:'var(--ff)',transition:'all .15s'}}
-            onClick={()=>setShowVersionHistory(true)}
-            onMouseEnter={ev=>ev.currentTarget.style.background='var(--bg3)'}
-            onMouseLeave={ev=>ev.currentTarget.style.background='none'}>
-            <span style={{fontSize:13}}>📋</span>
-            <span>Sürüm Geçmişi</span>
-            <span className="mono" style={{marginLeft:'auto',fontSize:9,opacity:.5}}>v6.2</span>
-          </button>
-          <button style={{display:'flex',alignItems:'center',gap:7,padding:'7px 10px',borderRadius:'var(--r)',cursor:'pointer',width:'100%',border:'none',background:'none',color:'var(--ink4)',fontSize:12.5,fontFamily:'var(--ff)',transition:'all .15s'}}
-            onClick={()=>{const s=prompt('Güncelleme önerinizi yazın:');if(s&&s.trim()){alert('Teşekkürler! Öneriniz kaydedildi: '+s.trim());}}}
-            onMouseEnter={ev=>ev.currentTarget.style.background='var(--bg3)'}
-            onMouseLeave={ev=>ev.currentTarget.style.background='none'}>
-            <span style={{fontSize:13}}>💡</span>
-            <span>Güncelleme Öner</span>
           </button>
           <div className="sfrow" style={{marginTop:4}}>
             <button className="btn btnxs btng" style={{flex:1,justifyContent:'center'}} onClick={()=>exportJSON(D)}>⬇ Yedek</button>
@@ -3744,11 +3354,6 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
           </div>
           <div className="topdate">
             <Clock style={{fontFamily:'var(--fm)',fontSize:12,letterSpacing:-.5}}/>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:6,padding:'3px 9px',borderRadius:20,background:'var(--acb)',border:'1px solid var(--acbd)'}}>
-            <span style={{fontSize:12,fontWeight:600,color:'var(--ac)'}}>{authUser}</span>
-            {authRole==='admin'&&<span style={{fontSize:9,background:'var(--ac)',color:'#fff',padding:'1px 5px',borderRadius:20,fontFamily:'var(--fm)',fontWeight:700}}>ADMIN</span>}
-            <button style={{border:'none',background:'none',cursor:'pointer',color:'var(--ink4)',fontSize:11,padding:'0 2px'}} onClick={()=>{{sessionStorage.clear();window.location.reload();}}} title="Çıkış">⎋</button>
           </div>
         </div>
 
@@ -3785,367 +3390,7 @@ function CalPage({D,setD,setDetail,setModal,calView,setCalView,calDate,setCalDat
 
       {detailPanel()}
       {modalEl()}
-      {showVersionHistory&&<VersionHistoryModal onClose={()=>setShowVersionHistory(false)}/>}
-      {showAdminPanel&&authRole==='admin'&&<AdminPanel onClose={()=>setShowAdminPanel(false)}/>}
-      {showRoadmap&&<SmartRoadmapModal onClose={()=>setShowRoadmap(false)}/>}
-      {showUserMgmt&&<UserMgmtModal onClose={()=>setShowUserMgmt(false)}/>}
-      {showPwModal&&<PwChangeModal onClose={()=>setShowPwModal(false)}/>}
       {printQ&&<PrintModal q={printQ} onClose={()=>setPrintQ(null)}/>}
-    </div>
-  );
-}
-
-
-
-
-
-function VersionHistoryModal({onClose}){
-  const history=[
-    {v:'v6.2',date:'16 Mar 2026 01:50',changes:['Çok kullanıcılı sistem eklendi','Admin paneli eklendi','Kullanıcı yetki yönetimi','TR/EN/FR dil desteği','Alt adımlara tarih ve sorumlu eklendi','PDF export güncellendi','Login ekranı canlı saat eklendi']},
-    {v:'v6.1',date:'14 Mar 2026 05:49',changes:['52 kitap listesi eklendi','Meydan Okumalar bölümü','Yer imi arama ve istatistik','SMART Yol Haritası (Brian Tracy)','Şifre değiştirme özelliği','Firebase Realtime Database entegrasyonu']},
-    {v:'v6.0',date:'13 Mar 2026 18:00',changes:['İlk yayın','Dashboard, Hedefler, Görevler','Alışkanlıklar, Kanban, Journal','AI Koç entegrasyonu','GitHub Pages yayını']},
-  ];
-  return(
-    <div className="backdrop" onClick={ev=>{if(ev.target===ev.currentTarget)onClose();}}>
-      <div className="modal" style={{maxWidth:500}}>
-        <div className="mhd"><span className="mtit">📋 Sürüm Geçmişi</span><button className="ibtn" onClick={onClose}>×</button></div>
-        <div className="mbd" style={{maxHeight:'70vh',overflowY:'auto'}}>
-          {history.map(h=>(
-            <div key={h.v} style={{marginBottom:18,paddingBottom:18,borderBottom:'1px solid var(--bd)'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                <span style={{fontWeight:700,fontSize:15,fontFamily:'var(--fm)',color:'var(--ac)'}}>{h.v}</span>
-                <span style={{fontSize:11,color:'var(--ink5)',fontFamily:'var(--fm)'}}>{h.date}</span>
-              </div>
-              {h.changes.map((c,i)=>(
-                <div key={i} style={{display:'flex',gap:7,padding:'4px 0',fontSize:12.5,color:'var(--ink3)'}}>
-                  <span style={{color:'var(--gn)',flexShrink:0}}>✓</span>{c}
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="mft"><button className="btn btnp btns" onClick={onClose}>Kapat</button></div>
-      </div>
-    </div>
-  );
-}
-
-function AdminPanel({onClose}){
-  const [users,setUsers]=React.useState({});
-  const [loading,setLoading]=React.useState(true);
-  const [newUser,setNewUser]=React.useState({name:'',pass:'',role:'user'});
-  const [msg,setMsg]=React.useState('');
-  const ALL_PAGES=['dashboard','goals','todos','habits','kanban','books','journal','notes','quotes','routines','coaching','bookmarks','coach','challenges','review'];
-  const PAGE_LABELS={dashboard:'Dashboard',goals:'Smart Hedefler',todos:'Görevler',habits:'Alışkanlıklar',kanban:'Kanban',books:'Okuma Listesi',journal:'Journal',notes:'Notlar',quotes:'Alıntılar',routines:'Rutinler',coaching:'Koçluk',bookmarks:'Yer İmleri',coach:'AI Koç',challenges:'Meydan Okumalar',review:'Haftalık İnceleme'};
-
-  React.useEffect(()=>{
-    if(window.focusupUserMgmt){
-      window.focusupUserMgmt.getUsers().then(u=>{setUsers(u);setLoading(false);});
-    }
-  },[]);
-
-  const addUser=async()=>{
-    if(!newUser.name||!newUser.pass){setMsg('Ad ve şifre zorunlu');return;}
-    const perms={};ALL_PAGES.forEach(p=>perms[p]=true);
-    const userData={pass:newUser.pass,role:newUser.role,name:newUser.name,active:true,perms};
-    await window.focusupUserMgmt.saveUser(newUser.name,userData);
-    setUsers(u=>({...u,[newUser.name]:userData}));
-    setNewUser({name:'',pass:'',role:'user'});
-    setMsg('Kullanıcı eklendi ✓');
-  };
-
-  const toggleUser=async(uname,field,val)=>{
-    const u={...users[uname],[field]:val};
-    setUsers(prev=>({...prev,[uname]:u}));
-    await window.focusupUserMgmt.saveUser(uname,u);
-  };
-
-  const togglePerm=async(uname,page,val)=>{
-    const u={...users[uname],perms:{...users[uname].perms,[page]:val}};
-    setUsers(prev=>({...prev,[uname]:u}));
-    await window.focusupUserMgmt.saveUser(uname,u);
-  };
-
-  const deleteUser=async(uname)=>{
-    if(!confirm('Sil: '+uname+'?'))return;
-    await window.focusupUserMgmt.deleteUser(uname);
-    setUsers(prev=>{const n={...prev};delete n[uname];return n;});
-  };
-
-  return(
-    <div className="backdrop" onClick={ev=>{if(ev.target===ev.currentTarget)onClose();}}>
-      <div className="modal mlg" style={{maxWidth:700,maxHeight:'90vh'}}>
-        <div className="mhd">
-          <span className="mtit">👥 Kullanıcı Yönetimi</span>
-          <button className="ibtn" onClick={onClose}>×</button>
-        </div>
-        <div className="mbd" style={{maxHeight:'75vh',overflowY:'auto'}}>
-          {loading?<div style={{textAlign:'center',padding:40,color:'var(--ink4)'}}>Yükleniyor...</div>:(
-            <>
-              {msg&&<div style={{padding:'8px 12px',background:'var(--gnb)',border:'1px solid var(--gnbd)',borderRadius:'var(--r)',marginBottom:14,color:'var(--gn)',fontSize:13}}>{msg}</div>}
-              
-              {/* Yeni kullanıcı */}
-              <div style={{padding:'14px',background:'var(--bg2)',borderRadius:'var(--r2)',border:'1px solid var(--bd)',marginBottom:18}}>
-                <div className="slbl2" style={{marginBottom:10}}>+ Yeni Kullanıcı Ekle</div>
-                <div className="fr3">
-                  <div className="field"><label>Kullanıcı Adı</label><input value={newUser.name} onChange={e=>setNewUser(p=>({...p,name:e.target.value}))} placeholder="kullanici_adi"/></div>
-                  <div className="field"><label>Şifre</label><input type="password" value={newUser.pass} onChange={e=>setNewUser(p=>({...p,pass:e.target.value}))} placeholder="Şifre"/></div>
-                  <div className="field"><label>Rol</label><select value={newUser.role} onChange={e=>setNewUser(p=>({...p,role:e.target.value}))}><option value="user">Kullanıcı</option><option value="admin">Admin</option></select></div>
-                </div>
-                <button className="btn btnp btns" onClick={addUser}>Ekle</button>
-              </div>
-
-              {/* Kullanıcı listesi */}
-              {Object.entries(users).map(([uname,u])=>(
-                <div key={uname} style={{marginBottom:14,padding:'14px',background:'var(--sur)',border:'1px solid var(--bd)',borderRadius:'var(--r2)'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-                    <div style={{display:'flex',gap:10,alignItems:'center'}}>
-                      <div style={{width:32,height:32,borderRadius:'50%',background:'var(--ac)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:14}}>{(u.name||uname)[0].toUpperCase()}</div>
-                      <div>
-                        <div style={{fontWeight:600,fontSize:13}}>{u.name||uname}</div>
-                        <div style={{fontSize:11,color:'var(--ink4)',fontFamily:'var(--fm)'}}>{uname} · {u.role==='admin'?'👑 Admin':'👤 Kullanıcı'}</div>
-                      </div>
-                    </div>
-                    <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                      <label style={{display:'flex',gap:5,alignItems:'center',cursor:'pointer',fontSize:12}}>
-                        <input type="checkbox" checked={u.active!==false} onChange={e=>toggleUser(uname,'active',e.target.checked)}/>
-                        {u.active!==false?'Aktif':'Pasif'}
-                      </label>
-                      <select value={u.role||'user'} onChange={e=>toggleUser(uname,'role',e.target.value)} style={{fontSize:11,padding:'3px 7px',borderRadius:20}}>
-                        <option value="user">Kullanıcı</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                      {uname!=='baran202690'&&<button className="btn btnd btnxs" onClick={()=>deleteUser(uname)}>Sil</button>}
-                    </div>
-                  </div>
-                  {/* Sayfa yetkileri */}
-                  <div>
-                    <div className="slbl2" style={{marginBottom:6}}>Sayfa Yetkileri</div>
-                    <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                      {ALL_PAGES.map(page=>(
-                        <label key={page} style={{display:'flex',gap:4,alignItems:'center',padding:'3px 8px',borderRadius:20,background:(u.perms||{})[page]?'var(--gnb)':'var(--bg3)',border:`1px solid ${(u.perms||{})[page]?'var(--gnbd)':'var(--bd)'}`,cursor:'pointer',fontSize:11,color:(u.perms||{})[page]?'var(--gn)':'var(--ink4)',transition:'all .15s'}}>
-                          <input type="checkbox" style={{display:'none'}} checked={!!(u.perms||{})[page]} onChange={e=>togglePerm(uname,page,e.target.checked)}/>
-                          {PAGE_LABELS[page]}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SmartRoadmapModal({onClose}){
-  const steps=[
-    {n:1,title:'Ne istediğine tam karar ver',desc:'Hayatının her kilit alanında hiçbir sınırın olmadığını hayal ederek ne istediğini net belirle.'},
-    {n:2,title:'Hedeflerini yazıya dök',desc:'Hedeflerini açık, detaylı ve ölçülebilir şekilde yaz. Yazıya dökülen hedefler bilinçaltına programlanır.'},
-    {n:3,title:'Son teslim tarihi belirle',desc:'Hedefiniz için zaman sınırı ve alt teslim tarihleri (yıllık, aylık, haftalık) koy.'},
-    {n:4,title:'Engelleri belirle',desc:'Hedefinle aranda duran darboğazları ve seni yavaşlatan kısıtlamaları tespit et.'},
-    {n:5,title:'Gerekli bilgi ve becerileri tanımla',desc:'Başarını engelleyen en zayıf noktanı bularak hedefe ulaşmak için öğremen gereken yeni bilgi ve yetenekleri belirle.'},
-    {n:6,title:'Yardımına ihtiyaç duyacakların',desc:'Aile, yöneticiler, iş arkadaşları — hedefinle ilgili işbirliği gerektiren herkesi listele.'},
-    {n:7,title:'Yapman gereken her şeyi listele',desc:'Geliştirilecek beceriler, iletişime geçilecek kişiler, aşılacak engeller ve tüm adımları içeren kapsamlı liste hazırla.'},
-    {n:8,title:'Listeyi organize et',desc:'Listeyi yapılış sırasına ve 80/20 kuralını göz önünde bulundurarak öncelik derecesine göre düzenle.'},
-    {n:9,title:'Plan yap',desc:'Listeyi başlangıçtan sona bir adımlar serisine dönüştürerek aylarını, haftalarını ve günlerini önceden planla.'},
-    {n:10,title:'Her gün en önemli görevi seç',desc:'Görevleri önceliklendir ve her zaman en yüksek değere sahip, en önemli işe başla.'},
-    {n:11,title:'Öz disiplin geliştir',desc:'Seçtiğin en önemli göreve odaklan ve %100 tamamlanana kadar tek bir iş üzerinde çalış.'},
-    {n:12,title:'Hedeflerini görselleştir',desc:'Hedefinize çoktan ulaşmışsın gibi net, canlı zihinsel resimler yarat. Çekim Yasası'nı harekete geçir.'},
-  ];
-  return(
-    <div className="backdrop" onClick={ev=>{if(ev.target===ev.currentTarget)onClose();}}>
-      <div className="modal mlg" style={{maxWidth:600}}>
-        <div className="mhd">
-          <div>
-            <div className="mtit">🗺 Smart Hedef Yol Haritası</div>
-            <div style={{fontSize:11,color:'var(--ink4)',marginTop:2}}>Brian Tracy'nin 12 Adımlık Yöntemi</div>
-          </div>
-          <button className="ibtn" onClick={onClose}>×</button>
-        </div>
-        <div className="mbd" style={{maxHeight:'70vh',overflowY:'auto'}}>
-          <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            {steps.map(s=>(
-              <div key={s.n} style={{display:'flex',gap:14,padding:'12px',background:'var(--bg2)',borderRadius:'var(--r)',border:'1px solid var(--bd)'}}>
-                <div style={{width:32,height:32,borderRadius:'50%',background:'var(--ac)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,fontFamily:'var(--fm)',flexShrink:0}}>{s.n}</div>
-                <div>
-                  <div style={{fontWeight:600,fontSize:13,marginBottom:3,color:'var(--ink)'}}>{s.title}</div>
-                  <div style={{fontSize:12,color:'var(--ink3)',lineHeight:1.6}}>{s.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mft"><button className="btn btnp" onClick={onClose}>Kapat</button></div>
-      </div>
-    </div>
-  );
-}
-
-
-function UserMgmtModal({onClose}){
-  const ALL_TABS=['dashboard','goals','todos','habits','kanban','books','journal','notes','quotes','routines','coaching','bookmarks','review','coach','challenges'];
-  const TAB_LABELS={dashboard:'Dashboard',goals:'Smart Hedefler',todos:'Görevler',habits:'Alışkanlıklar',kanban:'Kanban',books:'Okuma Listesi',journal:'Journal',notes:'Notlar',quotes:'Alıntılar',routines:'Rutinler',coaching:'Koçluk',bookmarks:'Yer İmleri',review:'Haftalık İnceleme',coach:'AI Koç',challenges:'Meydan Okumalar'};
-
-  const [users,setUsers]=React.useState(()=>{
-    try{return window._getUsers?window._getUsers():{};}catch(e){return{};}
-  });
-  const [newUser,setNewUser]=React.useState('');
-  const [newPass,setNewPass]=React.useState('');
-  const [newName,setNewName]=React.useState('');
-  const [newPerms,setNewPerms]=React.useState([...ALL_TABS]);
-  const [editUser,setEditUser]=React.useState(null);
-  const [msg,setMsg]=React.useState('');
-
-  const addUser=()=>{
-    if(!newUser.trim()||!newPass.trim()){setMsg('Kullanıcı adı ve şifre zorunlu');return;}
-    if(newPass.length<4){setMsg('Şifre en az 4 karakter');return;}
-    const userData={password:newPass,role:'user',name:newName||newUser,permissions:[...newPerms]};
-    window._saveUser(newUser.trim(),userData);
-    setUsers(window._getUsers());
-    setNewUser('');setNewPass('');setNewName('');setNewPerms([...ALL_TABS]);
-    setMsg('✓ Kullanıcı eklendi');
-  };
-
-  const delUser=u=>{
-    if(!confirm(u+' kullanıcısını sil?'))return;
-    window._deleteUser(u);
-    setUsers(window._getUsers());
-    setMsg('✓ Kullanıcı silindi');
-  };
-
-  const togglePerm=(u,tab)=>{
-    const usr={...users[u]};
-    const perms=[...(usr.permissions||[])];
-    const idx=perms.indexOf(tab);
-    if(idx>=0)perms.splice(idx,1);else perms.push(tab);
-    usr.permissions=perms;
-    window._saveUser(u,usr);
-    setUsers(window._getUsers());
-  };
-
-  const toggleNewPerm=tab=>{
-    setNewPerms(p=>p.includes(tab)?p.filter(x=>x!==tab):[...p,tab]);
-  };
-
-  return(
-    <div className="backdrop" onClick={ev=>{if(ev.target===ev.currentTarget)onClose();}}>
-      <div className="modal mlg" style={{maxWidth:720}}>
-        <div className="mhd">
-          <div><div className="mtit">👥 Kullanıcı Yönetimi</div><div style={{fontSize:11,color:'var(--ink4)',marginTop:2}}>Admin paneli — kullanıcı ekle, sil, yetkilendir</div></div>
-          <button className="ibtn" onClick={onClose}>×</button>
-        </div>
-        <div className="mbd" style={{maxHeight:'75vh',overflowY:'auto'}}>
-
-          {/* Mevcut kullanıcılar */}
-          <div className="slbl2" style={{marginBottom:12}}>Mevcut Kullanıcılar</div>
-          <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:20}}>
-            {Object.entries(users).map(([uname,udata])=>(
-              <div key={uname} style={{border:'1px solid var(--bd)',borderRadius:'var(--r2)',overflow:'hidden'}}>
-                <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:udata.role==='admin'?'var(--acb)':'var(--bg2)'}}>
-                  <div style={{flex:1}}>
-                    <span style={{fontWeight:600,fontSize:13}}>{udata.name||uname}</span>
-                    <span className="mono" style={{fontSize:10,color:'var(--ink4)',marginLeft:8}}>@{uname}</span>
-                    {udata.role==='admin'&&<span className="tag ta" style={{marginLeft:8,fontSize:10}}>Admin</span>}
-                  </div>
-                  {udata.role!=='admin'&&(
-                    <div style={{display:'flex',gap:5}}>
-                      <button className="btn btnxs btng" onClick={()=>setEditUser(editUser===uname?null:uname)}>
-                        {editUser===uname?'▲ Kapat':'✏ Yetkiler'}
-                      </button>
-                      <button className="btn btnxs btnd" onClick={()=>delUser(uname)}>🗑</button>
-                    </div>
-                  )}
-                </div>
-                {editUser===uname&&(
-                  <div style={{padding:'12px 14px',borderTop:'1px solid var(--bd)'}}>
-                    <div style={{fontSize:11,color:'var(--ink4)',marginBottom:8}}>Erişim izni olan bölümler:</div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                      {ALL_TABS.map(tab=>{
-                        const hasPerm=(udata.permissions||[]).includes(tab);
-                        return(
-                          <button key={tab} onClick={()=>togglePerm(uname,tab)}
-                            style={{padding:'4px 10px',borderRadius:20,border:`1.5px solid ${hasPerm?'var(--ac)':'var(--bd)'}`,background:hasPerm?'var(--acb)':'transparent',color:hasPerm?'var(--ac)':'var(--ink4)',fontSize:11,cursor:'pointer',fontFamily:'var(--ff)',fontWeight:hasPerm?600:400,transition:'all .15s'}}>
-                            {hasPerm?'✓ ':''}{TAB_LABELS[tab]}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Yeni kullanıcı */}
-          <div style={{padding:'16px',background:'var(--bg2)',borderRadius:'var(--r2)',border:'1px solid var(--bd)'}}>
-            <div className="slbl2" style={{marginBottom:12}}>+ Yeni Kullanıcı Ekle</div>
-            <div className="fr3" style={{marginBottom:10}}>
-              <div className="field"><label>Kullanıcı Adı *</label><input value={newUser} onChange={e=>setNewUser(e.target.value)} placeholder="kullanici"/></div>
-              <div className="field"><label>Şifre *</label><input type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="min 4 karakter"/></div>
-              <div className="field"><label>İsim</label><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="Ad Soyad"/></div>
-            </div>
-            <div style={{marginBottom:12}}>
-              <div style={{fontSize:11,color:'var(--ink4)',marginBottom:7}}>Erişim izinleri:</div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-                {ALL_TABS.map(tab=>{
-                  const has=newPerms.includes(tab);
-                  return(
-                    <button key={tab} onClick={()=>toggleNewPerm(tab)}
-                      style={{padding:'3px 9px',borderRadius:20,border:`1.5px solid ${has?'var(--ac)':'var(--bd)'}`,background:has?'var(--acb)':'transparent',color:has?'var(--ac)':'var(--ink4)',fontSize:11,cursor:'pointer',fontFamily:'var(--ff)',fontWeight:has?600:400,transition:'all .15s'}}>
-                      {has?'✓ ':''}{TAB_LABELS[tab]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            {msg&&<div style={{fontSize:12,color:msg.startsWith('✓')?'var(--gn)':'var(--rd)',marginBottom:8,padding:'6px 10px',background:msg.startsWith('✓')?'var(--gnb)':'var(--rdb)',borderRadius:'var(--r)'}}>{msg}</div>}
-            <button className="btn btnp" onClick={addUser}>+ Kullanıcı Ekle</button>
-          </div>
-        </div>
-        <div className="mft"><button className="btn btng" onClick={onClose}>Kapat</button></div>
-      </div>
-    </div>
-  );
-}
-
-function PwChangeModal({onClose}){
-  const [cur,setCur]=React.useState('');
-  const [nw,setNw]=React.useState('');
-  const [nw2,setNw2]=React.useState('');
-  const [msg,setMsg]=React.useState('');
-  const [ok,setOk]=React.useState(false);
-
-  const go=()=>{
-    if(!cur||!nw||!nw2){setMsg('Tüm alanları doldur');return;}
-    if(nw!==nw2){setMsg('Yeni şifreler eşleşmiyor');return;}
-    const res=window.focusupChangePassword?window.focusupChangePassword(cur,nw):{ok:false,msg:'Fonksiyon bulunamadı'};
-    if(res.ok){setOk(true);setMsg('Şifre güncellendi! ✓');}
-    else setMsg(res.msg||'Hata');
-  };
-
-  return(
-    <div className="backdrop" onClick={ev=>{if(ev.target===ev.currentTarget)onClose();}}>
-      <div className="modal" style={{maxWidth:360}}>
-        <div className="mhd"><span className="mtit">🔑 Şifre Değiştir</span><button className="ibtn" onClick={onClose}>×</button></div>
-        <div className="mbd">
-          {['Mevcut Şifre','Yeni Şifre','Yeni Şifre (Tekrar)'].map((lbl,i)=>(
-            <div key={i} className="field">
-              <label>{lbl}</label>
-              <input type="password" value={i===0?cur:i===1?nw:nw2}
-                onChange={e=>i===0?setCur(e.target.value):i===1?setNw(e.target.value):setNw2(e.target.value)}/>
-            </div>
-          ))}
-          {msg&&<div style={{fontSize:13,color:ok?'var(--gn)':'var(--rd)',textAlign:'center',padding:'8px',background:ok?'var(--gnb)':'var(--rdb)',borderRadius:'var(--r)'}}>{msg}</div>}
-        </div>
-        <div className="mft">
-          <button className="btn btng" onClick={onClose}>İptal</button>
-          {!ok&&<button className="btn btnp" onClick={go}>Güncelle</button>}
-          {ok&&<button className="btn btng" onClick={onClose}>Kapat</button>}
-        </div>
-      </div>
     </div>
   );
 }
