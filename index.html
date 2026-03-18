@@ -1792,53 +1792,237 @@ function delStep(goalId,stepId){
 window.addGoalStep=addGoalStep;window.toggleStep=toggleStep;window.delStep=delStep;
 
 function renderTodos() {
-  var PLBL={urgent:'Acil',high:'Onemli',normal:'Normal'};
-  var PCLS={urgent:'p-red',high:'p-orange',normal:'p-gray'};
-  var todos = fil(D.todos,['text']);
-  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Yapilacaklar</h1><button class="btn btn-p" onclick="openForm(\'todo\')">'+ic('plus',13)+' Gorev Ekle</button></div>'
-    +'<div class="card" style="overflow:hidden"><table class="tbl"><thead><tr>'
-    +'<th style="padding-left:16px">Gorev</th><th style="text-align:center">Onem</th><th style="text-align:center">Kategori</th><th style="text-align:center">Bitis</th><th style="width:36px"></th>'
-    +'</tr></thead><tbody>';
-  todos.forEach(function(todo){
-    var ov=todo.end&&new Date(todo.end)<new Date()&&!todo.done;
-    html += '<tr style="opacity:'+(todo.done?.42:1)+'">'
-      +'<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:10px">'
-      +'<input type="checkbox" class="cb" '+(todo.done?'checked':'')+' onchange="toggleTodo('+todo.id+')">'
-      +'<span style="font-weight:500;text-decoration:'+(todo.done?'line-through':'none')+'">'+U.escape(todo.text)+'</span></div></td>'
-      +'<td style="text-align:center"><span class="pill '+(PCLS[todo.priority]||'p-gray')+'" style="font-size:10px">'+(PLBL[todo.priority]||todo.priority)+'</span></td>'
-      +'<td style="text-align:center;font-size:12px;color:var(--t2)">'+U.escape(todo.category||'')+'</td>'
-      +'<td style="text-align:center;font-size:12px;color:'+(ov?'var(--red)':'var(--t2)')+'">'+(todo.end||'&mdash;')+'</td>'
-      +'<td><button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+todo.id+',\'todo\')">'+ic('trash',12,'var(--t3)')+'</button></td></tr>';
+  var all = D.todos || [];
+  var filtered = fil(all, ['text','category']);
+  var todoView = window._todoView || 'list';
+  var done  = all.filter(function(t){return t.done;}).length;
+  var urgent= all.filter(function(t){return !t.done && t.priority==='urgent';}).length;
+  var overdue = all.filter(function(t){return !t.done && t.end && new Date(t.end)<new Date();}).length;
+
+  var html = '<div class="fade">';
+  html += '<div class="sh"><div><h1 class="sh-t">Yapilacaklar</h1>'
+    +'<p class="sh-sub">Eisenhower Matrisi &mdash; Once onemli olanı yap</p></div>'
+    +'<div style="display:flex;gap:7px;align-items:center">'
+    +'<div style="display:flex;gap:3px;background:var(--s2);border-radius:8px;padding:3px">'
+    +'<button class="btn btn-sm" style="padding:4px 10px;background:'+(todoView==='list'?'var(--s)':'transparent')+';color:'+(todoView==='list'?'var(--t)':'var(--t2)')+'" onclick="window._todoView=\'list\';renderPage()">Liste</button>'
+    +'<button class="btn btn-sm" style="padding:4px 10px;background:'+(todoView==='matrix'?'var(--s)':'transparent')+';color:'+(todoView==='matrix'?'var(--t)':'var(--t2)')+'" onclick="window._todoView=\'matrix\';renderPage()">Matris</button>'
+    +'</div>'
+    +'<button class="btn btn-p" onclick="openForm(\'todo\')">'+ic('plus',13)+' Gorev Ekle</button>'
+    +'</div></div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">';
+  [{l:'Toplam',v:all.length,c:'var(--blue)',i:'csq'},
+   {l:'Tamamlandi',v:done,c:'var(--green)',i:'chk'},
+   {l:'Acil',v:urgent,c:'var(--red)',i:'flame'},
+   {l:'Gecmis',v:overdue,c:'var(--orange)',i:'ci'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'+ic(s.i,13,s.c)
+      +'<span style="font-size:11px;color:var(--t2);font-weight:600">'+s.l+'</span></div>'
+      +'<div style="font-size:24px;font-weight:800;color:'+s.c+'">'+s.v+'</div></div>';
   });
-  if(!todos.length) html += '<tr><td colspan="5"><div class="empty">'+ic('csq',28,'var(--t3)')+'<p>Gorev yok</p></div></td></tr>';
-  html += '</tbody></table></div></div>';
-  show('pinner',html);
+  html += '</div>';
+
+  if(todoView === 'matrix') {
+    html += '<div style="margin-bottom:12px;padding:11px 14px;background:var(--bl);border-radius:10px;border-left:3px solid var(--blue)">'
+      +'<p style="font-weight:700;font-size:12.5px;margin-bottom:2px">Eisenhower Matrisi &mdash; Dwight Eisenhower</p>'
+      +'<p style="font-size:11.5px;color:var(--t2)">Acil & Onemli: Hemen Yap &nbsp;|&nbsp; Onemli Acil Degil: Planla &nbsp;|&nbsp; Acil Onemli Degil: Delege Et &nbsp;|&nbsp; Ikisi de Degil: Sil</p>'
+      +'</div>';
+    var quadrants = [
+      {p:'urgent',l:'Hemen Yap',sub:'Acil & Onemli',c:'var(--red)',emoji:'&#128293;'},
+      {p:'high',l:'Planla',sub:'Onemli, Acil Degil',c:'var(--blue)',emoji:'&#128197;'},
+      {p:'normal',l:'Delege Et',sub:'Acil, Onemli Degil',c:'var(--orange)',emoji:'&#128101;'},
+      {p:'low',l:'Sil / Ertele',sub:'Ne Acil Ne Onemli',c:'var(--t3)',emoji:'&#128465;'},
+    ];
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+    quadrants.forEach(function(q){
+      var priorities = ['urgent','high','normal'];
+      var qItems = filtered.filter(function(t){
+        if(q.p==='low') return !t.done && priorities.indexOf(t.priority)<0;
+        return !t.done && t.priority===q.p;
+      });
+      html += '<div class="card" style="padding:14px 16px;border-top:3px solid '+q.c+'">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+        +'<span style="font-size:18px">'+q.emoji+'</span>'
+        +'<div><p style="font-weight:700;font-size:13px;color:'+q.c+'">'+q.l+'</p>'
+        +'<p style="font-size:10.5px;color:var(--t2)">'+q.sub+'</p></div>'
+        +'<span class="pill p-gray" style="font-size:10px;margin-left:auto">'+qItems.length+'</span></div>'
+        +'<div style="display:flex;flex-direction:column;gap:5px">';
+      if(!qItems.length) html += '<p style="font-size:11.5px;color:var(--t3);font-style:italic;text-align:center;padding:12px 0">Bos</p>';
+      qItems.slice(0,6).forEach(function(t){
+        var ov = t.end && new Date(t.end)<new Date();
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--s2);border-radius:8px">'
+          +'<input type="checkbox" class="cb" onchange="toggleTodo('+t.id+')">'
+          +'<span style="font-size:12.5px;font-weight:500;flex:1">'+U.escape(t.text.slice(0,38))+'</span>'
+          +(ov?'<span style="font-size:9px;color:var(--red);font-weight:700">GECTI</span>':'')
+          +'</div>';
+      });
+      if(qItems.length>6) html += '<p style="font-size:11px;color:var(--t3);text-align:center;padding-top:4px">+'+(qItems.length-6)+' daha</p>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+    var doneTodos = filtered.filter(function(t){return t.done;});
+    if(doneTodos.length) {
+      html += '<div style="margin-top:14px"><p class="lbl" style="margin-bottom:8px">Tamamlanan ('+doneTodos.length+')</p>'
+        +'<div style="display:flex;flex-direction:column;gap:4px">';
+      doneTodos.slice(0,5).forEach(function(t){
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gl);border-radius:8px;opacity:.6">'
+          +'<input type="checkbox" class="cb" checked onchange="toggleTodo('+t.id+')">'
+          +'<span style="font-size:12.5px;text-decoration:line-through;color:var(--t2)">'+U.escape(t.text)+'</span></div>';
+      });
+      html += '</div></div>';
+    }
+  } else {
+    var groups = [
+      {p:'urgent',l:'Acil & Onemli',c:'var(--red)',emoji:'&#128293;'},
+      {p:'high',l:'Onemli',c:'var(--orange)',emoji:'&#9193;'},
+      {p:'normal',l:'Normal',c:'var(--blue)',emoji:'&#9679;'},
+    ];
+    groups.forEach(function(g){
+      var gTodos = filtered.filter(function(t){return !t.done && t.priority===g.p;});
+      if(!gTodos.length) return;
+      html += '<div style="margin-bottom:14px">'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">'
+        +'<span style="font-size:14px">'+g.emoji+'</span>'
+        +'<span style="font-weight:700;font-size:13px;color:'+g.c+'">'+g.l+'</span>'
+        +'<span class="pill p-gray" style="font-size:10px">'+gTodos.length+'</span></div>'
+        +'<div class="card" style="overflow:hidden">';
+      gTodos.forEach(function(todo){
+        var dl = todo.end ? Math.ceil((new Date(todo.end)-new Date())/864e5) : null;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.05)">'
+          +'<input type="checkbox" class="cb" onchange="toggleTodo('+todo.id+')">'
+          +'<div style="flex:1"><p style="font-weight:500;font-size:13.5px">'+U.escape(todo.text)+'</p>'
+          +'<div style="display:flex;gap:6px;margin-top:3px">'
+          +(todo.category?'<span class="pill p-gray" style="font-size:9.5px">'+U.escape(todo.category)+'</span>':'')
+          +(dl!==null?'<span style="font-size:10px;font-weight:600;color:'+(dl<0?'var(--red)':dl<3?'var(--orange)':'var(--t3)')+'">'+(dl<0?'Gecti '+Math.abs(dl)+'g':dl===0?'Bugun':dl+'g kaldi')+'</span>':'')
+          +'</div></div>'
+          +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+todo.id+',\'todo\')">'+ic('trash',12,'var(--t3)')+'</button></div>';
+      });
+      html += '</div></div>';
+    });
+    var noPri = filtered.filter(function(t){return !t.done && ['urgent','high','normal'].indexOf(t.priority)<0;});
+    if(noPri.length) {
+      html += '<div style="margin-bottom:14px"><p class="lbl" style="margin-bottom:7px">Diger</p><div class="card" style="overflow:hidden">';
+      noPri.forEach(function(t){
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.05)">'
+          +'<input type="checkbox" class="cb" onchange="toggleTodo('+t.id+')">'
+          +'<span style="font-weight:500;font-size:13.5px">'+U.escape(t.text)+'</span></div>';
+      });
+      html += '</div></div>';
+    }
+    var doneTodos = filtered.filter(function(t){return t.done;});
+    if(doneTodos.length) {
+      html += '<details style="margin-top:6px"><summary style="cursor:pointer;font-size:12px;color:var(--t2);font-weight:600;padding:6px 2px">Tamamlanan gorevler ('+doneTodos.length+')</summary>'
+        +'<div class="card" style="overflow:hidden;margin-top:8px">';
+      doneTodos.forEach(function(t){
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(0,0,0,.04);opacity:.5">'
+          +'<input type="checkbox" class="cb" checked onchange="toggleTodo('+t.id+')">'
+          +'<span style="font-size:13px;text-decoration:line-through;color:var(--t2)">'+U.escape(t.text)+'</span>'
+          +'<button class="btn btn-g btn-ic" style="width:24px;height:24px;margin-left:auto" onclick="del('+t.id+',\'todo\')">'+ic('trash',11,'var(--t3)')+'</button></div>';
+      });
+      html += '</div></details>';
+    }
+    if(!filtered.length) {
+      html += '<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">'
+        +'<div style="width:52px;height:52px;border-radius:14px;background:var(--gl);display:flex;align-items:center;justify-content:center">'+ic('chk',26,'var(--green)')+'</div>'
+        +'<p style="font-weight:700;font-size:16px">Tum gorevler tamamlandi!</p>'
+        +'<button class="btn btn-p" onclick="openForm(\'todo\')">'+ic('plus',13)+' Yeni Gorev</button></div>';
+    }
+  }
+  html += '</div>';
+  show('pinner', html);
 }
 function toggleTodo(id){snapshot();D.todos=D.todos.map(function(t){if(t.id!==id)return t;if(!t.done)gainXP(15,'Gorev tamamlandi');return Object.assign({},t,{done:!t.done});});addLog('Gorev');save();renderPage();}
 window.toggleTodo=toggleTodo;
 
 function renderRoutines() {
-  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Rutinler</h1><button class="btn btn-p" onclick="openForm(\'routine\')">'+ic('plus',13)+' Rutin Ekle</button></div><div class="gas">';
-  Object.keys(D.routines).forEach(function(period){
-    var items=D.routines[period]||[];
-    var done=items.filter(function(r){return !U.isActive(period,r.last);}).length;
-    html += '<div class="card cp"><div style="display:flex;justify-content:space-between;margin-bottom:11px;align-items:center">'
-      +'<p style="font-weight:700;font-size:13px;text-transform:capitalize">'+period+'</p>'
-      +'<span class="pill '+(done===items.length&&items.length>0?'p-green':'p-gray')+'" style="font-size:10px">'+done+'/'+items.length+'</span></div>'
-      +'<div style="display:flex;flex-direction:column;gap:3px">';
-    items.forEach(function(item){
-      var active=U.isActive(period,item.last);
-      html += '<div class="rrow'+(active?'':', done')+'" onclick="checkRoutine(\''+period+'\','+item.id+')">'
-        +'<div style="width:24px;height:24px;border-radius:6px;background:'+(active?'var(--bl)':'var(--s2)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-        +ic(active?'ci':'chk',12,active?'var(--blue)':'var(--green)')+'</div>'
-        +'<span style="font-size:12.5px;font-weight:500;flex:1">'+U.escape(item.t)+'</span>'
-        +'<button class="btn btn-g btn-ic" style="width:20px;height:20px;pointer-events:auto" onclick="event.stopPropagation();delRoutine(\''+period+'\','+item.id+')">'+ic('x',10,'var(--t3)')+'</button></div>';
+  var today = U.today();
+  var allPeriods = ['daily','weekly','monthly','quarterly','yearly'];
+  var totalItems = 0, doneToday = 0;
+  allPeriods.forEach(function(p){ var items=D.routines[p]||[]; totalItems+=items.length; doneToday+=items.filter(function(r){return !U.isActive(p,r.last);}).length; });
+  var streak = D.routineStreak || 0;
+
+  var html = '<div class="fade">';
+  html += '<div class="sh"><div><h1 class="sh-t">Rutin Carki</h1>'
+    +'<p class="sh-sub">Atomic Habits &mdash; Her gun kucuk adim, buyuk degisim</p></div>'
+    +'<button class="btn btn-p" onclick="openForm('routine')">'+ic('plus',13)+' Rutin Ekle</button></div>';
+
+  // Stats
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">';
+  [{l:'Toplam Rutin',v:totalItems,c:'var(--blue)',i:'ref'},
+   {l:'Bugun Yapilan',v:doneToday,c:'var(--green)',i:'chk'},
+   {l:'Kalan',v:totalItems-doneToday,c:'var(--orange)',i:'ci'},
+   {l:'Seri (gun)',v:streak,c:'var(--purple)',i:'flame'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'+ic(s.i,13,s.c)
+      +'<span style="font-size:11px;color:var(--t2);font-weight:600">'+s.l+'</span></div>'
+      +'<div style="font-size:24px;font-weight:800;color:'+s.c+'">'+s.v+'</div></div>';
+  });
+  html += '</div>';
+
+  // Atomic Habits info
+  html += '<div style="margin-bottom:16px;padding:13px 16px;background:var(--gl);border-radius:10px;border-left:3px solid var(--green)">'
+    +'<p style="font-weight:700;font-size:12.5px;margin-bottom:3px">James Clear &mdash; Atomic Habits Kurali</p>'
+    +'<p style="font-size:12px;color:var(--t2);line-height:1.6">Gunde %1 daha iyi olmak = 1 yilda 37x daha iyi. Kucuk rutinler birikir. Zincirinizi kirmayın.</p>'
+    +'</div>';
+
+  // Daily habits first, prominently
+  var daily = D.routines.daily || [];
+  if(daily.length) {
+    html += '<div style="margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+      +'<div style="width:28px;height:28px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center">'+ic('ci',14,'#fff')+'</div>'
+      +'<p style="font-weight:700;font-size:14px">Gunluk Rutinler</p>'
+      +'<span class="pill '+(doneToday===daily.length&&daily.length>0?'p-green':'p-gray')+'" style="font-size:10px">'+daily.filter(function(r){return !U.isActive('daily',r.last);}).length+'/'+daily.length+'</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">';
+    daily.forEach(function(item){
+      var done = !U.isActive('daily', item.last);
+      html += '<div onclick="'+(done?'':'checkRoutine('daily','+item.id+')')+'" '
+        +'style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;'
+        +'background:'+(done?'var(--gl)':'var(--s2)')+';cursor:'+(done?'default':'pointer')+';'
+        +'border:1.5px solid '+(done?'var(--green)':'transparent')+';transition:all .15s">'
+        +'<div style="width:28px;height:28px;border-radius:99px;background:'+(done?'var(--green)':'var(--s3)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +(done?'<span style="color:#fff;font-size:13px">&#10003;</span>':ic('ci',12,'var(--t3)'))+'</div>'
+        +'<span style="font-size:13px;font-weight:600;color:'+(done?'var(--green)':'var(--t)');flex:1">'+U.escape(item.t)+'</span>'
+        +'<button onclick="event.stopPropagation();delRoutine('daily','+item.id+')" '
+        +'style="background:none;border:none;cursor:pointer;color:var(--t3);padding:3px;opacity:.5">'+ic('x',10)+'</button>'
+        +'</div>';
     });
-    if(!items.length) html += '<p style="font-size:11px;color:var(--t3);font-style:italic;text-align:center;padding:6px 0">Henuz rutin yok</p>';
+    html += '</div></div>';
+  }
+
+  // Other periods
+  var otherPeriods = ['weekly','monthly','quarterly','yearly'];
+  otherPeriods.forEach(function(period){
+    var items = D.routines[period] || [];
+    if(!items.length) return;
+    var periodDone = items.filter(function(r){return !U.isActive(period,r.last);}).length;
+    var labels = {weekly:'Haftalik',monthly:'Aylik',quarterly:'Ceyreklik',yearly:'Yillik'};
+    html += '<div style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +'<p style="font-weight:600;font-size:13px;text-transform:capitalize">'+labels[period]+'</p>'
+      +'<span class="pill '+(periodDone===items.length&&items.length>0?'p-green':'p-gray')+'" style="font-size:10px">'+periodDone+'/'+items.length+'</span>'
+      +'</div>'
+      +'<div class="card" style="overflow:hidden">';
+    items.forEach(function(item){
+      var done = !U.isActive(period, item.last);
+      html += '<div onclick="'+(done?'':'checkRoutine(''+period+'','+item.id+')')+'" '
+        +'style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(0,0,0,.05);'
+        +'cursor:'+(done?'default':'pointer')+';background:'+(done?'var(--gl)':'transparent')+'">'
+        +'<div style="width:22px;height:22px;border-radius:99px;background:'+(done?'var(--green)':'var(--s2)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +(done?'<span style="color:#fff;font-size:11px">&#10003;</span>':ic('ci',10,'var(--t3)'))+'</div>'
+        +'<span style="font-size:13px;font-weight:500;flex:1;color:'+(done?'var(--green)':'var(--t)')+'">'+U.escape(item.t)+'</span>'
+        +(done&&item.last?'<span style="font-size:10px;color:var(--t3)">'+item.last.split('T')[0]+'</span>':'')
+        +'<button onclick="event.stopPropagation();delRoutine(''+period+'','+item.id+')" '
+        +'style="background:none;border:none;cursor:pointer;color:var(--t3);padding:3px">'+ic('x',11)+'</button>'
+        +'</div>';
+    });
     html += '</div></div>';
   });
-  html += '</div></div>';
-  show('pinner',html);
+
+  html += '</div>';
+  show('pinner', html);
 }
 function checkRoutine(period,id){snapshot();D.routines[period]=D.routines[period].map(function(r){return r.id===id?Object.assign({},r,{last:new Date().toISOString()}):r;});gainXP(10,'Rutin tamamlandi');addLog('Rutin tamamlandi');save();renderPage();}
 function delRoutine(period,id){snapshot();D.routines[period]=(D.routines[period]||[]).filter(function(r){return r.id!==id;});addLog('Rutin silindi');save();renderPage();}
@@ -1946,17 +2130,74 @@ function confirmChallenge(){
 window.openChallengePicker=openChallengePicker;window._renderPicker=_renderPicker;window.confirmChallenge=confirmChallenge;
 
 function renderTools() {
-  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Odaklanma Araclari</h1></div><div class="gas">';
-  SOUNDS.forEach(function(s){
-    var on=D.activeSound===s.url;
-    html += '<button class="snd'+(on?' on':'')+'" onclick="toggleSound(\''+s.url+'\')">'
-      +'<div style="width:36px;height:36px;border-radius:8px;background:'+(on?'rgba(255,255,255,.2)':'var(--bl)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(s.icon,17,on?'#fff':'var(--blue)')+'</div>'
-      +'<div style="flex:1;text-align:left"><p style="font-weight:600;font-size:13px">'+s.name+'</p><p style="font-size:11px;margin-top:1px;opacity:.7">'+(on?'Caliniyor...':'Dinlemek icin tikla')+'</p></div></button>';
+  var totalFocus = D.stats.totalFocus || 0;
+  var sessions = D.deepWorkSessions || 0;
+  var todayFocus = D.stats.todayFocus || 0;
+
+  var html = '<div class="fade">';
+  html += '<div class="sh"><div><h1 class="sh-t">Odak Araclari</h1>'
+    +'<p class="sh-sub">Cal Newport &mdash; Deep Work + Pomodoro Tekniği</p></div></div>';
+
+  // Focus stats
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">';
+  [{l:'Toplam Odak',v:totalFocus+'dk',c:'var(--blue)',i:'zap'},
+   {l:'Bugun Odak',v:todayFocus+'dk',c:'var(--green)',i:'flame'},
+   {l:'Deep Work Seans',v:sessions,c:'var(--purple)',i:'brain'},
+   {l:'Pomodoro XP',v:(sessions*75+Math.floor(totalFocus/25)*50)+' XP',c:'var(--orange)',i:'star'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'+ic(s.i,13,s.c)
+      +'<span style="font-size:11px;color:var(--t2);font-weight:600">'+s.l+'</span></div>'
+      +'<div style="font-size:22px;font-weight:800;color:'+s.c+'">'+s.v+'</div></div>';
   });
-  html += '</div><div class="card cp" style="margin-top:12px;display:flex;align-items:center;gap:12px">'+ic('vol',15,'var(--t2)')
+  html += '</div>';
+
+  // Pomodoro in tools
+  html += '<div class="g2" style="margin-bottom:16px">';
+  html += '<div class="card"><div id="timer-block-tools"></div></div>';
+  html += '<div class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">'
+    +'<p style="font-weight:700;font-size:14px">Pomodoro Tekniği</p>'
+    +'<p style="font-size:12.5px;color:var(--t2);line-height:1.6">Francesco Cirillo tarafından gelistirilen bu teknik, zihnin kesintisiz odaklanabilme surelerini optimize eder.</p>'
+    +'<div style="display:flex;flex-direction:column;gap:7px">';
+  [
+    {t:'25 dk',s:'Odak Blogu',c:'var(--blue)',xp:'+50 XP'},
+    {t:'5 dk',s:'Kisa Mola',c:'var(--green)',xp:''},
+    {t:'15 dk',s:'Uzun Mola',c:'var(--orange)',xp:''},
+    {t:'4 tekrar',s:'= 1 Pomodoro Seti',c:'var(--purple)',xp:'+200 XP'},
+  ].forEach(function(r){
+    html += '<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--s2);border-radius:8px">'
+      +'<div style="width:8px;height:8px;border-radius:99px;background:'+r.c+';flex-shrink:0"></div>'
+      +'<span style="font-size:13px;font-weight:600;color:'+r.c+'">'+r.t+'</span>'
+      +'<span style="font-size:12.5px;color:var(--t2);flex:1">'+r.s+'</span>'
+      +(r.xp?'<span style="font-size:10px;font-weight:700;color:var(--purple)">'+r.xp+'</span>':'')
+      +'</div>';
+  });
+  html += '</div></div></div>';
+
+  // Ambient sounds
+  html += '<p style="font-weight:700;font-size:14px;margin-bottom:10px">Ortam Sesleri</p>';
+  html += '<div class="gas">';
+  SOUNDS.forEach(function(s){
+    var on = D.activeSound===s.url;
+    html += '<button class="snd'+(on?' on':'')+'" onclick="toggleSound(''+s.url+'')">'
+      +'<div style="width:38px;height:38px;border-radius:9px;background:'+(on?'rgba(255,255,255,.2)':'var(--bl)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(s.icon,18,on?'#fff':'var(--blue)')+'</div>'
+      +'<div style="flex:1;text-align:left">'
+      +'<p style="font-weight:600;font-size:13px">'+s.name+'</p>'
+      +'<p style="font-size:10.5px;margin-top:1px;opacity:.7">'+(on?'Caliniyor...':'Dinlemek icin tikla')+'</p></div>'
+      +(on?'<div style="width:6px;height:6px;border-radius:99px;background:#fff;animation:blink 1.5s infinite"></div>':'')
+      +'</button>';
+  });
+  html += '</div>';
+  html += '<div class="card cp" style="margin-top:12px;display:flex;align-items:center;gap:12px">'
+    +ic('vol',15,'var(--t2)')
     +'<input type="range" min="0" max="1" step=".05" value="'+D.vol+'" oninput="setVol(this.value)" style="flex:1">'
-    +'<span id="vol-pct" style="font-size:12px;color:var(--t2);font-weight:500;min-width:30px;text-align:right">'+Math.round(D.vol*100)+'%</span></div></div>';
-  show('pinner',html);
+    +'<span id="vol-pct" style="font-size:12px;color:var(--t2);font-weight:500;min-width:30px;text-align:right">'+Math.round(D.vol*100)+'%</span></div>';
+
+  html += '</div>';
+  show('pinner', html);
+  // Render timer in tools tab too
+  var tb = document.getElementById('timer-block-tools');
+  if(tb) renderTimerInto('timer-block-tools');
 }
 function toggleSound(url){if(audio&&D.activeSound===url){audio.pause();audio=null;D.activeSound=null;save();renderPage();}else{if(audio)audio.pause();try{audio=new Audio(url);audio.loop=true;audio.volume=D.vol;audio.play().catch(function(){});}catch(e){}D.activeSound=url;save();renderPage();}}
 function setVol(v){D.vol=parseFloat(v);if(audio)audio.volume=D.vol;var e=$('vol-pct');if(e)e.textContent=Math.round(D.vol*100)+'%';save();}
@@ -1997,27 +2238,59 @@ function printItem(id,key){
 window.printItem=printItem;
 
 function renderHistory() {
-  var logs=D.logs||[];
-  var html='<div class="fade"><div class="sh"><h1 class="sh-t">Aktivite Gecmisi</h1><span class="pill p-gray">'+logs.length+' kayit</span></div>'
-    +'<div class="card" style="padding:4px 16px;max-height:72vh;overflow-y:auto">';
-  logs.forEach(function(lg,i){
-    var isXP=lg.action.indexOf('XP')>=0;
-    html+='<div style="display:flex;gap:11px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05)">'
-      +'<div style="width:7px;height:7px;border-radius:50%;background:'+(isXP?'var(--green)':'var(--blue)')+';flex-shrink:0;margin-top:4px'+(isXP?';box-shadow:0 0 5px var(--green)':'')+'"></div>'
-      +'<div><p style="font-size:10.5px;color:var(--t2);font-weight:500;margin-bottom:1px">'+lg.time+'</p><p style="font-size:13px;font-weight:500">'+U.escape(lg.action)+'</p></div></div>';
+  var logs = D.logs || [];
+  var xpLogs = logs.filter(function(l){return l.action.indexOf('XP')>=0;});
+  var totalXPEarned = xpLogs.reduce(function(a,l){
+    var m = l.action.match(/\+(\d+)\s*XP/);
+    return a + (m?parseInt(m[1]):0);
+  }, 0);
+
+  var html = '<div class="fade">';
+  html += '<div class="sh"><div><h1 class="sh-t">Aktivite Gecmisi</h1>'
+    +'<p class="sh-sub">Sistem kayitlari &mdash; Her XP kazanimi bir ilerlemenin kanıtı</p></div>'
+    +'<span class="pill p-gray">'+logs.length+' kayit</span></div>';
+
+  // Stats
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">';
+  [{l:'Toplam Kayit',v:logs.length,c:'var(--blue)',i:'act'},
+   {l:'XP Kazanilan',v:totalXPEarned,c:'var(--purple)',i:'star'},
+   {l:'Bugun',v:logs.filter(function(l){return l.time&&l.time.indexOf(new Date().toLocaleDateString('tr-TR').split('.').reverse().join('-'))>=0||l.time.indexOf(U.today())>=0;}).length,c:'var(--green)',i:'zap'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'+ic(s.i,13,s.c)
+      +'<span style="font-size:11px;color:var(--t2);font-weight:600">'+s.l+'</span></div>'
+      +'<div style="font-size:24px;font-weight:800;color:'+s.c+'">'+s.v+'</div></div>';
   });
-  if(!logs.length) html+='<div class="empty">'+ic('act',28,'var(--t3)')+'<p>Henuz aktivite yok</p></div>';
-  html+='</div></div>';
-  show('pinner',html);
+  html += '</div>';
+
+  // Log timeline
+  html += '<div class="card" style="padding:4px 18px;max-height:68vh;overflow-y:auto">';
+  var prevDate = '';
+  logs.forEach(function(lg, i){
+    var isXP = lg.action.indexOf('XP')>=0;
+    var isGoal = lg.action.indexOf('hedef')>=0||lg.action.indexOf('Hedef')>=0;
+    var isHabit = lg.action.indexOf('Rutin')>=0||lg.action.indexOf('rutin')>=0||lg.action.indexOf('Aliskanlik')>=0;
+    var dotC = isXP?'var(--purple)':isGoal?'var(--blue)':isHabit?'var(--green)':'var(--t3)';
+    var dateStr = lg.time ? lg.time.split(' ')[0] : '';
+    if(dateStr && dateStr !== prevDate) {
+      html += '<div style="padding:10px 0 4px;font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em">'+dateStr+'</div>';
+      prevDate = dateStr;
+    }
+    html += '<div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.04)">'
+      +'<div style="display:flex;flex-direction:column;align-items:center;margin-top:3px">'
+      +'<div style="width:8px;height:8px;border-radius:99px;background:'+dotC+';flex-shrink:0'+(isXP?';box-shadow:0 0 6px var(--purple)':'')+'"></div>'
+      +(i<logs.length-1?'<div style="width:1px;flex:1;background:rgba(0,0,0,.06);margin-top:3px"></div>':'')
+      +'</div>'
+      +'<div style="flex:1">'
+      +(isXP?'<span style="font-size:10px;font-weight:700;color:var(--purple);background:var(--pl);padding:1px 7px;border-radius:99px;margin-right:6px">'+( lg.action.match(/\+\d+ XP/)||['XP'])[0]+'</span>':'')
+      +'<span style="font-size:13px;font-weight:500">'+U.escape(lg.action.replace(/\+\d+ XP: /,''))+'</span>'
+      +'<p style="font-size:10px;color:var(--t3);margin-top:2px">'+U.escape(lg.time||'')+'</p>'
+      +'</div></div>';
+  });
+  if(!logs.length) html += '<div class="empty">'+ic('act',28,'var(--t3)')+'<p>Henuz aktivite yok</p></div>';
+  html += '</div></div>';
+  show('pinner', html);
 }
-
-// --- Main renderer ---
-
-// ============================================================
-// NEW SYSTEM RENDERERS
-// ============================================================
-
-// ---- ONE Thing widget (used in dashboard) ----
 function renderOneThingWidget() {
   var ot = D.oneThing||{};
   var today = U.today();
@@ -2489,118 +2762,496 @@ window.addSOPStep=addSOPStep;window.delSOPStep=delSOPStep;
 
 
 // ===== SMART GOAL MOTOR =====
+// ============================================================
+// SMART HEDEF MOTORU V2 — Wizard + Analiz + Tracy Sistemi
+// ============================================================
+var smartWizardStep = 0;
+var smartWizardData = {};
+
 function renderSMART() {
   var goals = D.goals || [];
-  var html = '<div class="fade"><div class="sh"><div><h1 class="sh-t">SMART Hedef Motoru</h1>'
-    +'<p class="sh-sub">Spesifik • Olculebilir • Ulasabilir • Anlamli • Zamanli + Brian Tracy 6 Kurali</p></div>'
-    +'<button class="btn btn-p" onclick="openSMARTForm()">'+ic('plus',13)+' SMART Hedef Ekle</button></div>';
 
-  // Brian Tracy info card
-  html += '<div class="card" style="margin-bottom:16px;padding:16px 18px;border-left:3px solid var(--blue);background:var(--bl)">'
-    +'<p style="font-weight:700;font-size:13px;margin-bottom:8px">Brian Tracy 6 Altin Kurali</p>'
-    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
-  ['1. Hedefini yaz','2. Net deadline koy','3. Alt parcalara bol','4. Onceliklendir','5. Hemen basla','6. Her gun ilerleme kaydet'].forEach(function(r,i){
-    html += '<div style="background:var(--s);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:500">'+r+'</div>';
+  // Compute SMART scores for all goals
+  var scored = goals.map(function(g) {
+    return { g: g, sc: smartScore(g) };
   });
-  html += '</div></div>';
+  var perfect = scored.filter(function(x){return x.sc===5;}).length;
+  var weak    = scored.filter(function(x){return x.sc<=2;}).length;
+  var avgSc   = goals.length ? (scored.reduce(function(a,x){return a+x.sc;},0)/goals.length).toFixed(1) : 0;
 
-  // SMART criteria explanation
-  html += '<div class="g3" style="margin-bottom:16px">';
-  [{l:'S - Spesifik',d:'Net ve acik. "Daha iyi olacagim" degil, "Aylik 100K TL satis yapacagim"',c:'var(--blue)'},
-   {l:'M - Olculebilir',d:'Sayi olmali. Olcemedin seyi gelistiremezsin.',c:'var(--green)'},
-   {l:'A - Ulasabilir',d:'Gercekci ama zorlayici. %20 ust sinir idealdir.',c:'var(--orange)'},
-   {l:'R - Anlamli',d:'Hayatina gercekten katki saglamali. Ego degil, sonuc.',c:'var(--purple)'},
-   {l:'T - Zamanli',d:'Deadline sart. Tarih yoksa hedef yoktur.',c:'var(--red)'},
-   {l:'Tracy +','d':'Gunluk en az 1 adim at. Sistem = ozgurluk.',c:'var(--teal)'}].forEach(function(s){
-    html += '<div class="card" style="padding:13px 15px;border-top:3px solid '+s.c+'">'
-      +'<p style="font-weight:700;font-size:13px;margin-bottom:4px">'+s.l+'</p>'
-      +'<p style="font-size:11.5px;color:var(--t2);line-height:1.5">'+s.d+'</p></div>';
+  var html = '<div class="fade">';
+
+  // ── Header ──
+  html += '<div class="sh">'
+    +'<div><h1 class="sh-t">SMART Hedef Motoru</h1>'
+    +'<p class="sh-sub">Brian Tracy sistemi &mdash; Yaz, olc, parcala, onceliklendir, basla, takip et</p></div>'
+    +'<button class="btn btn-p" onclick="openSMARTWizard()">'+ic('plus',13)+' SMART Hedef Wizard</button>'
+    +'</div>';
+
+  // ── Tracy Quote ──
+  html += '<div style="margin-bottom:16px;padding:14px 18px;border-radius:12px;'
+    +'background:linear-gradient(135deg,var(--bl),rgba(175,82,222,.08));border:1px solid rgba(0,113,227,.15)">'
+    +'<p style="font-size:13.5px;font-style:italic;font-weight:500;line-height:1.7;color:var(--t)">'
+    +'&ldquo;People with clear, written goals accomplish far more in a shorter period of time than people without them could ever imagine.&rdquo;</p>'
+    +'<p style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">&mdash; Brian Tracy</p>'
+    +'</div>';
+
+  // ── Stats row ──
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">';
+  [
+    {l:'Toplam Hedef',   v:goals.length,   c:'var(--blue)',   i:'tgt'},
+    {l:'Ort. SMART Skor',v:avgSc+'/5',     c:'var(--purple)', i:'kpi'},
+    {l:'Tam SMART (5/5)',v:perfect,         c:'var(--green)',  i:'chk'},
+    {l:'Zayif Hedef',   v:weak,            c:'var(--red)',    i:'flame'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">'+ic(s.i,14,s.c)
+      +'<span style="font-size:11px;color:var(--t2);font-weight:600">'+s.l+'</span></div>'
+      +'<div style="font-size:26px;font-weight:800;letter-spacing:-.5px;color:'+s.c+'">'+s.v+'</div>'
+      +'</div>';
   });
   html += '</div>';
 
-  // Goals with SMART scores
+  // ── SMART Kriterleri Rehber ──
+  html += '<div style="margin-bottom:20px">'
+    +'<p style="font-weight:700;font-size:13px;margin-bottom:10px">SMART Kriterleri Nedir?</p>'
+    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">';
+  [
+    {l:'S',name:'Spesifik',   c:'#0071e3',desc:'Net ve somut. &ldquo;Daha iyi&rdquo; degil &ldquo;Aylik 100K TL satis&rdquo;.',   bad:'Daha basarili olacagim',  good:'Aylik 100.000 TL satis yapacagim'},
+    {l:'M',name:'Olculebilir',c:'#34c759',desc:'Rakam olmali. Olcemedin seyi gelistiremezsin.',                                   bad:'Cok para kazanacagim',    good:'Net 20.000 TL birikim'},
+    {l:'A',name:'Ulasabilir', c:'#ff9500',desc:'Gercekci ama zorlayici. Mevcut kapasitenden %20 fazlasi idealdir.',              bad:'1 yilda milyarder olacagim',good:'6 ayda maasimi %30 arttiracagim'},
+    {l:'R',name:'Anlamli',    c:'#af52de',desc:'Hayatina gercekten katki saglamali. Ego degil sonuc odakli.',                     bad:'Arkadaslara imrenmek',    good:'Ailem icin finansal ozgurluk'},
+    {l:'T',name:'Zamanli',    c:'#ff3b30',desc:'Deadline sart. Tarih yoksa hedef yoktur, sadece dilektir.',                       bad:'Yakinda yapacagim',       good:'31 Aralik 2026 bitecek'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px">'
+      +'<div style="width:36px;height:36px;border-radius:10px;background:'+s.c+';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0">'+s.l+'</div>'
+      +'<p style="font-weight:700;font-size:13px">'+s.name+'</p>'
+      +'<p style="font-size:11.5px;color:var(--t2);line-height:1.5">'+s.desc+'</p>'
+      +'<div style="margin-top:4px">'
+      +'<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:4px">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--red);flex-shrink:0;margin-top:1px">&#10007;</span>'
+      +'<span style="font-size:11px;color:var(--t3);font-style:italic">'+s.bad+'</span></div>'
+      +'<div style="display:flex;align-items:flex-start;gap:5px">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;margin-top:1px">&#10003;</span>'
+      +'<span style="font-size:11px;color:var(--t);font-weight:500">'+s.good+'</span></div>'
+      +'</div></div>';
+  });
+  html += '</div></div>';
+
+  // ── Brian Tracy 6 Altin Kural ──
+  html += '<div style="margin-bottom:20px">'
+    +'<p style="font-weight:700;font-size:13px;margin-bottom:10px">Brian Tracy\'nin 6 Altin Kurali</p>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">';
+  [
+    {n:1,t:'Hedefini Yaz',      d:'Kağıda yazmak commit etmektir. Zihin yazılı hedefi ciddiye alır.',             i:'pen',   c:'var(--blue)'},
+    {n:2,t:'Net Deadline Koy',  d:'Tarih belirleme baskı yaratır. Baskı olmadan hareket olmaz.',                  i:'ci',    c:'var(--red)'},
+    {n:3,t:'Alt Parcalara Bol', d:'Buyuk hedef korkutur. Kucuk adımlar cesaretlendirir ve harekete gecirir.',     i:'layers',c:'var(--orange)'},
+    {n:4,t:'Onceliklendir',     d:'Her adımın sırası olsun. En kritik adımı once yap.',                           i:'flame', c:'var(--purple)'},
+    {n:5,t:'Hemen Basla',       d:'Hazir olmak icin hazirlanmak yok. Ilk kucuk adimi bugun at.',                   i:'zap',   c:'var(--green)'},
+    {n:6,t:'Her Gun Ilerleme',  d:'1 gun bile atladığında zihin hedefe olan bağı zayıflatır. Her gün 1 adım.',   i:'kpi',   c:'var(--teal)'},
+  ].forEach(function(r){
+    html += '<div class="card" style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start">'
+      +'<div style="width:32px;height:32px;border-radius:9px;background:'+r.c+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0">'+r.n+'</div>'
+      +'<div><p style="font-weight:700;font-size:13px;margin-bottom:3px">'+r.t+'</p>'
+      +'<p style="font-size:11.5px;color:var(--t2);line-height:1.5">'+r.d+'</p></div>'
+      +'</div>';
+  });
+  html += '</div></div>';
+
+  // ── Mevcut Hedefler: SMART Analizi ──
   if(!goals.length) {
-    html += '<div class="empty card" style="padding:48px">'+ic('tgt',32,'var(--t3)')+'<p>Henuz SMART hedef eklenmedi</p><button class="btn btn-p" style="margin-top:8px" onclick="openSMARTForm()">'+ic('plus',13)+' Ilk Hedefini Ekle</button></div>';
+    html += '<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px">'
+      +'<div style="width:56px;height:56px;border-radius:16px;background:var(--bl);display:flex;align-items:center;justify-content:center">'+ic('tgt',28,'var(--blue)')+'</div>'
+      +'<p style="font-weight:700;font-size:17px">Henuz SMART hedef eklenmedi</p>'
+      +'<p style="font-size:13px;color:var(--t2);max-width:300px;line-height:1.6">Wizard ile adim adim SMART hedefini olustur. 5 adim, 5 dakika.</p>'
+      +'<button class="btn btn-p" onclick="openSMARTWizard()">'+ic('zap',14)+' Wizard ile Baslat</button>'
+      +'</div>';
   } else {
-    html += '<div class="ga">';
-    goals.forEach(function(g){
-      var sc = smartScore(g);
-      var barW = Math.round(sc/5*100);
-      var barC = sc>=4?'var(--green)':sc>=2?'var(--orange)':'var(--red)';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<p style="font-weight:700;font-size:13px">Hedef SMART Analizi ('+goals.length+' hedef)</p>'
+      +'<span style="font-size:11.5px;color:var(--t2)">Eksik kriterleri tıklayarak tamamla</span>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:10px">';
+
+    scored.sort(function(a,b){return a.sc-b.sc;}).forEach(function(item){
+      var g = item.g, sc = item.sc;
+      var barC = sc===5?'var(--green)':sc>=3?'var(--orange)':'var(--red)';
+      var dl = g.deadline ? Math.ceil((new Date(g.deadline)-new Date())/864e5) : null;
       var criteria = [
-        {k:'smart_s',l:'S',tip:'Spesifik'},
-        {k:'smart_m',l:'M',tip:'Olculebilir'},
-        {k:'smart_a',l:'A',tip:'Ulasabilir'},
-        {k:'smart_r',l:'R',tip:'Anlamli'},
-        {k:'smart_t',l:'T',tip:'Zamanli'},
+        {k:'smart_s', l:'S', name:'Spesifik',    done: !!(g.title && g.title.length > 8),          c:'#0071e3'},
+        {k:'smart_m', l:'M', name:'Olculebilir', done: !!(g.measurable || g.desc),                  c:'#34c759'},
+        {k:'smart_a', l:'A', name:'Ulasabilir',  done: !!(g.smart_a || g.steps.length > 0),         c:'#ff9500'},
+        {k:'smart_r', l:'R', name:'Anlamli',     done: !!(g.whyImportant || g.desc),                c:'#af52de'},
+        {k:'smart_t', l:'T', name:'Zamanli',     done: !!(g.deadline),                              c:'#ff3b30'},
       ];
-      html += '<div class="card cp" style="display:flex;flex-direction:column;gap:12px">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-        +'<div>'+(g.frog?'<span style="font-size:16px;margin-right:6px">&#x1F438;</span>':'')+
-        '<span style="font-weight:700;font-size:14px">'+U.escape(g.title)+'</span>'
-        +'<br><span class="pill p-blue" style="font-size:10px;margin-top:4px">'+g.quarter+'</span></div>'
-        +'<div style="text-align:right"><div style="font-size:20px;font-weight:700;color:'+barC+'">'+sc+'/5</div>'
-        +'<div style="font-size:10px;color:var(--t2)">SMART Skoru</div></div></div>'
-        +'<div class="bar"><div class="barf" style="width:'+barW+'%;background:'+barC+'"></div></div>'
-        +'<div style="display:flex;gap:5px">';
-      criteria.forEach(function(c){
-        var on = g[c.k] || (c.k==='smart_t' && g.deadline);
-        html += '<span title="'+c.tip+'" style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;cursor:pointer;background:'+(on?barC:'var(--s2)')+';color:'+(on?'#fff':'var(--t3)')+'" onclick="toggleSMART('+g.id+',''+c.k+'')">'+c.l+'</span>';
+
+      html += '<div class="card" style="padding:16px 18px">';
+      // Top row
+      html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px">';
+      html += '<div style="flex:1">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+        +(g.frog?'<span style="font-size:15px">&#128056;</span>':'')
+        +'<span style="font-weight:700;font-size:14px">'+U.escape(g.title)+'</span>'
+        +(sc===5?'<span class="pill" style="background:var(--gl);color:var(--green);font-size:9px">&#10003; Tam SMART</span>':'')
+        +'</div>'
+        +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
+        +(g.cat?'<span class="pill p-gray" style="font-size:10px">'+g.cat+'</span>':'')
+        +'<span class="pill p-blue" style="font-size:10px">'+g.quarter+'</span>'
+        +(dl!==null?'<span class="pill" style="background:var(--'+(dl<0?'rl':dl<14?'ol':'bl')+');color:var(--'+(dl<0?'red':dl<14?'orange':'blue')+')" style="font-size:10px">'+(dl<0?'Gecti':dl+'g kaldi')+'</span>':'')
+        +'</div></div>';
+
+      // SMART score badge
+      html += '<div style="text-align:center;flex-shrink:0">'
+        +'<div style="width:52px;height:52px;border-radius:14px;background:'+barC+';display:flex;flex-direction:column;align-items:center;justify-content:center">'
+        +'<span style="font-size:20px;font-weight:800;color:#fff;line-height:1">'+sc+'</span>'
+        +'<span style="font-size:8px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase">/5</span>'
+        +'</div></div>';
+      html += '</div>';
+
+      // Criteria dots + progress
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+      html += '<div style="display:flex;gap:5px">';
+      criteria.forEach(function(cr){
+        html += '<div title="'+cr.name+(cr.done?'' : ' - Eksik! Tamamlamak icin tikla')+'" '
+          +'onclick="'+(cr.done?'':('quickFillSMART('+g.id+',\''+cr.k+'\')'))+'" '
+          +'style="width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;'
+          +'font-size:11px;font-weight:800;cursor:'+(cr.done?'default':'pointer')+';'
+          +'background:'+(cr.done?cr.c:'var(--s2)')+';color:'+(cr.done?'#fff':'var(--t3)')+';'
+          +'border:2px solid '+(cr.done?cr.c:'var(--s3)')+'">'
+          +cr.l+'</div>';
       });
       html += '</div>';
-      if(g.deadline) html += '<div style="font-size:11.5px;color:var(--t2)">&#128197; Deadline: '+g.deadline+'</div>';
-      if(g.whyImportant) html += '<div style="font-size:12px;color:var(--t2);font-style:italic;border-left:2px solid var(--border,rgba(0,0,0,.08));padding-left:9px">Neden onemli: '+U.escape(g.whyImportant)+'</div>';
+      // Progress bar
+      html += '<div style="flex:1">'
+        +'<div style="display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:4px">'
+        +'<span style="color:var(--t2);font-weight:500">SMART Puani</span>'
+        +'<span style="font-weight:700;color:'+barC+'">'+Math.round(sc/5*100)+'%</span>'
+        +'</div>'
+        +'<div class="bar"><div class="barf" style="width:'+Math.round(sc/5*100)+'%;background:'+barC+'"></div></div>'
+        +'</div>';
+      html += '</div>';
+
+      // Missing criteria warnings
+      var missing = criteria.filter(function(cr){return !cr.done;});
+      if(missing.length) {
+        html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+        missing.forEach(function(cr){
+          html += '<div onclick="quickFillSMART('+g.id+',\''+cr.k+'\')" '
+            +'style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;background:var(--rl);cursor:pointer">'
+            +'<span style="font-size:10px;font-weight:700;color:var(--red)">&#9888; '+cr.name+' eksik</span>'
+            +'</div>';
+        });
+        html += '</div>';
+      }
+
       // Daily action
+      var todayStep = (g.steps||[]).find(function(s){return !s.done;});
+      if(todayStep) {
+        html += '<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;background:var(--gl);margin-bottom:8px">'
+          +ic('zap',13,'var(--green)')
+          +'<span style="font-size:12.5px;font-weight:600;color:var(--t);flex:1">Bugunun adimi: '+U.escape(todayStep.t)+'</span>'
+          +'<input type="checkbox" class="cb" onchange="toggleStep('+g.id+','+todayStep.id+')">'
+          +'</div>';
+      }
+
+      // Action buttons
       html += '<div style="display:flex;gap:7px;flex-wrap:wrap">'
-        +'<button class="btn btn-s btn-sm" onclick="addGoalStep('+g.id+')">'+ic('plus',11)+' Adim</button>';
-      if(!g.deadline) html += '<button class="btn btn-s btn-sm" onclick="setGoalDeadline('+g.id+')">&#128197; Deadline</button>';
-      html += '<button class="btn btn-g btn-sm" onclick="del('+g.id+','goal')">'+ic('trash',11)+'</button></div>';
+        +'<button class="btn btn-s btn-sm" onclick="openAddStep('+g.id+')">'+ic('plus',11)+' Adim Ekle</button>'
+        +'<button class="btn btn-s btn-sm" onclick="openGoalDetail('+g.id+')">'+ic('edit',11)+' Detay</button>'
+        +(sc<5?'<button class="btn btn-sm" style="background:var(--ol);color:var(--orange)" onclick="openSMARTFixer('+g.id+')">'+ic('zap',11)+' SMART Tamamla</button>':'')
+        +'<button class="btn btn-g btn-sm" onclick="del('+g.id+',\'goal\')" style="margin-left:auto">'+ic('trash',11)+'</button>'
+        +'</div>';
+
       html += '</div>';
     });
     html += '</div>';
   }
+
   html += '</div>';
   show('pinner', html);
 }
 
-function openSMARTForm() {
-  var html = '<div class="mh"><span style="font-weight:700;font-size:15px">SMART Hedef Ekle</span><button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>'
-    +'<div class="mb">'
-    +'<input type="text" class="inp" id="sg_title" placeholder="Hedef: Net ve spesifik yaz (orn: Aylik 100K satis)">'
-    +'<textarea class="inp" id="sg_why" placeholder="Neden onemli? (R - Relevant)" rows="2"></textarea>'
-    +'<input type="text" class="inp" id="sg_measure" placeholder="Nasil olceceksin? (orn: TL, adet, %)">'
-    +'<input type="date" class="inp" id="sg_deadline" title="Deadline (T - Time-bound)">'
-    +'<select class="inp" id="sg_quarter"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>'
-    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" class="cb" id="sg_frog"> Bu ceyregin en kritik hedefi (Kurbaga)</label>'
+// ── SMART Wizard (5-step) ──
+var swStep = 0;
+var swData = {};
+var WIZARD_STEPS = [
+  {
+    id:'S', color:'#0071e3', title:'S &mdash; Spesifik',
+    subtitle:'Hedefin net ve somut olmali. Belirsizlik = hareketsizlik.',
+    tip:'Kotu: &ldquo;Daha iyi olacagim&rdquo; &nbsp;|&nbsp; Iyi: &ldquo;Q3 sonuna kadar sertifikasyon alacagim&rdquo;',
+    field:'<input class="inp" id="sw_title" placeholder="Hedefini net ve somut yaz..." style="font-size:14px;padding:13px 16px">',
+    hint:'En az 10 karakter, bir rakam veya somut cikti icersin.'
+  },
+  {
+    id:'M', color:'#34c759', title:'M &mdash; Olculebilir',
+    subtitle:'Basariyi nasil olceceksin? Sayi, miktar veya yuzde olmali.',
+    tip:'Kotu: &ldquo;Cok para kazanacagim&rdquo; &nbsp;|&nbsp; Iyi: &ldquo;Aylik 25.000 TL net gelir&rdquo;',
+    field:'<input class="inp" id="sw_measure" placeholder="Basari kriteri: orn. 100K TL, 10kg, B2 sertifika...">',
+    hint:'Bu olmadan ilerlemeyi olcemezsin.'
+  },
+  {
+    id:'A', color:'#ff9500', title:'A &mdash; Ulasabilir',
+    subtitle:'Gercekci ama zorlayici. Mevcut kapasitenden %20 fazlasi idealdir.',
+    tip:'%20 kural: Cok kolay = motivasyon yok. Cok zor = pes edersin.',
+    field:'<div style="display:flex;flex-direction:column;gap:10px">'
+      +'<input class="inp" id="sw_why" placeholder="Neden bu hedefe ulasabilecegine inaniyorsun?">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="padding:11px 13px;border-radius:10px;background:var(--gl);cursor:pointer;border:2px solid transparent" id="sw_a_opt1" onclick="swSelectA(1)">'
+      +'<p style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:2px">&#10003; Ulasabilir</p>'
+      +'<p style="font-size:11px;color:var(--t2)">Zorlu ama gercekci. %20 ustteki hedef.</p></div>'
+      +'<div style="padding:11px 13px;border-radius:10px;background:var(--ol);cursor:pointer;border:2px solid transparent" id="sw_a_opt2" onclick="swSelectA(2)">'
+      +'<p style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:2px">&#9888; Uzatilmis</p>'
+      +'<p style="font-size:11px;color:var(--t2)">Cok ambiasyonlu. Plan gerekiyor.</p></div>'
+      +'</div></div>',
+    hint:'Hangi kaynaklar, beceriler veya destekle bunu yapabilirsin?'
+  },
+  {
+    id:'R', color:'#af52de', title:'R &mdash; Anlamli',
+    subtitle:'Bu hedef hayatina gercekten ne katiyor? Ego degil, sonuc.',
+    tip:'&ldquo;Neden?&rdquo; sorusuna 3 kez cevap ver. Gercek motivasyonu bul.',
+    field:'<div style="display:flex;flex-direction:column;gap:9px">'
+      +'<input class="inp" id="sw_r1" placeholder="Bu hedefe neden ulasmayi istiyorum?">'
+      +'<input class="inp" id="sw_r2" placeholder="Bu benim hayatimi nasil degistirecek?">'
+      +'<input class="inp" id="sw_r3" placeholder="1 yil sonra basarsamm/basaramazsam ne olur?">'
+      +'</div>',
+    hint:'3 soruyu doldurursan hedefin anlami netlesir, motivasyon guclu olur.'
+  },
+  {
+    id:'T', color:'#ff3b30', title:'T &mdash; Zamanli',
+    subtitle:'Deadline olmadan hedef sadece dilektir. Tarih koy, taahhut et.',
+    tip:'Brian Tracy: Deadline baskı yaratır. Baskı olmadan hareket olmaz.',
+    field:'<div style="display:flex;flex-direction:column;gap:10px">'
+      +'<input type="date" class="inp" id="sw_deadline" placeholder="Son tarih">'
+      +'<select class="inp" id="sw_quarter"><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<label style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--rl);border-radius:9px;cursor:pointer">'
+      +'<input type="checkbox" class="cb" id="sw_frog"> <span style="font-size:12.5px;font-weight:500">&#128056; Bu ceyregin Kurbagasi</span></label>'
+      +'<input class="inp" id="sw_step1" placeholder="Ilk somut adim (hemen yapilabilir)">'
+      +'</div></div>',
+    hint:'Bugün atacagin ilk adimi da yaz. Baslamak en zor kismdir.'
+  },
+];
+
+function openSMARTWizard() {
+  swStep = 0;
+  swData = {};
+  renderWizardStep();
+}
+
+function renderWizardStep() {
+  var step = WIZARD_STEPS[swStep];
+  var progress = Math.round((swStep / WIZARD_STEPS.length) * 100);
+  var isLast = swStep === WIZARD_STEPS.length - 1;
+
+  var html = '<div style="background:var(--s);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;width:100%;max-width:520px">';
+
+  // Colored header
+  html += '<div style="background:'+step.color+';padding:18px 22px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<div style="display:flex;gap:5px">';
+  WIZARD_STEPS.forEach(function(s, i) {
+    html += '<div style="width:'+(i===swStep?28:8)+'px;height:8px;border-radius:99px;'
+      +'background:'+(i<=swStep?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)')+';transition:all .3s"></div>';
+  });
+  html += '</div>'
+    +'<button onclick="closeModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:14px">&#10005;</button>'
     +'</div>'
-    +'<div class="mf"><button class="btn btn-s" style="flex:1" onclick="closeModal()">Iptal</button>'
-    +'<button class="btn btn-p" style="flex:2" onclick="saveSMART()">SMART Hedef Olustur</button></div>';
-  showModal(html);
+    +'<div style="display:flex;align-items:center;gap:10px">'
+    +'<div style="width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff">'+step.id+'</div>'
+    +'<div>'
+    +'<p style="font-size:17px;font-weight:800;color:#fff">'+step.title+'</p>'
+    +'<p style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">Adim '+(swStep+1)+' / '+WIZARD_STEPS.length+'</p>'
+    +'</div></div></div>';
+
+  // Body
+  html += '<div style="padding:18px 22px;display:flex;flex-direction:column;gap:12px">'
+    +'<p style="font-size:13px;color:var(--t2);line-height:1.6">'+step.subtitle+'</p>'
+    +'<div style="padding:10px 13px;background:var(--s2);border-radius:9px;font-size:12px;color:var(--t2)">'+step.tip+'</div>'
+    +step.field
+    +'<p style="font-size:11px;color:var(--t3);font-style:italic">'+ic('hlp',11,'var(--t3)')+' '+step.hint+'</p>'
+    +'</div>';
+
+  // Footer
+  html += '<div style="padding:12px 22px;border-top:1px solid rgba(0,0,0,.06);display:flex;gap:8px">'
+    +(swStep>0?'<button class="btn btn-s" onclick="swPrev()">&#8592; Geri</button>':'')
+    +'<button class="btn btn-s" onclick="closeModal()" style="margin-left:'+(swStep===0?'0':'auto')+'">Iptal</button>'
+    +(swStep>0?'':'<div style="flex:1"></div>')
+    +'<button class="btn btn-p" onclick="swNext()" style="min-width:120px">'
+    +(isLast?ic('chk',13)+' Hedefi Olustur':'Devam &#8594;')
+    +'</button>'
+    +'</div></div>';
+
+  showModal(html, null);
 }
-function saveSMART() {
-  var title = $('sg_title') && $('sg_title').value;
-  if(!title){alert('Hedef basligi zorunlu');return;}
-  snapshot();
-  var item = {
-    id:Date.now(), title:title,
-    desc: ($('sg_measure')&&$('sg_measure').value)||'',
-    whyImportant: ($('sg_why')&&$('sg_why').value)||'',
-    deadline: ($('sg_deadline')&&$('sg_deadline').value)||'',
-    quarter: ($('sg_quarter')&&$('sg_quarter').value)||'Q1',
-    frog: $('sg_frog')&&$('sg_frog').checked,
-    steps:[],
-    smart_s:!!(title&&title.length>5), smart_m:!!($('sg_measure')&&$('sg_measure').value),
-    smart_a:true, smart_r:!!($('sg_why')&&$('sg_why').value),
-    smart_t:!!($('sg_deadline')&&$('sg_deadline').value)
+
+function swPrev() {
+  swSaveCurrentStep();
+  if(swStep > 0) { swStep--; renderWizardStep(); }
+}
+
+function swNext() {
+  swSaveCurrentStep();
+  if(swStep < WIZARD_STEPS.length - 1) {
+    swStep++;
+    renderWizardStep();
+  } else {
+    swFinish();
+  }
+}
+
+function swSaveCurrentStep() {
+  var fields = {
+    sw_title:    function(v){ swData.title = v; },
+    sw_measure:  function(v){ swData.measurable = v; },
+    sw_why:      function(v){ swData.achievableNote = v; },
+    sw_r1:       function(v){ swData.r1 = v; },
+    sw_r2:       function(v){ swData.r2 = v; },
+    sw_r3:       function(v){ swData.r3 = v; },
+    sw_deadline: function(v){ swData.deadline = v; },
+    sw_quarter:  function(v){ swData.quarter = v; },
+    sw_step1:    function(v){ swData.firstStep = v; },
   };
-  D.goals = [item].concat(D.goals||[]);
-  addLog('SMART hedef eklendi: '+title); gainXP(25,'SMART hedef'); save(); closeModal(); renderPage();
+  Object.keys(fields).forEach(function(id) {
+    var el2 = $(id);
+    if(el2) fields[id](el2.value);
+  });
+  var frog = $('sw_frog');
+  if(frog) swData.frog = frog.checked;
 }
+
+function swSelectA(opt) {
+  swData.achievable = opt;
+  ['sw_a_opt1','sw_a_opt2'].forEach(function(id,i){
+    var el2=$(id);
+    if(el2) el2.style.border='2px solid '+(i+1===opt?'var(--green)':'transparent');
+  });
+}
+
+function swFinish() {
+  swSaveCurrentStep();
+  if(!swData.title || swData.title.length < 3) {
+    alert('Hedef basligi zorunlu! Geri donup doldurun.');
+    swStep = 0; renderWizardStep(); return;
+  }
+  snapshot();
+  var why = [swData.r1, swData.r2, swData.r3].filter(Boolean).join(' | ');
+  var steps = [];
+  if(swData.firstStep) steps.push({id:Date.now()+1, t:swData.firstStep, done:false});
+  var goal = {
+    id: Date.now(),
+    title: swData.title,
+    desc: why || swData.achievableNote || '',
+    measurable: swData.measurable || '',
+    whyImportant: why || '',
+    deadline: swData.deadline || '',
+    quarter: swData.quarter || 'Q1',
+    frog: !!swData.frog,
+    cat: 'Gelisim',
+    steps: steps,
+    notes: '',
+    status: 'active',
+    createdAt: U.today(),
+    smart_s: !!(swData.title && swData.title.length > 8),
+    smart_m: !!swData.measurable,
+    smart_a: true,
+    smart_r: !!why,
+    smart_t: !!swData.deadline,
+  };
+  D.goals = [goal].concat(D.goals || []);
+  addLog('SMART Wizard: '+swData.title);
+  gainXP(35, 'SMART Wizard tamamlandi');
+  save(); closeModal();
+  // Show success
+  setTimeout(function(){
+    var sc = smartScore(goal);
+    alert('Hedef olusturuldu! SMART Skoru: '+sc+'/5. +35 XP kazandin!');
+    renderPage();
+  }, 100);
+}
+window.openSMARTWizard=openSMARTWizard;window.swPrev=swPrev;window.swNext=swNext;window.swSelectA=swSelectA;
+
+// ── SMART Fixer Modal (for existing goals missing criteria) ──
+function openSMARTFixer(goalId) {
+  var g = (D.goals||[]).find(function(x){return x.id===goalId;});
+  if(!g) return;
+  var sc = smartScore(g);
+  var html = '<div class="mh">'
+    +'<span style="font-weight:700;font-size:15px">SMART Kriterlerini Tamamla</span>'
+    +'<button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button>'
+    +'</div>'
+    +'<div class="mb">'
+    +'<div style="padding:11px 14px;border-radius:10px;background:var(--bl);margin-bottom:4px">'
+    +'<p style="font-size:13px;font-weight:700">'+U.escape(g.title)+'</p>'
+    +'<p style="font-size:11px;color:var(--t2);margin-top:3px">Mevcut SMART Skoru: '+sc+'/5 &mdash; Eksikleri tamamla.</p>'
+    +'</div>';
+
+  if(!g.measurable) html += '<div><p class="lbl" style="margin-bottom:4px">M &mdash; Basari Kriteri</p>'
+    +'<input class="inp" id="fix_m" placeholder="Nasil olceceksin? (orn: 100K TL, B2 seviye...)"></div>';
+  if(!g.whyImportant) html += '<div><p class="lbl" style="margin-bottom:4px">R &mdash; Neden Anlamli?</p>'
+    +'<textarea class="inp" id="fix_r" placeholder="Bu hedef sana ve hayatina ne katacak?" rows="2"></textarea></div>';
+  if(!g.deadline) html += '<div><p class="lbl" style="margin-bottom:4px">T &mdash; Deadline</p>'
+    +'<input type="date" class="inp" id="fix_t"></div>';
+  if(!g.steps || !g.steps.length) html += '<div><p class="lbl" style="margin-bottom:4px">A &mdash; Ilk Adim (Ulasabilir)</p>'
+    +'<input class="inp" id="fix_a" placeholder="Hemen yapabilecegim ilk somut adim..."></div>';
+
+  html += '</div><div class="mf">'
+    +'<button class="btn btn-s" style="flex:1" onclick="closeModal()">Iptal</button>'
+    +'<button class="btn btn-p" style="flex:2" onclick="saveSMARTFix('+goalId+')">'+ic('chk',13)+' Kaydet & Guncelle</button>'
+    +'</div>';
+  showModal(html, null);
+}
+
+function saveSMARTFix(goalId) {
+  snapshot();
+  D.goals = (D.goals||[]).map(function(g){
+    if(g.id !== goalId) return g;
+    var updates = {};
+    var fm = $('fix_m'), fr = $('fix_r'), ft = $('fix_t'), fa = $('fix_a');
+    if(fm && fm.value.trim()) { updates.measurable = fm.value.trim(); updates.smart_m = true; }
+    if(fr && fr.value.trim()) { updates.whyImportant = fr.value.trim(); updates.smart_r = true; }
+    if(ft && ft.value) { updates.deadline = ft.value; updates.smart_t = true; }
+    if(fa && fa.value.trim()) {
+      updates.steps = (g.steps||[]).concat([{id:Date.now(), t:fa.value.trim(), done:false}]);
+      updates.smart_a = true;
+    }
+    return Object.assign({}, g, updates);
+  });
+  addLog('SMART kriterleri guncellendi');
+  gainXP(15, 'SMART kriteri tamamlandi');
+  save(); closeModal(); renderPage();
+}
+
+// ── Quick fill single criterion inline ──
+function quickFillSMART(goalId, key) {
+  var prompts = {
+    smart_m: 'Basari kriteri: Hedefi nasil olceceksin?',
+    smart_r: 'Neden anlamli: Bu hedef sana ne katacak?',
+    smart_t: 'Deadline (YYYY-MM-DD formatinda):',
+    smart_a: 'Ilk somut adim:',
+    smart_s: null,
+  };
+  var msg = prompts[key];
+  if(!msg) { alert('Bu kriter otomatik dolduruluyor.'); return; }
+  var val = prompt(msg);
+  if(!val || !val.trim()) return;
+  snapshot();
+  D.goals = (D.goals||[]).map(function(g){
+    if(g.id!==goalId) return g;
+    var u = {}; u[key] = true;
+    if(key==='smart_m') u.measurable = val.trim();
+    else if(key==='smart_r') u.whyImportant = val.trim();
+    else if(key==='smart_t') u.deadline = val.trim();
+    else if(key==='smart_a') u.steps = (g.steps||[]).concat([{id:Date.now(),t:val.trim(),done:false}]);
+    return Object.assign({},g,u);
+  });
+  gainXP(10,'SMART kriteri eklendi'); save(); renderPage();
+}
+
 function toggleSMART(goalId, key) {
   snapshot();
   D.goals = (D.goals||[]).map(function(g){
     if(g.id!==goalId) return g;
-    var upd = {}; upd[key] = !g[key]; return Object.assign({},g,upd);
+    var u={}; u[key]=!g[key]; return Object.assign({},g,u);
   });
   save(); renderPage();
 }
@@ -2611,7 +3262,12 @@ function setGoalDeadline(goalId) {
   D.goals = (D.goals||[]).map(function(g){return g.id===goalId?Object.assign({},g,{deadline:d,smart_t:true}):g;});
   addLog('Deadline eklendi'); save(); renderPage();
 }
-window.openSMARTForm=openSMARTForm;window.saveSMART=saveSMART;window.toggleSMART=toggleSMART;window.setGoalDeadline=setGoalDeadline;
+// Keep backward compat
+function openSMARTForm(){ openSMARTWizard(); }
+function saveSMART(){ swFinish(); }
+window.openSMARTForm=openSMARTForm;window.saveSMART=saveSMART;
+window.openSMARTFixer=openSMARTFixer;window.saveSMARTFix=saveSMARTFix;
+window.quickFillSMART=quickFillSMART;window.toggleSMART=toggleSMART;window.setGoalDeadline=setGoalDeadline;
 
 // ===== ONE THING DEDICATED PAGE =====
 function renderOneThingPage() {
