@@ -868,7 +868,7 @@ function renderDashboard() {
   if(!oneThingDone){
     html += '<div class="card" style="margin-bottom:16px;padding:16px 18px;border-left:4px solid var(--blue);background:var(--bl)">'+
       '<div style="display:flex;align-items:center;justify-content:space-between">'+
-      '<div><p style="font-weight:700;font-size:14px;margin-bottom:3px">&#9889; Bugunun ONE Thing'ini secmediniz!</p>'+
+      '<div><p style="font-weight:700;font-size:14px;margin-bottom:3px">&#9889; Bugunun ONE Thing secmediniz!</p>'+
       '<p style="font-size:12px;color:var(--t2);line-height:1.5">&ldquo;Bugün yaparsam her seyi kolaylastiracak TEK sey ne?&rdquo; &mdash; Gary Keller</p></div>'+
       '<button class="btn btn-p" style="flex-shrink:0;margin-left:12px" onclick="setTab(\'onething\')">Simdi Sec</button>'+
       '</div></div>';
@@ -1596,7 +1596,7 @@ function renderGoalModal(g) {
     {l:'Ilerleme kaydi',done:p>0},
   ].forEach(function(rule){
     html += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0">'
-      +'<span style="color:'+(rule.done?'var(--green)':'var(--t3)');font-size:13px">'+(rule.done?'&#10003;':'&#9675;')+'</span>'
+      +'<span style="color:'+(rule.done?'var(--green)':'var(--t3)')+';font-size:13px">'+(rule.done?'&#10003;':'&#9675;')+'</span>'
       +'<span style="font-size:11.5px;color:'+(rule.done?'var(--t)':'var(--t3)')+'">'+rule.l+'</span>'
       +'</div>';
   });
@@ -2040,7 +2040,7 @@ function renderOneThingWidget() {
 }
 function editOneThing(){
   var cur=(D.oneThing&&D.oneThing.task)||'';
-  var t=prompt('Bugunun ONE Thing'i nedir?',cur);
+  var t=prompt('Bugunun ONE Thing nedir?',cur);
   if(!t)return;
   snapshot();D.oneThing={task:t,date:U.today(),done:false};
   addLog('ONE Thing belirlendi: '+t);gainXP(10,'ONE Thing');save();renderPage();
@@ -2350,7 +2350,7 @@ function renderWeeklyReview(){
   html+='</div><div style="display:flex;flex-direction:column;gap:12px">';
   html+='<div class="review-section review-next"><p style="font-weight:700;font-size:13px;margin-bottom:8px">'+ic('ar',14,'var(--blue)')+' Gelecek hafta plan</p>'
     +'<textarea class="inp" id="wr-next" placeholder="Gelecek hafta odak noktasi ve 3 ana gorev..." rows="4" style="background:rgba(255,255,255,.6)">'+U.escape(wr.next||'')+'</textarea></div>';
-  html+='<div class="card cp"><p class="lbl" style="margin-bottom:8px">Gelecek Haftanin ONE Thing'i</p>'
+  html+='<div class="card cp"><p class="lbl" style="margin-bottom:8px">Gelecek Haftanin ONE Thing</p>'
     +'<input class="inp" id="wr-onething" placeholder="Gelecek hafta en kritik 1 sey..." value="'+U.escape(wr.oneThingNext||'')+'"><p style="font-size:11px;color:var(--t2);margin-top:6px;line-height:1.5">Bu hafta sonunda belirle, Pazartesi sabahi tek odak noktan olsun.</p></div>';
   html+='</div></div></div>';
   show('pinner',html);
@@ -2492,12 +2492,12 @@ window.addSOPStep=addSOPStep;window.delSOPStep=delSOPStep;
 function renderSMART() {
   var goals = D.goals || [];
   var html = '<div class="fade"><div class="sh"><div><h1 class="sh-t">SMART Hedef Motoru</h1>'
-    +'<p class="sh-sub">Spesifik • Olculebilir • Ulasabilir • Anlamli • Zamanli + Brian Tracy'nin 6 kurali</p></div>'
+    +'<p class="sh-sub">Spesifik • Olculebilir • Ulasabilir • Anlamli • Zamanli + Brian Tracy 6 Kurali</p></div>'
     +'<button class="btn btn-p" onclick="openSMARTForm()">'+ic('plus',13)+' SMART Hedef Ekle</button></div>';
 
   // Brian Tracy info card
   html += '<div class="card" style="margin-bottom:16px;padding:16px 18px;border-left:3px solid var(--blue);background:var(--bl)">'
-    +'<p style="font-weight:700;font-size:13px;margin-bottom:8px">Brian Tracy'nin 6 Altin Kurali</p>'
+    +'<p style="font-weight:700;font-size:13px;margin-bottom:8px">Brian Tracy 6 Altin Kurali</p>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
   ['1. Hedefini yaz','2. Net deadline koy','3. Alt parcalara bol','4. Onceliklendir','5. Hemen basla','6. Her gun ilerleme kaydet'].forEach(function(r,i){
     html += '<div style="background:var(--s);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:500">'+r+'</div>';
@@ -2571,7 +2571,7 @@ function openSMARTForm() {
     +'<input type="text" class="inp" id="sg_measure" placeholder="Nasil olceceksin? (orn: TL, adet, %)">'
     +'<input type="date" class="inp" id="sg_deadline" title="Deadline (T - Time-bound)">'
     +'<select class="inp" id="sg_quarter"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>'
-    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" class="cb" id="sg_frog"> Bu Q'nun en kritik hedefi (Kurbaga)</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" class="cb" id="sg_frog"> Bu ceyregin en kritik hedefi (Kurbaga)</label>'
     +'</div>'
     +'<div class="mf"><button class="btn btn-s" style="flex:1" onclick="closeModal()">Iptal</button>'
     +'<button class="btn btn-p" style="flex:2" onclick="saveSMART()">SMART Hedef Olustur</button></div>';
@@ -2625,7 +2625,7 @@ function renderOneThingPage() {
   // Principle card
   html += '<div class="card" style="margin-bottom:20px;padding:20px 24px;border-left:4px solid var(--orange);background:var(--ol)">'
     +'<p style="font-size:15px;font-style:italic;font-weight:500;line-height:1.7;color:var(--t)">'
-    +'&ldquo;What's the ONE Thing I can do such that by doing it everything else will be easier or unnecessary?&rdquo;</p>'
+    +'&ldquo;What is the ONE Thing I can do such that by doing it everything else will be easier or unnecessary?&rdquo;</p>'
     +'<p style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.1em;margin-top:10px">&mdash; Gary Keller, The ONE Thing</p></div>';
 
   // Today's ONE Thing
@@ -2633,7 +2633,7 @@ function renderOneThingPage() {
   if(isToday && ot.task) {
     var done = ot.done;
     html += '<div class="card" style="padding:24px;text-align:center;border:'+(done?'2px solid var(--green)':'2px dashed var(--orange)')+'">'
-      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:'+(done?'var(--green)':'var(--orange)')+';margin-bottom:10px">BUGUNUN ONE THING'I</div>'
+      +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:'+(done?'var(--green)':'var(--orange)')+';margin-bottom:10px">BUGUNUN ONE THING</div>'
       +'<div style="font-size:22px;font-weight:700;line-height:1.4;margin-bottom:16px">'+U.escape(ot.task)+'</div>';
     if(!done) {
       html += '<div style="display:flex;gap:10px;justify-content:center">'
@@ -2647,7 +2647,7 @@ function renderOneThingPage() {
   } else {
     html += '<div class="card" style="padding:32px;text-align:center">'
       +'<div style="font-size:40px;margin-bottom:12px">&#127919;</div>'
-      +'<p style="font-size:17px;font-weight:700;margin-bottom:8px">Bugunun ONE Thing'ini belirle</p>'
+      +'<p style="font-size:17px;font-weight:700;margin-bottom:8px">Bugunun ONE Thing belirleme</p>'
       +'<p style="font-size:13px;color:var(--t2);max-width:360px;margin:0 auto 20px;line-height:1.6">Dis dunyayi gormezden gel. Hangi tek sey, her seyi daha kolay kilar?</p>'
       +'<button class="btn btn-orange" style="font-size:14px;padding:10px 24px" onclick="editOneThing()">'+ic('zap',14)+' ONE Thing Belirle</button></div>';
   }
@@ -2671,7 +2671,7 @@ function renderOneThingPage() {
   // How it works
   html += '<div style="margin-top:20px"><p class="lbl" style="margin-bottom:10px">ONE Thing Sistemi Nasil Calisir?</p>'
     +'<div class="g3">';
-  [{n:'1. Sabah Sec',d:'Gune baslamadan ONE Thing'ini belirle. Zihni bos, etkisi maksimum.',c:'var(--blue)'},
+  [{n:'1. Sabah Sec',d:'Gune baslamadan ONE Thing belirleme. Zihni bos, etkisi maksimum.',c:'var(--blue)'},
    {n:'2. Blokkla',d:'ONE Thing icin sabah 2 saatini koru. Hic kesilme olmadan.',c:'var(--orange)'},
    {n:'3. Sirayla',d:'ONE Thing bitmeden diger gorevlere gecme. Odagi dagitma.',c:'var(--green)'}].forEach(function(s){
     html += '<div class="card" style="padding:14px 16px;border-top:3px solid '+s.c+'"><p style="font-weight:700;font-size:13px;margin-bottom:5px">'+s.n+'</p><p style="font-size:12px;color:var(--t2);line-height:1.5">'+s.d+'</p></div>';
