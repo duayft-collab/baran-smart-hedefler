@@ -1161,46 +1161,634 @@ function activatePlan(planId) {
 }
 window.activatePlan = activatePlan;
 
+// ============================================================
+// HEDEFLER V6 — Zengin Hedef Yönetim Sistemi
+// ============================================================
+
+var goalView = localStorage.getItem('goalView') || 'grid'; // grid | kanban | list
+var goalFilter = 'all'; // all | active | done | Q1 | Q2 | Q3 | Q4
+var openGoalId = null; // detay modalı için
+
+var GOAL_CATS = ['Is','Kisisel','Saglik','Finans','Gelisim','Iliski','Egitim','Diger'];
+var GOAL_CAT_COLORS = {
+  'Is':'var(--blue)','Kisisel':'var(--purple)','Saglik':'var(--green)',
+  'Finans':'var(--orange)','Gelisim':'var(--blue)','Iliski':'#ff6b9d',
+  'Egitim':'var(--teal)','Diger':'var(--t3)'
+};
+var GOAL_CAT_BG = {
+  'Is':'var(--bl)','Kisisel':'var(--pl)','Saglik':'var(--gl)',
+  'Finans':'var(--ol)','Gelisim':'var(--bl)','Iliski':'rgba(255,107,157,.1)',
+  'Egitim':'rgba(100,210,255,.12)','Diger':'var(--s2)'
+};
+
+function goalDaysLeft(g) {
+  if(!g.deadline) return null;
+  return Math.ceil((new Date(g.deadline) - new Date()) / 864e5);
+}
+function goalStatus(g) {
+  if(g.status) return g.status;
+  var p = goalPct(g);
+  if(p >= 100) return 'done';
+  return 'active';
+}
+function goalPct(g) {
+  if(!g.steps || !g.steps.length) return 0;
+  return Math.round(g.steps.filter(function(s){return s.done;}).length / g.steps.length * 100);
+}
+
 function renderGoals() {
-  var goals = fil(D.goals,['title','desc']);
-  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Hedefler</h1><button class="btn btn-p" onclick="openForm(\'goal\')">'+ic('plus',13)+' Hedef Ekle</button></div><div class="ga">';
-  goals.forEach(function(goal){
-    var dn=goal.steps.filter(function(s){return s.done;}).length;
-    var p=goal.steps.length?Math.round(dn/goal.steps.length*100):0;
-    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-      +'<div style="display:flex;align-items:center;gap:7px;flex:1">'
-      +(goal.frog?'<span style="font-size:18px">&#x1F438;</span>':'')
-      +'<div><p style="font-weight:700;font-size:14px;line-height:1.3">'+U.escape(goal.title)+'</p>'
-      +'<span class="pill p-blue" style="margin-top:4px;font-size:10px">'+goal.quarter+'</span></div></div>'
-      +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+goal.id+',\'goal\')">'+ic('trash',12,'var(--t3)')+'</button></div>'
-      +'<p style="font-size:12px;color:var(--t2);line-height:1.6;border-left:2px solid rgba(0,0,0,.07);padding-left:9px">'+U.escape(goal.desc)+'</p>'
-      +'<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
-      +'<span class="lbl">Aksiyon Plani</span>'
-      +'<button class="btn btn-g btn-sm" onclick="addGoalStep('+goal.id+')">'+ic('plus',11)+' Adim</button></div>'
-      +'<div id="steps-'+goal.id+'">';
-    if(!goal.steps.length) html += '<p style="font-size:12px;color:var(--t3);font-style:italic;text-align:center;padding:6px 0">Adim eklenmedi</p>';
-    goal.steps.forEach(function(s){
-      html += '<div class="srow">'
-        +'<input type="checkbox" class="cb" '+(s.done?'checked':'')+' onchange="toggleStep('+goal.id+','+s.id+')">'
-        +'<span style="font-size:12.5px;text-decoration:'+(s.done?'line-through':'none')+';color:'+(s.done?'var(--t3)':'var(--t)')+';flex:1">'+U.escape(s.t)+'</span>'
-        +'<button class="btn btn-g btn-ic" style="width:22px;height:22px" onclick="delStep('+goal.id+','+s.id+')">'+ic('x',10,'var(--t3)')+'</button></div>';
+  var allGoals = D.goals || [];
+  var goals = fil(allGoals, ['title','desc','cat','measurable']);
+
+  // Apply filter
+  if(goalFilter !== 'all') {
+    if(goalFilter === 'active') goals = goals.filter(function(g){return goalStatus(g) !== 'done';});
+    else if(goalFilter === 'done') goals = goals.filter(function(g){return goalStatus(g) === 'done';});
+    else goals = goals.filter(function(g){return g.quarter === goalFilter;});
+  }
+
+  var totalGoals = allGoals.length;
+  var doneCount = allGoals.filter(function(g){return goalStatus(g)==='done';}).length;
+  var activeCount = allGoals.filter(function(g){return goalStatus(g)==='active';}).length;
+  var avgPct = totalGoals ? Math.round(allGoals.reduce(function(a,g){return a+goalPct(g);},0)/totalGoals) : 0;
+  var frogGoals = allGoals.filter(function(g){return g.frog;}).length;
+
+  var html = '<div class="fade">';
+
+  // Header
+  html += '<div class="sh">';
+  html += '<div><h1 class="sh-t">Hedefler</h1><p class="sh-sub">Brian Tracy sistemi &mdash; Yaz, olc, tamamla</p></div>';
+  html += '<div style="display:flex;gap:8px;align-items:center">';
+  // View toggle
+  html += '<div style="display:flex;gap:3px;background:var(--s2);border-radius:8px;padding:3px">';
+  ['grid','kanban','list'].forEach(function(v){
+    var icons = {grid:'&#9783;',kanban:'&#9776;',list:'&#9868;'};
+    var labels = {grid:'Grid',kanban:'Kanban',list:'Liste'};
+    html += '<button class="btn btn-sm" style="padding:4px 10px;background:'+(goalView===v?'var(--s)':'transparent')+';color:'+(goalView===v?'var(--t)':'var(--t2)')+';box-shadow:'+(goalView===v?'0 1px 3px rgba(0,0,0,.1)':'none')+'" onclick="setGoalView(\''+v+'\')">'+icons[v]+' '+labels[v]+'</button>';
+  });
+  html += '</div>';
+  html += '<button class="btn btn-p" onclick="openGoalForm()">'+ic('plus',13)+' Hedef Ekle</button>';
+  html += '</div></div>';
+
+  // Stats row
+  html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px">';
+  [
+    {l:'Toplam',v:totalGoals,c:'var(--blue)',icon:'tgt'},
+    {l:'Aktif',v:activeCount,c:'var(--orange)',icon:'zap'},
+    {l:'Tamamlandi',v:doneCount,c:'var(--green)',icon:'chk'},
+    {l:'Kurbaga',v:frogGoals,c:'var(--red)',icon:'flame'},
+    {l:'Ort. Ilerleme',v:avgPct+'%',c:avgPct>=70?'var(--green)':avgPct>=40?'var(--orange)':'var(--red)',icon:'kpi'},
+  ].forEach(function(s){
+    html += '<div class="card" style="padding:14px 16px">'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">'+ic(s.icon,14,s.c)+'<span style="font-size:11px;color:var(--t2);font-weight:600">'+s.l+'</span></div>'
+      +'<div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:'+s.c+'">'+s.v+'</div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  // Filter bar
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">';
+  var filters = [
+    {id:'all',l:'Tumu'},
+    {id:'active',l:'Aktif'},
+    {id:'done',l:'Tamamlandi'},
+    {id:'Q1',l:'Q1'},{id:'Q2',l:'Q2'},{id:'Q3',l:'Q3'},{id:'Q4',l:'Q4'},
+  ];
+  filters.forEach(function(f){
+    html += '<button class="btn btn-sm" style="background:'+(goalFilter===f.id?'var(--blue)':'var(--s2)')+';color:'+(goalFilter===f.id?'#fff':'var(--t2)')+'" onclick="setGoalFilter(\''+f.id+'\')">'+f.l+'</button>';
+  });
+  html += '</div>';
+
+  if(!goals.length) {
+    html += '<div class="empty" style="padding:60px 20px">'
+      +'<div style="width:56px;height:56px;border-radius:16px;background:var(--bl);display:flex;align-items:center;justify-content:center;margin-bottom:12px">'+ic('tgt',28,'var(--blue)')+'</div>'
+      +'<p style="font-weight:700;font-size:16px;margin-bottom:6px">Henuz hedef eklenmedi</p>'
+      +'<p style="color:var(--t2);font-size:13px;max-width:280px;line-height:1.6;margin-bottom:16px">Brian Tracy: Her hedefi yaz, olc, parcala. Baslamak icin ilk adimi at.</p>'
+      +'<button class="btn btn-p" onclick="openGoalForm()">'+ic('plus',13)+' Ilk Hedefini Ekle</button>'
+      +'</div>';
+    html += '</div>';
+    show('pinner',html);
+    return;
+  }
+
+  // KANBAN VIEW
+  if(goalView === 'kanban') {
+    var COLS = [
+      {id:'active',l:'Aktif',color:'var(--blue)'},
+      {id:'paused',l:'Beklemede',color:'var(--orange)'},
+      {id:'done',l:'Tamamlandi',color:'var(--green)'},
+    ];
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">';
+    COLS.forEach(function(col){
+      var colGoals = goals.filter(function(g){
+        var st = goalStatus(g);
+        if(col.id==='active') return st==='active' && !g.paused;
+        if(col.id==='paused') return g.paused;
+        return st==='done';
+      });
+      html += '<div style="display:flex;flex-direction:column;gap:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+        +'<div style="width:10px;height:10px;border-radius:99px;background:'+col.color+'"></div>'
+        +'<span style="font-weight:700;font-size:13px">'+col.l+'</span>'
+        +'<span class="pill p-gray" style="font-size:9px">'+colGoals.length+'</span></div>';
+      colGoals.forEach(function(g){
+        html += buildGoalCardKanban(g);
+      });
+      if(!colGoals.length) {
+        html += '<div style="border:2px dashed var(--s3);border-radius:12px;padding:20px;text-align:center;color:var(--t3);font-size:12px">Hedef yok</div>';
+      }
+      html += '</div>';
     });
-    html += '</div></div>';
-    if(goal.steps.length) {
-      html += '<div><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px">'
-        +'<span style="color:var(--t2);font-weight:500">Ilerleme</span><span style="color:var(--blue);font-weight:700">'+p+'%</span></div>'
-        +progressPill(p)+'</div>';
+    html += '</div>';
+
+  // LIST VIEW
+  } else if(goalView === 'list') {
+    html += '<div class="card" style="overflow:hidden">'
+      +'<table class="tbl"><thead><tr>'
+      +'<th style="padding-left:16px">Hedef</th>'
+      +'<th>Kategori</th>'
+      +'<th>Ceyrek</th>'
+      +'<th>Deadline</th>'
+      +'<th>Ilerleme</th>'
+      +'<th style="text-align:center">Adimlar</th>'
+      +'<th style="width:80px"></th>'
+      +'</tr></thead><tbody>';
+    goals.forEach(function(g){
+      var p = goalPct(g);
+      var dl = goalDaysLeft(g);
+      var st = goalStatus(g);
+      var cc = GOAL_CAT_COLORS[g.cat||'Diger'] || 'var(--t3)';
+      var dlColor = dl===null?'var(--t3)':dl<0?'var(--red)':dl<7?'var(--orange)':'var(--t2)';
+      var pColor = p>=100?'var(--green)':p>=60?'var(--blue)':p>=30?'var(--orange)':'var(--red)';
+      html += '<tr style="cursor:pointer" onclick="openGoalDetail('+g.id+')">'
+        +'<td style="padding-left:16px">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +(g.frog?'<span style="font-size:16px">&#128056;</span>':'')
+        +'<div>'
+        +'<p style="font-weight:600;font-size:13px;line-height:1.3">'+U.escape(g.title)+'</p>'
+        +(g.measurable?'<p style="font-size:10.5px;color:var(--t2);margin-top:1px">'+ic('kpi',11,'var(--t3)')+' '+U.escape(g.measurable)+'</p>':'')
+        +'</div></div></td>'
+        +'<td><span class="pill" style="background:'+GOAL_CAT_BG[g.cat||'Diger']+';color:'+cc+';font-size:10px">'+(g.cat||'Diger')+'</span></td>'
+        +'<td><span class="pill p-blue" style="font-size:10px">'+g.quarter+'</span></td>'
+        +'<td style="font-size:11.5px;color:'+dlColor+'">'
+        +(dl===null?'&mdash;':dl<0?'Gecti ('+Math.abs(dl)+'g)':dl===0?'Bugün':dl+'g kaldi')
+        +'</td>'
+        +'<td style="min-width:120px">'
+        +'<div style="display:flex;align-items:center;gap:7px">'
+        +'<div class="bar" style="flex:1"><div class="barf" style="width:'+p+'%;background:'+pColor+'"></div></div>'
+        +'<span style="font-size:11px;font-weight:700;color:'+pColor+';min-width:28px">'+p+'%</span>'
+        +'</div></td>'
+        +'<td style="text-align:center;font-size:12px;color:var(--t2)">'
+        +g.steps.filter(function(s){return s.done;}).length+'/'+g.steps.length
+        +'</td>'
+        +'<td><div style="display:flex;gap:4px">'
+        +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="event.stopPropagation();openGoalDetail('+g.id+')" title="Detay">'+ic('edit',12,'var(--t3)')+'</button>'
+        +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="event.stopPropagation();del('+g.id+',\'goal\')" title="Sil">'+ic('trash',12,'var(--t3)')+'</button>'
+        +'</div></td>'
+        +'</tr>';
+    });
+    html += '</tbody></table></div>';
+
+  // GRID VIEW (default)
+  } else {
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">';
+    goals.forEach(function(g){
+      html += buildGoalCard(g);
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  show('pinner', html);
+}
+
+function buildGoalCard(g) {
+  var p = goalPct(g);
+  var dl = goalDaysLeft(g);
+  var st = goalStatus(g);
+  var cc = GOAL_CAT_COLORS[g.cat||'Diger'] || 'var(--t3)';
+  var cbg = GOAL_CAT_BG[g.cat||'Diger'] || 'var(--s2)';
+  var pColor = p>=100?'var(--green)':p>=60?'var(--blue)':p>=30?'var(--orange)':'var(--red)';
+  var dlColor = dl===null?'var(--t3)':dl<0?'var(--red)':dl<7?'var(--orange)':'var(--t2)';
+  var isDone = st==='done';
+
+  var html = '<div class="card" style="display:flex;flex-direction:column;overflow:hidden;'+(isDone?'opacity:.7':'')+'cursor:pointer" onclick="openGoalDetail('+g.id+')">';
+
+  // Color top bar
+  html += '<div style="height:3px;background:'+cc+'"></div>';
+
+  html += '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;flex:1">';
+
+  // Header
+  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+  html += '<div style="flex:1">';
+  html += '<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">';
+  if(g.frog) html += '<span title="Kurbaga - En kritik hedef" style="font-size:16px">&#128056;</span>';
+  html += '<span class="pill" style="background:'+cbg+';color:'+cc+';font-size:10px">'+(g.cat||'Diger')+'</span>';
+  html += '<span class="pill p-gray" style="font-size:10px">'+g.quarter+'</span>';
+  if(isDone) html += '<span class="pill" style="background:var(--gl);color:var(--green);font-size:10px">&#10003; Bitti</span>';
+  html += '</div>';
+  html += '<p style="font-weight:700;font-size:14.5px;line-height:1.3;color:var(--t)">'+U.escape(g.title)+'</p>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:4px;flex-shrink:0">';
+  html += '<button class="btn btn-g btn-ic" style="width:27px;height:27px" onclick="event.stopPropagation();del('+g.id+',\'goal\')" title="Sil">'+ic('trash',12,'var(--t3)')+'</button>';
+  html += '</div>';
+  html += '</div>';
+
+  // Description
+  if(g.desc) {
+    html += '<p style="font-size:12px;color:var(--t2);line-height:1.6;border-left:2px solid '+cc+';padding-left:9px;opacity:.8">'+U.escape(g.desc.length>100?g.desc.slice(0,100)+'...':g.desc)+'</p>';
+  }
+
+  // Measurable criterion
+  if(g.measurable) {
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--s2);border-radius:8px">'
+      +ic('kpi',13,'var(--t2)')
+      +'<span style="font-size:12px;color:var(--t2);font-weight:500">Basari: </span>'
+      +'<span style="font-size:12px;font-weight:600">'+U.escape(g.measurable)+'</span></div>';
+  }
+
+  // Steps summary
+  var doneSteps = g.steps.filter(function(s){return s.done;}).length;
+  var totalSteps = g.steps.length;
+  if(totalSteps > 0) {
+    html += '<div>';
+    // Show first 3 steps
+    html += '<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px">';
+    g.steps.slice(0,3).forEach(function(s){
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0">'
+        +'<input type="checkbox" class="cb" style="pointer-events:none" '+(s.done?'checked':'')+'>'
+        +'<span style="font-size:12px;text-decoration:'+(s.done?'line-through':'none')+';color:'+(s.done?'var(--t3)':'var(--t)')+'">'+U.escape(s.t)+'</span>'
+        +'</div>';
+    });
+    if(totalSteps > 3) {
+      html += '<p style="font-size:11px;color:var(--t3);padding-left:24px">+ '+(totalSteps-3)+' adim daha</p>';
     }
     html += '</div>';
-  });
-  if(!goals.length) html += '<div class="empty" style="grid-column:1/-1">'+ic('tgt',32,'var(--t3)')+'<p>Henuz hedef eklenmedi</p></div>';
+    // Progress
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
+      +'<span style="font-size:11px;color:var(--t2);font-weight:500">'+doneSteps+'/'+totalSteps+' adim</span>'
+      +'<span style="font-size:13px;font-weight:700;color:'+pColor+'">'+p+'%</span></div>';
+    html += '<div class="bar" style="height:5px"><div class="barf" style="width:'+p+'%;background:'+pColor+'"></div></div>';
+    html += '</div>';
+  } else {
+    html += '<div style="padding:10px;background:var(--s2);border-radius:8px;text-align:center;font-size:12px;color:var(--t3)">'+ic('plus',12,'var(--t3)')+' Adim eklemek icin tikla</div>';
+  }
+
+  // Footer: deadline + note count
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:4px;border-top:1px solid rgba(0,0,0,.05)">';
+  if(dl !== null) {
+    html += '<span style="font-size:11px;color:'+dlColor+';font-weight:500;display:flex;align-items:center;gap:4px">'
+      +ic('ci',11,dlColor)
+      +(dl<0?'Gecti ('+Math.abs(dl)+' gun)':dl===0?'Bugün son gun!':dl+' gun kaldi')
+      +'</span>';
+  } else {
+    html += '<span style="font-size:11px;color:var(--t3)">Deadline yok</span>';
+  }
+  var noteCount = g.notes ? 1 : 0;
+  html += '<span style="font-size:11px;color:var(--t2)">'
+    +ic('pen',11,'var(--t3)')+' Detay icin tikla</span>';
+  html += '</div>';
+
   html += '</div></div>';
-  show('pinner',html);
+  return html;
 }
-function addGoalStep(goalId){var t=prompt('Adim adi?');if(!t)return;snapshot();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:t,done:false}])}):g;});addLog('Adim eklendi');save();renderPage();}
-function toggleStep(goalId,stepId){snapshot();D.goals=D.goals.map(function(g){if(g.id!==goalId)return g;var ns=g.steps.map(function(s){return s.id===stepId?Object.assign({},s,{done:!s.done}):s;});var wasDone=g.steps.find(function(s){return s.id===stepId;}).done;if(!wasDone)gainXP(10,'Adim tamamlandi');return Object.assign({},g,{steps:ns});});addLog('Adim');save();renderPage();}
-function delStep(goalId,stepId){snapshot();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.filter(function(s){return s.id!==stepId;})}):g;});addLog('Adim silindi');save();renderPage();}
+
+function buildGoalCardKanban(g) {
+  var p = goalPct(g);
+  var dl = goalDaysLeft(g);
+  var cc = GOAL_CAT_COLORS[g.cat||'Diger'] || 'var(--t3)';
+  var cbg = GOAL_CAT_BG[g.cat||'Diger'] || 'var(--s2)';
+  var pColor = p>=100?'var(--green)':p>=60?'var(--blue)':'var(--orange)';
+
+  var html = '<div class="card" style="padding:13px 14px;cursor:pointer;display:flex;flex-direction:column;gap:8px" onclick="openGoalDetail('+g.id+')">';
+  html += '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">';
+  if(g.frog) html += '<span style="font-size:13px">&#128056;</span>';
+  html += '<span class="pill" style="background:'+cbg+';color:'+cc+';font-size:9px">'+(g.cat||'Diger')+'</span>';
+  html += '<span class="pill p-gray" style="font-size:9px">'+g.quarter+'</span>';
+  html += '</div>';
+  html += '<p style="font-weight:600;font-size:13px;line-height:1.3">'+U.escape(g.title)+'</p>';
+  if(g.steps.length) {
+    html += '<div style="display:flex;align-items:center;gap:7px">'
+      +'<div class="bar" style="flex:1"><div class="barf" style="width:'+p+'%;background:'+pColor+'"></div></div>'
+      +'<span style="font-size:10.5px;font-weight:700;color:'+pColor+'">'+p+'%</span></div>';
+  }
+  if(dl !== null) {
+    var dlc = dl<0?'var(--red)':dl<7?'var(--orange)':'var(--t3)';
+    html += '<span style="font-size:10px;color:'+dlc+'">'+(dl<0?'Gecti':'&#x23F0; '+dl+' gun')+'</span>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ---- Goal Detail Modal ----
+function openGoalDetail(goalId) {
+  openGoalId = goalId;
+  var g = (D.goals||[]).find(function(x){return x.id===goalId;});
+  if(!g) return;
+  renderGoalModal(g);
+}
+window.openGoalDetail = openGoalDetail;
+
+function renderGoalModal(g) {
+  var p = goalPct(g);
+  var dl = goalDaysLeft(g);
+  var cc = GOAL_CAT_COLORS[g.cat||'Diger'] || 'var(--t3)';
+  var cbg = GOAL_CAT_BG[g.cat||'Diger'] || 'var(--s2)';
+  var pColor = p>=100?'var(--green)':p>=60?'var(--blue)':p>=30?'var(--orange)':'var(--red)';
+  var dlColor = dl===null?'var(--t3)':dl<0?'var(--red)':dl<7?'var(--orange)':'var(--t2)';
+
+  var html = '<div style="max-width:620px;background:var(--s);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.2);overflow:hidden;width:100%;max-height:92vh;display:flex;flex-direction:column">';
+
+  // Modal header - colored
+  html += '<div style="padding:18px 20px;background:'+cc+';display:flex;align-items:center;justify-content:space-between">';
+  html += '<div style="display:flex;align-items:center;gap:8px">';
+  if(g.frog) html += '<span style="font-size:20px">&#128056;</span>';
+  html += '<div>'
+    +'<p style="font-weight:700;font-size:16px;color:#fff;line-height:1.3">'+U.escape(g.title)+'</p>'
+    +'<div style="display:flex;gap:6px;margin-top:4px">'
+    +'<span style="background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px">'+(g.cat||'Diger')+'</span>'
+    +'<span style="background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px">'+g.quarter+'</span>'
+    +'</div></div>';
+  html += '</div>';
+  html += '<button class="btn" style="background:rgba(255,255,255,.2);color:#fff;width:30px;height:30px;padding:0;justify-content:center;border-radius:8px" onclick="closeModal()">'+ic('x',15,'#fff')+'</button>';
+  html += '</div>';
+
+  // Body
+  html += '<div style="flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:16px">';
+
+  // Progress ring + stats
+  html += '<div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center">';
+  // Mini ring
+  var C = 2*3.14159*36;
+  html += '<div style="position:relative;width:88px;height:88px;flex-shrink:0">'
+    +'<svg viewBox="0 0 88 88" style="width:100%;height:100%">'
+    +'<circle cx="44" cy="44" r="36" fill="none" stroke="var(--s2)" stroke-width="6"/>'
+    +'<circle cx="44" cy="44" r="36" fill="none" stroke="'+pColor+'" stroke-width="6" stroke-linecap="round"'
+    +' stroke-dasharray="'+C+'" stroke-dashoffset="'+(C*(1-p/100))+'"'
+    +' style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .6s ease"/>'
+    +'</svg>'
+    +'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">'
+    +'<span style="font-size:18px;font-weight:800;color:'+pColor+'">'+p+'%</span></div></div>';
+
+  // Stats grid
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  var doneSteps = g.steps.filter(function(s){return s.done;}).length;
+  [
+    {l:'Adim',v:doneSteps+'/'+g.steps.length,c:'var(--blue)'},
+    {l:'Deadline',v:dl===null?'Yok':dl<0?'Gecti':dl+'g',c:dlColor},
+    {l:'Basari Kriteri',v:g.measurable||'&mdash;',c:'var(--t2)'},
+    {l:'Durum',v:goalStatus(g)==='done'?'Tamamlandi':'Devam Ediyor',c:goalStatus(g)==='done'?'var(--green)':'var(--orange)'},
+  ].forEach(function(s){
+    html += '<div style="background:var(--s2);border-radius:8px;padding:8px 10px">'
+      +'<p style="font-size:10px;color:var(--t3);font-weight:600;margin-bottom:3px">'+s.l+'</p>'
+      +'<p style="font-size:13px;font-weight:700;color:'+s.c+'">'+s.v+'</p>'
+      +'</div>';
+  });
+  html += '</div></div>';
+
+  // Description
+  if(g.desc) {
+    html += '<div style="padding:12px 14px;background:var(--s2);border-radius:10px;border-left:3px solid '+cc+'">'
+      +'<p style="font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Hedef Tanimi</p>'
+      +'<p style="font-size:13px;color:var(--t2);line-height:1.7">'+U.escape(g.desc)+'</p>'
+      +'</div>';
+  }
+
+  // Action steps
+  html += '<div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<p style="font-weight:700;font-size:13px">Aksiyon Plani</p>'
+    +'<button class="btn btn-s btn-sm" onclick="openAddStep('+g.id+')">'+ic('plus',12)+' Adim Ekle</button>'
+    +'</div>';
+
+  if(!g.steps.length) {
+    html += '<div style="padding:16px;border:2px dashed var(--s3);border-radius:10px;text-align:center;color:var(--t3);font-size:12px">Henuz aksiyon adimi yok. Bir adim ekleyerek basla.</div>';
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    g.steps.forEach(function(s,i){
+      html += '<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;background:'+(s.done?'var(--gl)':'var(--s2)')+';transition:background .12s">'
+        +'<input type="checkbox" class="cb" '+(s.done?'checked':'')+' onchange="toggleStep('+g.id+','+s.id+')">'
+        +'<span style="font-size:12.5px;font-weight:500;text-decoration:'+(s.done?'line-through':'none')+';color:'+(s.done?'var(--t3)':'var(--t)')+';flex:1">'+U.escape(s.t)+'</span>'
+        +'<button class="btn btn-g btn-ic" style="width:22px;height:22px;opacity:.5;flex-shrink:0" onclick="delStep('+g.id+','+s.id+')">'+ic('x',10,'var(--t3)')+'</button>'
+        +'</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Notes
+  html += '<div>'
+    +'<p style="font-weight:700;font-size:13px;margin-bottom:8px">Notlar</p>'
+    +'<textarea class="inp" id="goal-notes-'+g.id+'" placeholder="Bu hedef hakkinda notlar, fikirler, engeller..." rows="3" style="font-size:13px" onchange="saveGoalNote('+g.id+')">'+U.escape(g.notes||'')+'</textarea>'
+    +'</div>';
+
+  // Tracy 6 kuralı kontrol listesi
+  html += '<div style="padding:12px 14px;background:var(--ol);border-radius:10px;border-left:3px solid var(--orange)">'
+    +'<p style="font-weight:700;font-size:12px;color:var(--orange);margin-bottom:8px">Brian Tracy\'nin 6 Kurali</p>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">';
+  [
+    {l:'Hedef yazili',done:true},
+    {l:'Net deadline',done:!!g.deadline},
+    {l:'Alt parcalara bolundu',done:g.steps.length>0},
+    {l:'Onceliklendirildi',done:!!g.frog||!!g.cat},
+    {l:'Baslanildi',done:g.steps.some(function(s){return s.done;})},
+    {l:'Ilerleme kaydi',done:p>0},
+  ].forEach(function(rule){
+    html += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0">'
+      +'<span style="color:'+(rule.done?'var(--green)':'var(--t3)');font-size:13px">'+(rule.done?'&#10003;':'&#9675;')+'</span>'
+      +'<span style="font-size:11.5px;color:'+(rule.done?'var(--t)':'var(--t3)')+'">'+rule.l+'</span>'
+      +'</div>';
+  });
+  html += '</div></div>';
+
+  html += '</div>';
+
+  // Footer actions
+  html += '<div style="padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:8px">';
+  if(goalStatus(g) !== 'done') {
+    html += '<button class="btn btn-green" style="flex:1;justify-content:center" onclick="markGoalDone('+g.id+')">'+ic('chk',13)+' Hedefi Tamamla (+100 XP)</button>';
+  } else {
+    html += '<button class="btn btn-s" style="flex:1;justify-content:center" onclick="markGoalActive('+g.id+')">Tekrar Aktif Et</button>';
+  }
+  html += '<button class="btn btn-s" onclick="closeModal()">Kapat</button>';
+  html += '</div>';
+
+  html += '</div>';
+
+  showModal(html, null);
+}
+
+// ---- Goal form (rich) ----
+function openGoalForm() {
+  var catOpts = GOAL_CATS.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  var html = '<div class="mh">'
+    +'<span style="font-weight:700;font-size:15px">Yeni Hedef</span>'
+    +'<button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button>'
+    +'</div>'
+    +'<div class="mb">'
+
+    +'<div style="background:var(--bl);border-radius:10px;padding:11px 13px;margin-bottom:2px">'
+    +'<p style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:3px">&#9889; SMART Prensipleri</p>'
+    +'<p style="font-size:11.5px;color:var(--t2);line-height:1.5">Spesifik, Olculebilir, Ulasabilir, Anlamli, Zamanli. Brian Tracy: Her hedefi yaz ve deadline koy.</p>'
+    +'</div>'
+
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'
+    +'<div style="grid-column:1/-1">'
+    +'<p class="lbl" style="margin-bottom:4px">Hedef Basligi *</p>'
+    +'<input class="inp" id="gf-title" placeholder="Net ve spesifik bir hedef yaz...">'
+    +'</div>'
+    +'<div>'
+    +'<p class="lbl" style="margin-bottom:4px">Kategori</p>'
+    +'<select class="inp" id="gf-cat">'+catOpts+'</select>'
+    +'</div>'
+    +'<div>'
+    +'<p class="lbl" style="margin-bottom:4px">Ceyrek</p>'
+    +'<select class="inp" id="gf-quarter"><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select>'
+    +'</div>'
+    +'<div style="grid-column:1/-1">'
+    +'<p class="lbl" style="margin-bottom:4px">Deadline (Time-bound) *</p>'
+    +'<input type="date" class="inp" id="gf-deadline">'
+    +'</div>'
+    +'<div style="grid-column:1/-1">'
+    +'<p class="lbl" style="margin-bottom:4px">Basari Kriteri (Measurable)</p>'
+    +'<input class="inp" id="gf-measurable" placeholder="Orn: Aylık 100k TL satış, B2 seviye, 10kg...">'
+    +'</div>'
+    +'<div style="grid-column:1/-1">'
+    +'<p class="lbl" style="margin-bottom:4px">Hedef Tanimi</p>'
+    +'<textarea class="inp" id="gf-desc" placeholder="Bu hedef neden onemli? Basarinca ne degisecek?" rows="2"></textarea>'
+    +'</div>'
+    +'<div style="grid-column:1/-1">'
+    +'<p class="lbl" style="margin-bottom:4px">Ilk Aksiyon Adimi</p>'
+    +'<input class="inp" id="gf-step1" placeholder="Hemen yapabilecegim ilk somut adim...">'
+    +'</div>'
+    +'<div style="grid-column:1/-1">'
+    +'<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:10px 12px;background:var(--rl);border-radius:9px">'
+    +'<input type="checkbox" class="cb" id="gf-frog">'
+    +'<span style="font-size:13px;font-weight:500">&#128056; Bu hedef en kritik hedefim (Kurbaga)</span>'
+    +'</label>'
+    +'</div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="mf">'
+    +'<button class="btn btn-s" style="flex:1" onclick="closeModal()">Iptal</button>'
+    +'<button class="btn btn-p" style="flex:2" onclick="submitGoalForm()">'+ic('chk',13)+' Hedefi Kaydet</button>'
+    +'</div>';
+  showModal(html, null);
+}
+window.openGoalForm = openGoalForm;
+
+function submitGoalForm() {
+  var title = $('gf-title') ? $('gf-title').value.trim() : '';
+  if(!title) { alert('Hedef basligi zorunlu!'); return; }
+  var step1 = $('gf-step1') ? $('gf-step1').value.trim() : '';
+  var steps = step1 ? [{id:Date.now()+1, t:step1, done:false}] : [];
+  snapshot();
+  var newGoal = {
+    id: Date.now(),
+    title: title,
+    desc: $('gf-desc') ? $('gf-desc').value : '',
+    cat: $('gf-cat') ? $('gf-cat').value : 'Is',
+    quarter: $('gf-quarter') ? $('gf-quarter').value : 'Q1',
+    deadline: $('gf-deadline') ? $('gf-deadline').value : '',
+    measurable: $('gf-measurable') ? $('gf-measurable').value : '',
+    frog: $('gf-frog') ? $('gf-frog').checked : false,
+    steps: steps,
+    notes: '',
+    status: 'active',
+    createdAt: U.today(),
+  };
+  D.goals = [newGoal].concat(D.goals||[]);
+  addLog('Hedef eklendi: '+title);
+  gainXP(25, 'Yeni hedef');
+  save(); closeModal(); renderPage();
+}
+window.submitGoalForm = submitGoalForm;
+
+function openAddStep(goalId) {
+  var html = '<div class="mh"><span style="font-weight:700;font-size:15px">Adim Ekle</span>'
+    +'<button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>'
+    +'<div class="mb">'
+    +'<p class="lbl" style="margin-bottom:4px">Aksiyon Adimi</p>'
+    +'<input class="inp" id="step-inp" placeholder="Somut ve yapilabilir bir adim..." autofocus>'
+    +'</div>'
+    +'<div class="mf">'
+    +'<button class="btn btn-s" style="flex:1" onclick="closeModal()">Iptal</button>'
+    +'<button class="btn btn-p" style="flex:2" onclick="submitAddStep('+goalId+')">'+ic('plus',13)+' Adim Ekle</button>'
+    +'</div>';
+  showModal(html, null);
+}
+window.openAddStep = openAddStep;
+
+function submitAddStep(goalId) {
+  var inp = $('step-inp');
+  if(!inp || !inp.value.trim()) { alert('Adim adi zorunlu!'); return; }
+  snapshot();
+  D.goals = D.goals.map(function(g){
+    return g.id===goalId ? Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:inp.value.trim(),done:false}])}) : g;
+  });
+  addLog('Adim eklendi'); save(); closeModal();
+  openGoalDetail(goalId);
+}
+window.submitAddStep = submitAddStep;
+
+function saveGoalNote(goalId) {
+  var el2 = $('goal-notes-'+goalId);
+  if(!el2) return;
+  D.goals = D.goals.map(function(g){
+    return g.id===goalId ? Object.assign({},g,{notes:el2.value}) : g;
+  });
+  save();
+}
+window.saveGoalNote = saveGoalNote;
+
+function markGoalDone(goalId) {
+  snapshot();
+  D.goals = D.goals.map(function(g){
+    return g.id===goalId ? Object.assign({},g,{status:'done',completedAt:U.today()}) : g;
+  });
+  addLog('Hedef tamamlandi!'); gainXP(100,'Hedef tamamlandi'); save(); closeModal(); renderPage();
+  setTimeout(function(){alert('Tebrikler! Hedef tamamlandi! +100 XP kazandin.');},100);
+}
+window.markGoalDone = markGoalDone;
+
+function markGoalActive(goalId) {
+  snapshot();
+  D.goals = D.goals.map(function(g){
+    return g.id===goalId ? Object.assign({},g,{status:'active',completedAt:null}) : g;
+  });
+  addLog('Hedef tekrar aktif'); save(); closeModal(); renderPage();
+}
+window.markGoalActive = markGoalActive;
+
+function setGoalView(v) { goalView=v; localStorage.setItem('goalView',v); renderPage(); }
+function setGoalFilter(f) { goalFilter=f; renderPage(); }
+window.setGoalView=setGoalView; window.setGoalFilter=setGoalFilter;
+
+// Keep backward compat
+function addGoalStep(goalId){openAddStep(goalId);}
+function toggleStep(goalId,stepId){
+  snapshot();
+  D.goals=D.goals.map(function(g){
+    if(g.id!==goalId)return g;
+    var wasDone=g.steps.find(function(s){return s.id===stepId;});
+    if(wasDone&&!wasDone.done) gainXP(10,'Adim tamamlandi');
+    return Object.assign({},g,{steps:g.steps.map(function(s){return s.id===stepId?Object.assign({},s,{done:!s.done}):s;})});
+  });
+  addLog('Adim'); save();
+  // Re-render modal if open
+  var g = D.goals.find(function(x){return x.id===goalId;});
+  if(g && openGoalId===goalId) renderGoalModal(g);
+  else renderPage();
+}
+function delStep(goalId,stepId){
+  snapshot();
+  D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.filter(function(s){return s.id!==stepId;})}):g;});
+  addLog('Adim silindi'); save();
+  var g = D.goals.find(function(x){return x.id===goalId;});
+  if(g && openGoalId===goalId) renderGoalModal(g);
+  else renderPage();
+}
 window.addGoalStep=addGoalStep;window.toggleStep=toggleStep;window.delStep=delStep;
 
 function renderTodos() {
