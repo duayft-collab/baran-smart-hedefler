@@ -3,1117 +3,1177 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocusUp</title>
+<title>FocusUp - Performans Sistemi</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Apple-inspired design system ── */
 :root {
-  --bg: #f5f5f7;
-  --bg2: #ffffff;
-  --bg3: #f0f0f2;
-  --border: rgba(0,0,0,0.08);
-  --border2: rgba(0,0,0,0.12);
-  --text: #1d1d1f;
-  --text2: #6e6e73;
-  --text3: #aeaeb2;
-  --blue: #0071e3;
-  --blue-light: rgba(0,113,227,0.1);
-  --green: #34c759;
-  --green-light: rgba(52,199,89,0.1);
-  --orange: #ff9500;
-  --orange-light: rgba(255,149,0,0.1);
-  --red: #ff3b30;
-  --red-light: rgba(255,59,48,0.1);
-  --purple: #af52de;
-  --purple-light: rgba(175,82,222,0.1);
-  --yellow: #ffcc00;
-  --yellow-light: rgba(255,204,0,0.12);
-  --sidebar-w: 220px;
-  --radius: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --bg:#f5f5f7; --bg2:#ffffff; --bg3:#f0f0f2; --bg4:#e8e8ed;
+  --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.13);
+  --text:#1d1d1f; --t2:#6e6e73; --t3:#aeaeb2;
+  --blue:#0071e3; --bl:rgba(0,113,227,0.1);
+  --green:#34c759; --gl:rgba(52,199,89,0.1);
+  --orange:#ff9500; --ol:rgba(255,149,0,0.11);
+  --red:#ff3b30; --rl:rgba(255,59,48,0.1);
+  --purple:#af52de; --pl:rgba(175,82,222,0.1);
+  --yellow:#ffcc00; --yl:rgba(255,204,0,0.13);
+  --teal:#32ade6; --tl:rgba(50,173,230,0.1);
+  --sw:230px;
+  --sh:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.05);
 }
 .dark {
-  --bg: #000000;
-  --bg2: #1c1c1e;
-  --bg3: #2c2c2e;
-  --border: rgba(255,255,255,0.1);
-  --border2: rgba(255,255,255,0.15);
-  --text: #f5f5f7;
-  --text2: #98989d;
-  --text3: #636366;
-  --blue: #0a84ff;
-  --blue-light: rgba(10,132,255,0.15);
-  --green: #30d158;
-  --green-light: rgba(48,209,88,0.12);
-  --orange: #ff9f0a;
-  --orange-light: rgba(255,159,10,0.12);
-  --red: #ff453a;
-  --red-light: rgba(255,69,58,0.12);
-  --purple: #bf5af2;
-  --purple-light: rgba(191,90,242,0.12);
-  --yellow: #ffd60a;
-  --yellow-light: rgba(255,214,10,0.12);
-  --shadow: 0 2px 8px rgba(0,0,0,0.4);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --bg:#000; --bg2:#1c1c1e; --bg3:#2c2c2e; --bg4:#3a3a3c;
+  --border:rgba(255,255,255,0.09); --border2:rgba(255,255,255,0.14);
+  --text:#f5f5f7; --t2:#98989d; --t3:#636366;
+  --blue:#0a84ff; --bl:rgba(10,132,255,0.14);
+  --green:#30d158; --gl:rgba(48,209,88,0.12);
+  --orange:#ff9f0a; --ol:rgba(255,159,10,0.13);
+  --red:#ff453a; --rl:rgba(255,69,58,0.12);
+  --purple:#bf5af2; --pl:rgba(191,90,242,0.12);
+  --yellow:#ffd60a; --yl:rgba(255,214,10,0.12);
+  --teal:#5ac8fa; --tl:rgba(90,200,250,0.12);
+  --sh:0 2px 8px rgba(0,0,0,0.4);
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow: hidden; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
 
 /* Layout */
-.shell { display: flex; height: 100vh; }
-.sidebar { width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px; flex-shrink: 0; overflow-y: auto; }
-.body { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
-.topbar { height: 52px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
-.page { flex: 1; overflow-y: auto; padding: 24px 28px; background: var(--bg); }
-.page-inner { max-width: 960px; margin: 0 auto; }
+.shell{display:flex;height:100vh;}
+.sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 10px;flex-shrink:0;overflow-y:auto;}
+.body{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:50px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.page{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg);}
+.pinner{max-width:1040px;margin:0 auto;}
 
 /* Logo */
-.logo { display: flex; align-items: center; gap: 9px; padding: 6px 8px 18px; }
-.logo-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.logo-mark svg { width: 14px; height: 14px; fill: var(--bg2); }
-.logo-name { font-weight: 600; font-size: 15px; letter-spacing: -0.3px; color: var(--text); }
+.logo{display:flex;align-items:center;gap:9px;padding:4px 6px 16px;}
+.logo-mark{width:26px;height:26px;border-radius:7px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-name{font-weight:700;font-size:14px;letter-spacing:-.3px;}
+.logo-ver{font-size:10px;color:var(--t3);font-weight:500;margin-left:auto;}
 
 /* Nav */
-.nav-section { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 8px 6px; margin-top: 8px; }
-.nav-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border-radius: 8px; border: none; background: none; cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--text2); text-align: left; transition: background 0.15s, color 0.15s; position: relative; }
-.nav-btn:hover { background: var(--bg3); color: var(--text); }
-.nav-btn.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
-.nav-icon { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
-.nav-btn.active .nav-icon { background: var(--blue-light); }
-.nav-badge { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: var(--orange); color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 99px; }
+.nsec{font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;padding:4px 6px 5px;margin-top:6px;}
+.nb{display:flex;align-items:center;gap:7px;width:100%;padding:6px 7px;border-radius:7px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);text-align:left;transition:background .12s,color .12s;position:relative;font-family:inherit;}
+.nb:hover{background:var(--bg3);color:var(--text);}
+.nb.active{background:var(--bl);color:var(--blue);font-weight:600;}
+.ni{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nb-badge{background:var(--orange);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:auto;}
 
 /* Cards */
-.card { background: var(--bg2); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
-.card-p { padding: 18px 20px; }
+.card{background:var(--bg2);border-radius:14px;box-shadow:var(--sh);}
+.cp{padding:16px 18px;}
 
 /* Buttons */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
-.btn-primary { background: var(--blue); color: white; }
-.btn-primary:hover { filter: brightness(1.1); }
-.btn-primary:active { filter: brightness(0.95); transform: scale(0.98); }
-.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { background: var(--border); }
-.btn-ghost { background: none; color: var(--text2); }
-.btn-ghost:hover { background: var(--bg3); color: var(--text); }
-.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
-.btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 8px; }
-.btn-green { background: var(--green); color: white; }
-.btn-green:hover { filter: brightness(1.1); }
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .12s;white-space:nowrap;}
+.btn-p{background:var(--blue);color:white;}
+.btn-p:hover{filter:brightness(1.1);}
+.btn-p:active{transform:scale(.98);}
+.btn-s{background:var(--bg3);color:var(--text);border:1px solid var(--border);}
+.btn-s:hover{background:var(--bg4);}
+.btn-g{background:none;color:var(--t2);}
+.btn-g:hover{background:var(--bg3);color:var(--text);}
+.btn-sm{padding:4px 9px;font-size:11.5px;border-radius:6px;}
+.btn-ic{width:30px;height:30px;padding:0;justify-content:center;border-radius:7px;}
+.btn-green{background:var(--green);color:white;}
+.btn-green:hover{filter:brightness(1.1);}
+.btn-orange{background:var(--orange);color:white;}
 
-/* Inputs */
-.inp { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 13px; font-size: 13.5px; color: var(--text); font-family: inherit; width: 100%; outline: none; transition: border 0.15s, box-shadow 0.15s; }
-.inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.12); background: var(--bg2); }
-.inp::placeholder { color: var(--text3); }
-textarea.inp { resize: none; }
-select.inp { cursor: pointer; appearance: none; }
+/* Input */
+.inp{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--text);font-family:inherit;width:100%;outline:none;transition:border .12s,box-shadow .12s;}
+.inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--bl);background:var(--bg2);}
+.inp::placeholder{color:var(--t3);}
+textarea.inp{resize:none;}
+select.inp{cursor:pointer;}
 
-/* Tags / Pills */
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
-.pill-blue { background: var(--blue-light); color: var(--blue); }
-.pill-green { background: var(--green-light); color: var(--green); }
-.pill-orange { background: var(--orange-light); color: var(--orange); }
-.pill-red { background: var(--red-light); color: var(--red); }
-.pill-purple { background: var(--purple-light); color: var(--purple); }
-.pill-gray { background: var(--bg3); color: var(--text2); }
-.pill-yellow { background: var(--yellow-light); color: #8a6d00; }
-.dark .pill-yellow { color: var(--yellow); }
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+.p-blue{background:var(--bl);color:var(--blue);}
+.p-green{background:var(--gl);color:var(--green);}
+.p-orange{background:var(--ol);color:var(--orange);}
+.p-red{background:var(--rl);color:var(--red);}
+.p-purple{background:var(--pl);color:var(--purple);}
+.p-gray{background:var(--bg3);color:var(--t2);}
+.p-yellow{background:var(--yl);color:#7a6000;}
+.dark .p-yellow{color:var(--yellow);}
+.p-teal{background:var(--tl);color:var(--teal);}
 
 /* Checkbox */
-.cb { appearance: none; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--border2); cursor: pointer; transition: all 0.15s; position: relative; flex-shrink: 0; background: transparent; }
-.cb:checked { background: var(--blue); border-color: var(--blue); }
-.cb:checked::after { content: ''; position: absolute; left: 4px; top: 1.5px; width: 5px; height: 8px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg); }
+.cb{appearance:none;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border2);cursor:pointer;transition:all .12s;position:relative;flex-shrink:0;}
+.cb:checked{background:var(--blue);border-color:var(--blue);}
+.cb:checked::after{content:'';position:absolute;left:4px;top:1.5px;width:5px;height:8px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg);}
 
 /* Modal */
-.overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; animation: fade-in 0.15s ease; }
-.modal { background: var(--bg2); border-radius: var(--radius-xl); box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 100%; max-width: 480px; overflow: hidden; animation: slide-up 0.2s cubic-bezier(0.34,1.56,0.64,1); }
-.modal-head { padding: 18px 20px 0; }
-.modal-body { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
-.modal-foot { padding: 14px 20px; display: flex; gap: 8px; border-top: 1px solid var(--border); }
+.ov{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fin .15s ease;}
+.mbox{background:var(--bg2);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:480px;overflow:hidden;animation:sup .2s cubic-bezier(.34,1.56,.64,1);}
+.mh{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;}
+.mb{padding:14px 20px;display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow-y:auto;}
+.mf{padding:12px 20px;display:flex;gap:8px;border-top:1px solid var(--border);}
 
 /* Table */
-.tbl { width: 100%; border-collapse: collapse; }
-.tbl th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-.tbl td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
-.tbl tr:last-child td { border-bottom: none; }
-.tbl tr:hover td { background: var(--bg3); }
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:9px 14px;text-align:left;font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--bg3);}
 
 /* Progress */
-.bar { height: 4px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+.bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+.barf{height:100%;border-radius:99px;transition:width .6s ease;}
 
-/* Stat tile */
-.stat { padding: 16px 18px; }
-.stat-n { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; margin-top: 6px; }
-.stat-l { font-size: 12px; color: var(--text2); margin-top: 4px; font-weight: 500; }
+/* Stars */
+.star{color:var(--yellow);font-size:13px;cursor:pointer;}
+.star.off{color:var(--bg4);}
 
 /* Section header */
-.sh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.sh-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.sh-t{font-size:20px;font-weight:700;letter-spacing:-.3px;}
+.sh-sub{font-size:13px;color:var(--t2);margin-top:2px;}
 
-/* List item */
-.list-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
-.list-item:last-child { border-bottom: none; }
-.list-item:hover { background: var(--bg3); }
-
-/* Icon container */
-.icon-box { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-/* Timer */
-.timer-face { font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1; font-variant-numeric: tabular-nums; }
-
-/* Animations */
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slide-up { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-.fade { animation: fade-in 0.2s ease; }
-
-/* Routine row */
-.rit { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: background 0.1s; border: 1px solid transparent; }
-.rit:hover { background: var(--bg3); }
-.rit.done { opacity: 0.4; pointer-events: none; }
-
-/* Step row */
-.step-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.step-row:last-child { border-bottom: none; }
-
-/* Challenge card */
-.ch-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
-
-/* Sound btn */
-.sound-btn { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); cursor: pointer; text-align: left; transition: all 0.15s; width: 100%; font-family: inherit; }
-.sound-btn:hover { border-color: var(--blue); background: var(--bg3); }
-.sound-btn.on { background: var(--blue); border-color: var(--blue); color: white; }
-
-/* Range */
-input[type=range] { -webkit-appearance: none; width: 100%; height: 3px; border-radius: 99px; background: var(--bg3); outline: none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--blue); cursor: pointer; border: 2px solid var(--bg2); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+/* Grid */
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.grid-auto-sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
 
 /* Empty */
-.empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 48px 20px; color: var(--text3); font-size: 13px; }
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 20px;color:var(--t3);font-size:13px;}
 
-/* Print */
-@media print {
-  @page { size: A4; margin: 0; }
-  .no-print { display: none !important; }
-  .for-print { display: flex !important; }
-}
-.for-print { display: none; position: fixed; inset: 0; background: white; z-index: 9999; align-items: center; justify-content: center; padding: 50mm; text-align: center; }
+/* Step row */
+.step-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
+.step-row:last-child{border-bottom:none;}
 
-/* Scratch */
-.scratch-area { background: var(--yellow-light); border: 1.5px solid var(--yellow); border-radius: var(--radius-lg); padding: 16px 18px; }
+/* Routine item */
+.rit{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .1s;}
+.rit:hover{background:var(--bg3);}
+.rit.done{opacity:.38;pointer-events:none;}
 
-/* Mobile */
-@media (max-width: 768px) {
-  .sidebar { display: none; }
-  .mob-nav { display: flex !important; }
-  .page { padding: 16px; }
-}
-.mob-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 4px 16px; z-index: 40; gap: 0; }
+/* Animations */
+@keyframes fin{from{opacity:0}to{opacity:1}}
+@keyframes sup{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.fade{animation:fin .2s ease;}
 
-/* Tooltip-like label */
-.label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 6px; }
+/* KPI card */
+.kpi{padding:16px 18px;display:flex;flex-direction:column;gap:5px;}
+.kpi-n{font-size:30px;font-weight:700;letter-spacing:-.5px;line-height:1;}
+.kpi-l{font-size:11.5px;color:var(--t2);font-weight:500;}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:3px;}
+
+/* Book item */
+.book-row{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:flex-start;transition:background .1s;cursor:pointer;}
+.book-row:last-child{border-bottom:none;}
+.book-row:hover{background:var(--bg3);}
+.book-cover{width:36px;height:50px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;letter-spacing:-.3px;}
+
+/* Reading progress ring */
+.ring-sm{transform:rotate(-90deg);transform-origin:center;}
 
 /* Divider */
-.div { height: 1px; background: var(--border); margin: 8px 0; }
+.div{height:1px;background:var(--border);margin:6px 2px;}
 
-/* Focus ring for buttons */
-.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+/* Focus timer */
+.timer-big{font-size:54px;font-weight:700;letter-spacing:-3px;font-variant-numeric:tabular-nums;line-height:1;}
+
+/* System card */
+.sys-card{padding:16px 18px;border-left:3px solid var(--blue);}
+
+/* Tag row */
+.tags{display:flex;flex-wrap:wrap;gap:5px;}
+
+/* Print */
+@media print{@page{size:A4;margin:0;}.no-print{display:none!important;}.for-print{display:flex!important;}}
+.for-print{display:none;position:fixed;inset:0;background:white;z-index:9999;align-items:center;justify-content:center;padding:50mm;text-align:center;}
+
+/* Scratch */
+.scratch{background:var(--yl);border:1.5px solid var(--yellow);border-radius:14px;padding:14px 16px;}
+
+/* Mobile */
+@media(max-width:768px){.sidebar{display:none;}.mob-nav{display:flex!important;}.page{padding:14px;}}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:7px 4px 14px;z-index:40;gap:0;}
+
+/* Range */
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:99px;background:var(--bg3);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid var(--bg2);box-shadow:0 1px 3px rgba(0,0,0,.2);}
+
+/* Sound btn */
+.snd{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;text-align:left;transition:all .12s;width:100%;font-family:inherit;}
+.snd:hover{border-color:var(--blue);}
+.snd.on{background:var(--blue);border-color:var(--blue);color:white;}
+
+/* Label */
+.lbl{font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+
+/* Reading plan */
+.rp-week{border-left:2px solid var(--blue);padding:8px 0 8px 14px;margin-bottom:10px;}
+.rp-week-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);margin-bottom:4px;}
+
+/* Kategori renkleri */
+.cat-0{background:#ff6b6b;}
+.cat-1{background:#4ecdc4;}
+.cat-2{background:#45b7d1;}
+.cat-3{background:#96ceb4;}
+.cat-4{background:#ffeaa7;color:#333 !important;}
+.cat-5{background:#dda0dd;}
+.cat-6{background:#98d8c8;}
+.cat-7{background:#f7dc6f;color:#333 !important;}
+.cat-8{background:#bb8fce;}
+.cat-9{background:#85c1e9;}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-/* eslint-disable */
-var R = React;
-var useState = R.useState;
-var useEffect = R.useEffect;
-var useMemo = R.useMemo;
-var useCallback = R.useCallback;
-var useRef = R.useRef;
-var memo = R.memo;
-var h = R.createElement;
+var R=React, useState=R.useState, useEffect=R.useEffect, useMemo=R.useMemo, useCallback=R.useCallback, useRef=R.useRef, memo=R.memo, h=R.createElement;
 
-// -- SVG Icons (inline, no external dep) ----------------------------------
-var ICONS = {
-  zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
-  dashboard: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
-  trophy: 'M8 21h8M12 17v4M7 4H4a1 1 0 0 0-1 1v3c0 3.3 2.7 6 6 6h6c3.3 0 6-2.7 6-6V5a1 1 0 0 0-1-1h-3M7 4V2M17 4V2M7 4h10',
-  headphones: 'M3 18v-6a9 9 0 0 1 18 0v6 M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z',
-  archive: 'M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.3 7l8.7 5 8.7-5 M12 22V12',
-  target: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M12 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z M12 14c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z',
-  check_sq: 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
-  book: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
-  quote: 'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
-  pen: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
-  refresh: 'M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
-  shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-  users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M9 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
-  help: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-  activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
-  download: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
-  undo: 'M9 14L4 9l5-5 M4 9h11a4 4 0 0 1 0 8h-1',
-  plus: 'M12 5v14M5 12h14',
-  x: 'M18 6L6 18M6 6l12 12',
-  trash: 'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
-  play: 'M5 3l14 9-14 9V3z',
-  pause: 'M6 4h4v16H6zM14 4h4v16h-4z',
-  reset: 'M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15',
-  sun: 'M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
-  moon: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
-  search: 'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
-  check: 'M20 6L9 17l-5-5',
-  printer: 'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z',
-  vol: 'M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07',
-  rain: 'M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2',
-  tree: 'M17 14v5M7 14v5M12 2L2 22h20z',
-  coffee: 'M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3',
-  wind: 'M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2',
-  bell: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
-  cloud: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z',
-  star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
-  grad: 'M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5',
-  piggy: 'M19 12a7 7 0 1 0-7 7M19 12c0 3.87-3.13 7-7 7M19 12h2M13 7h.01M8 13.5c0-2.5 1.5-4.5 4-5.5',
-  skull: 'M12 2a7 7 0 0 1 7 7v2c1.1 0 2 .9 2 2v2a2 2 0 0 1-2 2h-.5l-1 4H6.5l-1-4H5a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2V9a7 7 0 0 1 7-7zM9 17v-2M15 17v-2',
-  flame: 'M8.5 14.5A2.5 2.5 0 0 0 11 17c0-1.5 1-3 1-3s1 1.5 1 3a2.5 2.5 0 0 0 2.5-2.5c0-1.5-.8-3-3.5-5.5C9.3 11.5 8.5 13 8.5 14.5zM12 2C6.5 7 4 10.5 4 14a8 8 0 0 0 16 0c0-5.5-5-10-8-12z',
-  smile: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01',
-  brain: 'M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04zM14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04z',
-  wifi_off: 'M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01',
-  dumbbell: 'M6.5 6.5h11M6.5 17.5h11M3 8.5h4v7H3zM17 8.5h4v7h-4z',
-  cookie: 'M12 2a10 10 0 1 0 10 10M8.5 8.5h.01M16 15.5h.01M12 12h.01',
-  arrow_r: 'M5 12h14M12 5l7 7-7 7',
-  circle: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z',
-  check_c: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3',
-  lock: 'M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4',
+// ---- SVG icon system ----
+var IC={
+  zap:'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  dash:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+  trophy:'M8 21h8M12 17v4M7 4H4a1 1 0 0 0-1 1v3c0 3.3 2.7 6 6 6h6c3.3 0 6-2.7 6-6V5a1 1 0 0 0-1-1h-3M7 4V2M17 4V2M7 4h10',
+  hp:'M3 18v-6a9 9 0 0 1 18 0v6 M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z',
+  arc:'M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.3 7l8.7 5 8.7-5 M12 22V12',
+  tgt:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M12 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z M12 14c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z',
+  csq:'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  bk:'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+  qt:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
+  pen:'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+  ref:'M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+  sh:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  us:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M9 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
+  hlp:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+  act:'M22 12h-4l-3 9L9 3l-3 9H2',
+  dl:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
+  undo:'M9 14L4 9l5-5 M4 9h11a4 4 0 0 1 0 8h-1',
+  plus:'M12 5v14M5 12h14',
+  x:'M18 6L6 18M6 6l12 12',
+  trash:'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+  play:'M5 3l14 9-14 9V3z',
+  pause:'M6 4h4v16H6zM14 4h4v16h-4z',
+  rst:'M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15',
+  sun:'M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
+  moon:'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
+  srch:'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
+  chk:'M20 6L9 17l-5-5',
+  prn:'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z',
+  vol:'M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07',
+  rain:'M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2',
+  tree:'M17 14v5M7 14v5M12 2L2 22h20z',
+  coffee:'M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3',
+  wind:'M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2',
+  bell:'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
+  star:'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+  edit:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
+  bar:'M18 20V10M12 20V4M6 20v-6',
+  layers:'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+  book_open:'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+  checklist:'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4',
+  brain:'M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04z',
+  flame:'M8.5 14.5A2.5 2.5 0 0 0 11 17c0-1.5 1-3 1-3s1 1.5 1 3a2.5 2.5 0 0 0 2.5-2.5c0-1.5-.8-3-3.5-5.5C9.3 11.5 8.5 13 8.5 14.5z M12 2C6.5 7 4 10.5 4 14a8 8 0 0 0 16 0c0-5.5-5-10-8-12z',
+  ar:'M5 12h14M12 5l7 7-7 7',
+  ci:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z',
+  cc:'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3',
+  oi:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0',
+  note:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6M16 13H8M16 17H8M10 9H8',
+  kpi:'M3 3v18h18 M18.7 8l-5.1 5.2-2.8-2.7L7 14.3',
+  skull:'M12 2a7 7 0 0 1 7 7v2c1.1 0 2 .9 2 2v2a2 2 0 0 1-2 2h-.5l-1 4H6.5l-1-4H5a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2V9a7 7 0 0 1 7-7zM9 17v-2M15 17v-2',
+  sys:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
 };
-
-function Ic(props) {
-  var n = props.n, s = props.s || 16, c = props.c, st = props.st || {};
-  var d = ICONS[n];
-  if (!d) return null;
-  var paths = d.split('M').filter(Boolean).map(function(p) { return 'M' + p; });
-  return h('svg', {
-    width: s, height: s, viewBox: '0 0 24 24', fill: 'none',
-    stroke: c || 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round',
-    style: Object.assign({display:'inline-block',flexShrink:0,verticalAlign:'middle'}, st)
-  }, paths.map(function(p, i) { return h('path', {key: i, d: p}); }));
+function Ic(p){
+  var d=IC[p.n]; if(!d) return null;
+  var paths=d.split('M').filter(Boolean).map(function(x){return 'M'+x;});
+  return h('svg',{width:p.s||16,height:p.s||16,viewBox:'0 0 24 24',fill:'none',stroke:p.c||'currentColor',strokeWidth:1.6,strokeLinecap:'round',strokeLinejoin:'round',style:Object.assign({display:'inline-block',flexShrink:0,verticalAlign:'middle'},p.st||{})},
+    paths.map(function(pt,i){return h('path',{key:i,d:pt});}));
 }
 
-// -- Utils -----------------------------------------------------------------
-var U = {
-  isoWeek: function(d) {
-    var dt = new Date(d.getTime()); dt.setHours(0,0,0,0);
-    dt.setDate(dt.getDate() + 3 - (dt.getDay()+6)%7);
-    var w1 = new Date(dt.getFullYear(),0,4);
-    return 1 + Math.round(((dt-w1)/86400000 - 3 + (w1.getDay()+6)%7) / 7);
-  },
-  quarter: function(d) { return 'Q' + Math.floor((d.getMonth()+3)/3); },
-  isActive: function(p, last) {
-    if (!last) return true;
-    var l = new Date(last), n = new Date();
-    if (p==='daily') return l.toDateString() !== n.toDateString();
-    if (p==='weekly') return (n-l) > 7*864e5;
-    if (p==='monthly') return l.getMonth()!==n.getMonth() || l.getFullYear()!==n.getFullYear();
-    return true;
-  },
-  fmt: function(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); },
-  today: function() { return new Date().toISOString().split('T')[0]; },
-  ts: function() { return new Date().toLocaleString('tr-TR'); },
-  dl: function(data, fn) {
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
-    a.download = fn; a.click();
-  }
+// ---- Utilities ----
+var U={
+  isoWeek:function(d){var dt=new Date(d.getTime());dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);var w1=new Date(dt.getFullYear(),0,4);return 1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7);},
+  quarter:function(d){return 'Q'+Math.floor((d.getMonth()+3)/3);},
+  isActive:function(p,l){if(!l)return true;var last=new Date(l),n=new Date();if(p==='daily')return last.toDateString()!==n.toDateString();if(p==='weekly')return(n-last)>7*864e5;if(p==='monthly')return last.getMonth()!==n.getMonth()||last.getFullYear()!==n.getFullYear();return true;},
+  fmt:function(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},
+  today:function(){return new Date().toISOString().split('T')[0];},
+  ts:function(){return new Date().toLocaleString('tr-TR');},
+  dl:function(d,fn){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=fn;a.click();}
 };
 
-// -- Data ------------------------------------------------------------------
-var INIT = {
-  goals: [
-    {id:1,title:'Ingilizce C1 Sertifikasyonu',desc:'Uluslararasi projelerde liderlik icin.',quarter:'Q1',frog:true,steps:[{id:101,t:'IELTS Kurs Kaydi',done:true},{id:102,t:'Haftalik Essay',done:false}]},
-    {id:2,title:'Sabah Rutini Olustur',desc:'Erken kalkis ve egzersiz aliskanligini kazanmak.',quarter:'Q1',frog:false,steps:[{id:201,t:'Alarm kurulumu',done:true},{id:202,t:'7 gun surdur',done:false}]},
-  ],
-  todos: [
-    {id:11,text:'Onemli Raporu Teslim Et',end:'2026-04-15',priority:'urgent',category:'Is',done:false},
-    {id:12,text:'Haftalik planlama toplantisi',end:'',priority:'high',category:'Is',done:false},
-    {id:13,text:'Kitap ozeti cikar',end:'',priority:'normal',category:'Gelisim',done:true},
-  ],
-  books: [
-    {id:31,title:'Atomik Aliskanliklar',author:'James Clear',end:'2026-04-01',status:'reading'},
-    {id:32,title:'Deep Work',author:'Cal Newport',end:'',status:'queue'},
-  ],
-  quotes: [
-    {id:41,text:'Olcemedin seyi gelistiremezsin.',author:'Peter Drucker',cat:'Yonetim'},
-    {id:42,text:'Her seye hayir diyebildiginde, onemli seylere evet diyebilirsin.',author:'Steve Jobs',cat:'Odak'},
-    {id:43,text:'Mukemmellik bir eylem degil, bir aliskanligin sonucudur.',author:'Aristotle',cat:'Gelisim'},
-  ],
-  journal: [{id:501,date:'2026-03-18',cat:'Sukran',text:'Bugün odaklanmayi basardim ve planlarimi tamamladim.'}],
-  routines: {
-    daily:    [{id:61,t:'Sabah Meditasyonu',last:null},{id:62,t:'500ml Su',last:null},{id:63,t:'Gunluk Planlama',last:null}],
-    weekly:   [{id:71,t:'Haftalik Gozden Gecirme',last:null}],
-    monthly:  [{id:81,t:'Aylik Hedef Degerlendirmesi',last:null}],
-    quarterly:[], yearly:[],
-  },
-  principles: [{id:91,type:'Vizyon',text:'Her gun %1 daha iyi olmak.'},{id:92,type:'Kural',text:'Ilk iki saatimi derin calisma icin koru.'}],
-  coaching:   [{id:101,title:'GROW Modeli',text:'Goal, Reality, Options, Will adimlarini takip et.',cat:'Yontem'}],
-  questions:  [{id:1,text:'Korkmasaydim bugün ne yapardim?'},{id:2,text:'Gelecekteki ben bugünkü kararimdan memnun kalacak mi?'}],
-  vault: [], challenges: [], trash: [], logs: [],
-  stats: {xp:120, focus:0, level:1},
-  vol: 0.6, activeSound: null,
-};
-
-var CH_TPLS = [
-  {id:'no-sugar',  name:'Seker Yok',         icon:'cookie',   cat:'Saglik', desc:'90 gun boyunca ilave seker tuketme.',                      diff:'hard',    xp:300},
-  {id:'cold',      name:'Soguk Dus',          icon:'cloud',    cat:'Saglik', desc:'Her sabah 60 saniye soguk sus al.',                        diff:'medium',  xp:200},
-  {id:'read',      name:'Her Gun Oku',        icon:'book',     cat:'Gelisim',desc:'Her gun en az 20 sayfa oku.',                              diff:'easy',    xp:150},
-  {id:'no-social', name:'Sosyal Medya Detoks',icon:'wifi_off', cat:'Odak',   desc:'90 gun boyunca sosyal medyayi sil.',                       diff:'extreme', xp:500},
-  {id:'workout',   name:'Antrenman',          icon:'dumbbell', cat:'Saglik', desc:'Haftada 4 gun en az 30 dk egzersiz yap.',                  diff:'medium',  xp:250},
-  {id:'meditate',  name:'Meditasyon',         icon:'brain',    cat:'Zihin',  desc:'Her gun 10 dakika meditasyon yap.',                        diff:'easy',    xp:150},
-  {id:'journal',   name:'Gunluk Yazimi',      icon:'pen',      cat:'Zihin',  desc:'Her gun en az 200 kelime yaz.',                            diff:'medium',  xp:200},
-  {id:'learn',     name:'Yeni Beceri',        icon:'grad',     cat:'Gelisim',desc:'Her gun 30 dk yeni bir beceri ogren.',                     diff:'hard',    xp:350},
-  {id:'save',      name:'Birikim Mucadelesi', icon:'piggy',    cat:'Finans', desc:'90 gun boyunca her harcamayi kaydet.',                     diff:'medium',  xp:200},
-  {id:'custom',    name:'Ozel Mucadele',      icon:'star',     cat:'Ozel',   desc:'Kendi meydan okumani belirle!',                            diff:'medium',  xp:250},
+// ---- 100-book curated library ----
+var BOOK_CATS=['Temel Taslar','Hedef & Disiplin','Dis. & Zihin','Sistem & Is','Odak & Dikkat','Aliskanlik','Zaman Yonetimi','Ileri Performans','Modern Verimlilik','Tamamlama'];
+var LIBRARY=[
+  {id:'b1',t:'The ONE Thing',a:'Gary Keller',cat:0,pages:240,core:true,desc:'Tek en onemli seye odaklanma sanati. Diger her seyin gereksiz hale geldigi o bir seyi bulmak.'},
+  {id:'b2',t:'Atomic Habits',a:'James Clear',cat:5,pages:320,core:true,desc:'Kucuk degisikliklerin buyuk sonuclara donusumu. 1% iyilestirme sistemi.'},
+  {id:'b3',t:'Deep Work',a:'Cal Newport',cat:4,pages:304,core:true,desc:'Dikkat dagitmadan calismanin ekonomik degerini artirmak. Odakli calisma kurallari.'},
+  {id:'b4',t:'Getting Things Done',a:'David Allen',cat:6,pages:352,core:true,desc:'Zihinsel yukle basa cikmak icin GTD metodolojisi. Sistematik gorev yonetimi.'},
+  {id:'b5',t:'The 7 Habits of Highly Effective People',a:'Stephen R. Covey',cat:0,pages:432,core:true,desc:'Karaktere dayali etkililik. Once onemli olanlari on siraya koy.'},
+  {id:'b6',t:'Eat That Frog!',a:'Brian Tracy',cat:1,pages:144,core:true,desc:'Ertelemezligin panzehiri. En zor gorevi once yap ve gunu kazan.'},
+  {id:'b7',t:'Essentialism',a:'Greg McKeown',cat:0,pages:260,core:false,desc:'Daha az ama daha iyi. Sadece onemli olan seylere evet demek.'},
+  {id:'b8',t:'The Power of Habit',a:'Charles Duhigg',cat:5,pages:371,core:false,desc:'Aliskanlik dongusu: ipucu, rutin, odulun bilimsel analizi.'},
+  {id:'b9',t:'The 4-Hour Workweek',a:'Tim Ferriss',cat:0,pages:308,core:false,desc:'Yeni zengin olmak ve sahiden yasamak icin tasarlanmis yeni bir hayat mimarisi.'},
+  {id:'b10',t:'Make Time',a:'Jake Knapp & John Zeratsky',cat:6,pages:288,core:false,desc:'Her gun bir "odak noktasi" secmek ve gunu ona gore sekillendirmek.'},
+  {id:'b11',t:'Smarter Faster Better',a:'Charles Duhigg',cat:3,pages:352,core:false,desc:'Verimlilik bilimi: motivasyon, hedef koyma, odak ve karar verme.'},
+  {id:'b12',t:'168 Hours',a:'Laura Vanderkam',cat:6,pages:256,core:false,desc:'Haftanin 168 saatini yonetmek. Zamanin gercekte nereye gittigini gormek.'},
+  {id:'b13',t:'Four Thousand Weeks',a:'Oliver Burkeman',cat:6,pages:288,core:false,desc:'80 yillik bir hayat = 4000 hafta. Zamana karsi savasan insanlik.'},
+  {id:'b14',t:'Time Management from the Inside Out',a:'Julie Morgenstern',cat:6,pages:272,core:false,desc:'Dis duzenleme yerine ic motivasyondan gelen zaman yonetimi.'},
+  {id:'b15',t:'The One Minute Manager',a:'Ken Blanchard',cat:3,pages:112,core:false,desc:'Uc basit teknikle verimli liderlik: hedef, ovgu, azarlama.'},
+  {id:'b16',t:'Goals!',a:'Brian Tracy',cat:1,pages:288,core:true,desc:'Istediginiz her seyi daha hizli elde etmek icin Brian Tracy sistemi.'},
+  {id:'b17',t:'No Excuses!',a:'Brian Tracy',cat:1,pages:320,core:false,desc:'Oz disiplin: her alanda basarinin sirri.'},
+  {id:'b18',t:'Maximum Achievement',a:'Brian Tracy',cat:1,pages:384,core:false,desc:'Potansiyelinizi tam olarak kullanmak icin sistem ve strateji.'},
+  {id:'b19',t:'Focal Point',a:'Brian Tracy',cat:1,pages:224,core:false,desc:'Yasaminizi basitlestirin, hizlanin ve en onemli seylere odaklanin.'},
+  {id:'b20',t:'Time Power',a:'Brian Tracy',cat:1,pages:272,core:false,desc:'Zamaninizi yonetmenin en gelismis sistemi.'},
+  {id:'b21',t:'Can\'t Hurt Me',a:'David Goggins',cat:2,pages:364,core:true,desc:'Zihinsel engelleri asmanin ham hikayesi. %40 kuralindan kurtulmak.'},
+  {id:'b22',t:'Discipline Equals Freedom',a:'Jocko Willink',cat:2,pages:212,core:true,desc:'Askeri disiplin felsefesi: rutin, odak ve mutlak sahiplenme.'},
+  {id:'b23',t:'The War of Art',a:'Steven Pressfield',cat:2,pages:192,core:false,desc:'Direncin nasil tanindigi ve nasil asilacagi. Sanatci zihninin savasi.'},
+  {id:'b24',t:'Do the Work',a:'Steven Pressfield',cat:2,pages:112,core:false,desc:'Her buyuk ise baslamaya ve bitirmeye engel olan direncin pratik analizi.'},
+  {id:'b25',t:'Relentless',a:'Tim Grover',cat:2,pages:240,core:false,desc:'Michael Jordan ve Kobe Bryant\'in antrenucu olan Grover\'in zihin haritasi.'},
+  {id:'b26',t:'Grit',a:'Angela Duckworth',cat:2,pages:352,core:false,desc:'Tutku ve azim: yetenegin degil, kararliligin ustunlugu.'},
+  {id:'b27',t:'Mindset',a:'Carol Dweck',cat:2,pages:320,core:false,desc:'Sabit vs buyume zihniyeti. Basarinin psikolojik temeli.'},
+  {id:'b28',t:'The Effective Executive',a:'Peter Drucker',cat:3,pages:208,core:true,desc:'Etkililik ogrenilir. Bilgi islerinin verimlilik rehberi.'},
+  {id:'b29',t:'High Output Management',a:'Andrew Grove',cat:3,pages:272,core:false,desc:'Intel CEO\'sundan yonetim mektubu. Cikti odakli liderlik.'},
+  {id:'b30',t:'Measure What Matters',a:'John Doerr',cat:3,pages:320,core:true,desc:'OKR sistemi: hedef koymanin Google ve Intel\'de nasil kullanildigi.'},
+  {id:'b31',t:'Execution',a:'Larry Bossidy & Ram Charan',cat:3,pages:288,core:false,desc:'Strateji degil uygulama kazanir. Sonuc alma disiplini.'},
+  {id:'b32',t:'Good to Great',a:'Jim Collins',cat:3,pages:320,core:false,desc:'Iyi olmak buyuklugun dusmanidir. Sirketlerin kalici buyuklige gecisi.'},
+  {id:'b33',t:'Built to Last',a:'Jim Collins',cat:3,pages:368,core:false,desc:'Vizyoner sirketlerin ilkeleri ve kahici basarinin sirri.'},
+  {id:'b34',t:'Indistractable',a:'Nir Eyal',cat:4,pages:288,core:true,desc:'Dikkat dagiticilarla basa cikma. Ic ve dis tetikleyicilerin kontrolu.'},
+  {id:'b35',t:'Digital Minimalism',a:'Cal Newport',cat:4,pages:302,core:false,desc:'Telefon ve sosyal medyayla saglikli iliski. Odakli teknoloji kullanimi.'},
+  {id:'b36',t:'Hyperfocus',a:'Chris Bailey',cat:4,pages:288,core:false,desc:'Hiperfokus modu: tam odak, tam verim. Dikkat yonetiminin bilimi.'},
+  {id:'b37',t:'The Myth of Multitasking',a:'Dave Crenshaw',cat:4,pages:144,core:false,desc:'Multitasking yalaninin aciga cikmasi ve tek odak sisteminin gucu.'},
+  {id:'b38',t:'Tiny Habits',a:'BJ Fogg',cat:5,pages:320,core:false,desc:'Kucuk adimlarla buyuk degisiklik. Stanford Persuasive Lab bulgulari.'},
+  {id:'b39',t:'Better Than Before',a:'Gretchen Rubin',cat:5,pages:304,core:false,desc:'Aliskanlik tipleri ve her kisi icin farkli stratejiler.'},
+  {id:'b40',t:'The Compound Effect',a:'Darren Hardy',cat:5,pages:176,core:false,desc:'Kucuk kararlar zamanla birikir. Bilesik etki prensibi.'},
+  {id:'b41',t:'15 Secrets Successful People Know About Time Management',a:'Kevin Kruse',cat:6,pages:240,core:false,desc:'Basarili insanlarin zaman sirlarinin ozeti.'},
+  {id:'b42',t:'18 Minutes',a:'Peter Bregman',cat:6,pages:272,core:false,desc:'Her gun 18 dakikayla odak ve verimlilik.'},
+  {id:'b43',t:'The Pomodoro Technique',a:'Francesco Cirillo',cat:6,pages:128,core:false,desc:'25 dakikalik calisma, 5 dakika mola. Zamanin kutuye alinmasi.'},
+  {id:'b44',t:'Thinking, Fast and Slow',a:'Daniel Kahneman',cat:7,pages:499,core:false,desc:'Iki dusunce sistemi: hizli sezgi vs yavas mantik. Karar psikolojisi.'},
+  {id:'b45',t:'Principles',a:'Ray Dalio',cat:7,pages:592,core:false,desc:'Hayat ve is prensipleri. Dunya\'nin en buyuk hedge fonu\'nun kurucu prensipleri.'},
+  {id:'b46',t:'The 80/20 Principle',a:'Richard Koch',cat:7,pages:288,core:true,desc:'Sonuclarin %80\'i caba\'nin %20\'sinden gelir. Pareto prensibinin uygulamasi.'},
+  {id:'b47',t:'Peak',a:'Anders Ericsson',cat:7,pages:352,core:false,desc:'Kasitli pratik: ustalarin sirri. 10000 saat yalaninin dogru versiyonu.'},
+  {id:'b48',t:'Building a Second Brain',a:'Tiago Forte',cat:8,pages:272,core:false,desc:'Dijital not alma ve bilgi yonetimi. Dis zihin sistemi kurma.'},
+  {id:'b49',t:'Slow Productivity',a:'Cal Newport',cat:8,pages:256,core:false,desc:'Yapay yogunluk yerine gercek uretkenlik. Yavasin gucu.'},
+  {id:'b50',t:'Feel-Good Productivity',a:'Ali Abdaal',cat:8,pages:304,core:false,desc:'Keyif veren verimlilik. Motivasyonun bilimsel temelleri.'},
+  {id:'b51',t:'The Checklist Manifesto',a:'Atul Gawande',cat:9,pages:224,core:false,desc:'Kontrol listelerinin hayat kurtaran gucu. Karmasiklikla basa cikma.'},
+  {id:'b52',t:'Scrum',a:'Jeff Sutherland',cat:9,pages:240,core:false,desc:'Yari zamanla iki kat is cikarmak. Ceviklik manifestosu.'},
+  {id:'b53',t:'The Goal',a:'Eliyahu Goldratt',cat:9,pages:384,core:false,desc:'Kisitlar teorisi. Bir fabrika hikayesi uzerinden sistem optimizasyonu.'},
+  {id:'b54',t:'Flow',a:'Mihaly Csikszentmihalyi',cat:9,pages:303,core:false,desc:'Optimal deneyimin psikolojisi. Tam absorption aninin bilimi.'},
+  {id:'b55',t:'The Art of Thinking Clearly',a:'Rolf Dobelli',cat:9,pages:384,core:false,desc:'99 bilissel yanilgi ve bunlardan kurtulmanin yollari.'},
+  {id:'b56',t:'Mastery',a:'Robert Greene',cat:9,pages:352,core:false,desc:'Ustalasmak icin gecilmesi gereken asama ve surecler.'},
+  {id:'b57',t:'The Almanack of Naval Ravikant',a:'Eric Jorgenson',cat:9,pages:240,core:false,desc:'Servet ve mutluluk uzerine Naval\'in bilgeligi. Zenginlik felsefi.'},
+  {id:'b58',t:'Tools of Titans',a:'Tim Ferriss',cat:9,pages:707,core:false,desc:'Dunya liderleri, sanatcilar ve arastirmacilardan taktikler.'},
+  {id:'b59',t:'Daily Rituals',a:'Mason Currey',cat:9,pages:304,core:false,desc:'Buyuk yaratici zihinlerin gunluk rutinleri. 161 kisinin sabah aliskanliglari.'},
+  {id:'b60',t:'Rest',a:'Alex Pang',cat:9,pages:320,core:false,desc:'Daha az calis, daha fazla uret. Dinlenmenin bilimi ve sanati.'},
+  {id:'b61',t:'Make Your Bed',a:'William McRaven',cat:9,pages:144,core:false,desc:'10 basit kural. Kucuk bir gorevle buyuk bir gunu kazanmak.'},
+  {id:'b62',t:'Start with Why',a:'Simon Sinek',cat:9,pages:256,core:false,desc:'Neden ile baslayan liderlik. Altin daire prensibi.'},
+  {id:'b63',t:'Drive',a:'Daniel Pink',cat:9,pages:272,core:false,desc:'Ic motivasyonun science. Ozerklik, ustalasma ve amac.'},
+  {id:'b64',t:'Extreme Ownership',a:'Jocko Willink',cat:2,pages:320,core:false,desc:'Her seyin sorumluluğunu almak. Navy SEAL\'dan liderlik dersleri.'},
+  {id:'b65',t:'The Slight Edge',a:'Jeff Olson',cat:5,pages:250,core:false,desc:'Her gun yapilan kucuk secimler. Basariyi veya baskariyi seceriz.'},
+  {id:'b66',t:'Outliers',a:'Malcolm Gladwell',cat:9,pages:309,core:false,desc:'Basaridaki gizli faktorler. 10000 saatin ardindan ne var?'},
+  {id:'b67',t:'Originals',a:'Adam Grant',cat:9,pages:320,core:false,desc:'Statukoya meydan okuyanlarin psikolojisi. Yaratici liderlik.'},
+  {id:'b68',t:'Give and Take',a:'Adam Grant',cat:9,pages:307,core:false,desc:'Vericiler neden kazanir. Is dnyasinda comitertligin gucu.'},
+  {id:'b69',t:'The Dip',a:'Seth Godin',cat:9,pages:96,core:false,desc:'Her basarinin ortasindaki cukur. Ne zaman devam et ne zaman birak.'},
+  {id:'b70',t:'So Good They Can\'t Ignore You',a:'Cal Newport',cat:9,pages:304,core:false,desc:'Tutku takip etme yerine ustalasmak. Nadir ve degerli beceriler.'},
+  {id:'b71',t:'Peak Performance',a:'Brad Stulberg & Steve Magness',cat:7,pages:256,core:false,desc:'Stres + Dinlenme = Gelisme. Performans biliminin formulu.'},
+  {id:'b72',t:'The Power of Full Engagement',a:'Jim Loehr & Tony Schwartz',cat:7,pages:256,core:false,desc:'Zaman degil enerji yonetin. Performansin gercek kaynaklari.'},
+  {id:'b73',t:'Focus',a:'Daniel Goleman',cat:4,pages:320,core:false,desc:'Dikkat aglarinin bilimi. Ic, dis ve oteki odak turleri.'},
+  {id:'b74',t:'Linchpin',a:'Seth Godin',cat:9,pages:244,core:false,desc:'Vazgecilmez olmak. Paha bicilmez sanat eseri olarak calisma.'},
+  {id:'b75',t:'Psychology of Achievement',a:'Brian Tracy',cat:1,pages:192,core:false,desc:'Brian Tracy\'nin kisisel basari psikolojisi kursu.'},
 ];
 
-var DIFF = {
-  easy:    {label:'Kolay',   cls:'pill-green',  ic:'smile'},
-  medium:  {label:'Orta',    cls:'pill-orange',  ic:'flame'},
-  hard:    {label:'Zor',     cls:'pill-red',    ic:'zap'},
-  extreme: {label:'Ekstrem', cls:'pill-purple', ic:'skull'},
-};
-
-var SOUNDS = [
-  {name:'Yagmur',       url:'https://actions.google.com/google_around_the_world/notifications/rain_stick.ogg',     icon:'rain'},
-  {name:'Sabah Kuslari',url:'https://actions.google.com/google_around_the_world/notifications/morning_birds.ogg',  icon:'tree'},
-  {name:'Kafe',         url:'https://actions.google.com/google_around_the_world/notifications/busy_street.ogg',    icon:'coffee'},
-  {name:'Beyaz Gurultu',url:'https://actions.google.com/google_around_the_world/notifications/wind_climes.ogg',    icon:'wind'},
-  {name:'Meditasyon',   url:'https://actions.google.com/google_around_the_world/notifications/meditation_bell.ogg',icon:'bell'},
+// ---- 90-day reading plans ----
+var READING_PLANS=[
+  {id:'core5',name:'Cekirdek 5 - Temel Sistem',desc:'Keller, Clear, Newport, Tracy, Allen. 5 kitap 90 gunde.',books:['b1','b2','b3','b6','b4'],weeks:13},
+  {id:'discipline',name:'Disiplin & Zihin Kontrolu',desc:'Goggins, Willink, Pressfield uclusu ile zihni sertlestir.',books:['b21','b22','b23','b24','b64'],weeks:13},
+  {id:'brian_tracy',name:'Brian Tracy Ekolu',desc:'Hedef koyma ve disiplin odakli 6 haftalik sprint.',books:['b16','b6','b17','b18','b20','b75'],weeks:9},
+  {id:'system',name:'Sistem Kurma & Is',desc:'Drucker, Doerr, Collins ile kurumsal sistem kurma.',books:['b28','b30','b32','b31','b33'],weeks:12},
+  {id:'habit',name:'Aliskanlik Mimarisi',desc:'Atomic Habits merkezinde tam aliskanlik sistemi.',books:['b2','b8','b38','b39','b40','b65'],weeks:12},
+  {id:'focus',name:'Derin Odak Ustasi',desc:'Newport ekolu ile dikkat ve odak yonetimi.',books:['b3','b34','b35','b36','b73'],weeks:10},
 ];
 
-var FORM_CFG = {
-  goal:      [{n:'title',ph:'Hedef basligi',t:'text',req:true},{n:'desc',ph:'Tanim',t:'ta',req:true},{n:'quarter',t:'sel',opts:['Q1','Q2','Q3','Q4']},{n:'frog',lb:'Bu en kritik hedefiniz mi?',t:'cb'}],
-  todo:      [{n:'text',ph:'Gorev nedir?',t:'text',req:true},{n:'priority',t:'sel',opts:['normal','high','urgent']},{n:'category',t:'sel',opts:['Is','Kisisel','Aile','Finans','Gelisim','Sosyal']},{n:'end',t:'date'}],
-  book:      [{n:'title',ph:'Kitap adi',t:'text',req:true},{n:'author',ph:'Yazar',t:'text'},{n:'end',t:'date'}],
-  quote:     [{n:'text',ph:'Soz',t:'ta',req:true},{n:'author',ph:'Kaynak',t:'text'},{n:'cat',ph:'Kategori',t:'text'}],
-  journal:   [{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Bugün ne dusundun?',t:'ta',req:true}],
-  principle: [{n:'type',ph:'Tur (Vizyon, Kural...)',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
-  coaching:  [{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
-  vault:     [{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
-  question:  [{n:'text',ph:'Soru',t:'ta',req:true}],
-  routine:   [{n:'t',ph:'Rutin adi',t:'text',req:true},{n:'period',t:'sel',opts:['daily','weekly','monthly','quarterly','yearly']}],
+// ---- Challenges ----
+var CH_TPLS=[
+  {id:'no-sugar',name:'Seker Yok',icon:'flame',cat:'Saglik',desc:'90 gun boyunca ilave seker tuketme.',diff:'hard',xp:300},
+  {id:'cold',name:'Soguk Dus',icon:'rain',cat:'Saglik',desc:'Her sabah 60 saniye soguk dus al.',diff:'medium',xp:200},
+  {id:'read',name:'Her Gun Oku',icon:'bk',cat:'Gelisim',desc:'Her gun en az 20 sayfa oku.',diff:'easy',xp:150},
+  {id:'no-social',name:'Sosyal Medya Detoks',icon:'ci',cat:'Odak',desc:'90 gun boyunca sosyal medyayi sil.',diff:'extreme',xp:500},
+  {id:'workout',name:'Antrenman',icon:'flame',cat:'Saglik',desc:'Haftada 4 gun en az 30 dk egzersiz yap.',diff:'medium',xp:250},
+  {id:'meditate',name:'Meditasyon',icon:'brain',cat:'Zihin',desc:'Her gun 10 dakika meditasyon yap.',diff:'easy',xp:150},
+  {id:'deep-work',name:'Derin Calisma',icon:'zap',cat:'Odak',desc:'Her gun kesintisiz 2 saat derin calisma.',diff:'hard',xp:300},
+  {id:'journal',name:'Gunluk Yazimi',icon:'pen',cat:'Zihin',desc:'Her gun en az 200 kelime yaz.',diff:'medium',xp:200},
+  {id:'custom',name:'Ozel Mucadele',icon:'star',cat:'Ozel',desc:'Kendi meydan okumani belirle!',diff:'medium',xp:250},
+];
+var DIFF={easy:{l:'Kolay',cls:'p-green'},medium:{l:'Orta',cls:'p-orange'},hard:{l:'Zor',cls:'p-red'},extreme:{l:'Ekstrem',cls:'p-purple'}};
+
+// ---- Sounds ----
+var SOUNDS=[
+  {name:'Yagmur',url:'https://actions.google.com/google_around_the_world/notifications/rain_stick.ogg',icon:'rain'},
+  {name:'Sabah Kuslari',url:'https://actions.google.com/google_around_the_world/notifications/morning_birds.ogg',icon:'tree'},
+  {name:'Kafe',url:'https://actions.google.com/google_around_the_world/notifications/busy_street.ogg',icon:'coffee'},
+  {name:'Beyaz Gurultu',url:'https://actions.google.com/google_around_the_world/notifications/wind_climes.ogg',icon:'wind'},
+  {name:'Meditasyon',url:'https://actions.google.com/google_around_the_world/notifications/meditation_bell.ogg',icon:'bell'},
+];
+
+// ---- Forms ----
+var FORMS={
+  goal:[{n:'title',ph:'Hedef basligi',t:'text',req:true},{n:'desc',ph:'Tanim',t:'ta',req:true},{n:'quarter',t:'sel',opts:['Q1','Q2','Q3','Q4']},{n:'frog',lb:'Bu en kritik hedefiniz mi?',t:'cb'}],
+  todo:[{n:'text',ph:'Gorev nedir?',t:'text',req:true},{n:'priority',t:'sel',opts:['normal','high','urgent']},{n:'category',t:'sel',opts:['Is','Kisisel','Aile','Finans','Gelisim','Sosyal']},{n:'end',t:'date'}],
+  kpi:[{n:'name',ph:'KPI adi (orn: Haftalik Odak Saati)',t:'text',req:true},{n:'unit',ph:'Birim (saat, sayfa, %...)',t:'text'},{n:'target',ph:'Hedef deger',t:'text',req:true},{n:'current',ph:'Mevcut deger',t:'text'},{n:'cat',t:'sel',opts:['Is','Saglik','Gelisim','Finans','Iliski']}],
+  quote:[{n:'text',ph:'Soz',t:'ta',req:true},{n:'author',ph:'Kaynak',t:'text'},{n:'cat',ph:'Kategori',t:'text'}],
+  journal:[{n:'cat',ph:'Kategori (Sukran, Fikir...)',t:'text'},{n:'text',ph:'Bugün ne dusundun?',t:'ta',req:true}],
+  principle:[{n:'type',ph:'Tur (Vizyon, Kural...)',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
+  coaching:[{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
+  vault:[{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
+  question:[{n:'text',ph:'Soru',t:'ta',req:true}],
+  routine:[{n:'t',ph:'Rutin adi',t:'text',req:true},{n:'period',t:'sel',opts:['daily','weekly','monthly','quarterly','yearly']}],
+};
+var MTITLES={goal:'Hedef',todo:'Gorev',kpi:'KPI',quote:'Soz',journal:'Gunluk',principle:'Prensip',coaching:'Kocluk',vault:'Not',question:'Soru',routine:'Rutin'};
+
+// ---- Initial data ----
+var INIT={
+  goals:[{id:1,title:'Ingilizce C1 Sertifikasyonu',desc:'Uluslararasi projelerde liderlik icin.',quarter:'Q1',frog:true,steps:[{id:101,t:'IELTS Kurs Kaydi',done:true},{id:102,t:'Haftalik Essay',done:false}]}],
+  todos:[{id:11,text:'Onemli Raporu Teslim Et',end:'2026-04-15',priority:'urgent',category:'Is',done:false},{id:12,text:'Haftalik planlama toplantisi',end:'',priority:'high',category:'Is',done:false}],
+  kpis:[{id:201,name:'Haftalik Odak Saati',unit:'saat',target:'40',current:'28',cat:'Is',history:[22,25,28,28]},{id:202,name:'Gunluk Sayfa',unit:'sayfa',target:'20',current:'14',cat:'Gelisim',history:[8,12,14,14]},{id:203,name:'Rutin Tamamlama',unit:'%',target:'90',current:'67',cat:'Saglik',history:[45,60,67,67]}],
+  books:[],
+  myBooks:[],
+  quotes:[{id:41,text:'Olcemedin seyi gelistiremezsin.',author:'Peter Drucker',cat:'Yonetim'},{id:42,text:'Her seye hayir diyebildiginde, onemli seylere evet diyebilirsin.',author:'Steve Jobs',cat:'Odak'}],
+  journal:[{id:501,date:'2026-03-18',cat:'Sukran',text:'Bugün odaklanmayi basardim ve planlarimi tamamladim.'}],
+  routines:{daily:[{id:61,t:'Sabah Meditasyonu',last:null},{id:62,t:'500ml Su',last:null},{id:63,t:'Gunluk Planlama',last:null}],weekly:[{id:71,t:'Haftalik Gozden Gecirme',last:null}],monthly:[{id:81,t:'Aylik KPI Degerlendirmesi',last:null}],quarterly:[],yearly:[]},
+  principles:[{id:91,type:'Vizyon',text:'Her gun %1 daha iyi olmak.'},{id:92,type:'Kural',text:'Ilk iki saatimi derin calisma icin koru.'}],
+  coaching:[{id:101,title:'OKR Sistemi',text:'Objective + Key Results. Her ceyrek 1 buyuk hedef, 3 olcum.',cat:'Yontem'}],
+  questions:[{id:1,text:'Korkmasaydim bugün ne yapardim?'},{id:2,text:'Gelecekteki ben bugünkü kararimdan memnun kalacak mi?'}],
+  vault:[],challenges:[],
+  activeReadingPlan:null,
+  trash:[],logs:[],
+  stats:{xp:120,focus:0,level:1,streak:0,lastActive:U.today()},
+  vol:0.6,activeSound:null,
+  scratch:'',
 };
 
-// -- Clock component (isolated to prevent app re-render) -------------------
-var Clock = memo(function() {
-  var ts = useState(new Date());
-  var t = ts[0], setT = ts[1];
-  useEffect(function() {
-    var id = setInterval(function() { setT(new Date()); }, 1000);
-    return function() { clearInterval(id); };
-  }, []);
-  return h('span', {style:{fontSize:12,color:'var(--text2)',fontWeight:500}},
-    t.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) + '  ' + t.toLocaleTimeString('tr-TR')
-  );
+// ---- Clock ----
+var Clock=memo(function(){
+  var s=useState(new Date()); var t=s[0],setT=s[1];
+  useEffect(function(){var id=setInterval(function(){setT(new Date());},1000);return function(){clearInterval(id);},},[]);
+  return h('span',{style:{fontSize:11.5,color:'var(--t2)',fontWeight:500}},
+    t.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})+' \u00b7 '+t.toLocaleTimeString('tr-TR'));
 });
 
-// -- Timer component (isolated) --------------------------------------------
-var TimerWidget = memo(function(props) {
-  var onXP = props.onXP;
-  var ms = useState('focus');   var mode=ms[0],setMode=ms[1];
-  var tls = useState(25*60);    var tl=tls[0],setTl=tls[1];
-  var ons = useState(false);    var on=ons[0],setOn=ons[1];
-  var TDUR = {focus:25*60,short:5*60,long:15*60};
-
-  useEffect(function() {
+// ---- Timer ----
+var TimerWidget=memo(function(p){
+  var ms=useState('focus'); var mode=ms[0],setMode=ms[1];
+  var tls=useState(25*60); var tl=tls[0],setTl=tls[1];
+  var ons=useState(false); var on=ons[0],setOn=ons[1];
+  var TDUR={focus:25*60,short:5*60,long:15*60};
+  useEffect(function(){
     var id;
-    if (on && tl > 0) { id = setInterval(function() { setTl(function(p) { return p-1; }); }, 1000); }
-    else if (on && tl === 0) {
-      setOn(false);
-      if (mode === 'focus') { onXP(50, 'Pomodoro tamamlandi'); }
-      try { new Audio(SOUNDS[4].url).play(); } catch(e) {}
-    }
-    return function() { clearInterval(id); };
-  }, [on, tl]);
-
-  var perc = tl / TDUR[mode];
-  var C = 2 * Math.PI * 54;
-  var modeColor = mode === 'focus' ? 'var(--blue)' : 'var(--green)';
-
-  return h('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',gap:16,padding:'20px'}},
-    h('div', {style:{display:'flex',gap:4}},
-      [{id:'focus',l:'Odak 25'},{id:'short',l:'Kisa 5'},{id:'long',l:'Uzun 15'}].map(function(m) {
-        return h('button', {
-          key: m.id, className:'btn btn-sm',
-          style:{background:mode===m.id?'var(--blue)':'var(--bg3)',color:mode===m.id?'white':'var(--text2)'},
-          onClick: function() { setMode(m.id); setTl(TDUR[m.id]); setOn(false); }
-        }, m.l);
+    if(on&&tl>0){id=setInterval(function(){setTl(function(x){return x-1;});},1000);}
+    else if(on&&tl===0){setOn(false);if(mode==='focus'){p.onXP(50,'Pomodoro tamamlandi');}try{new Audio(SOUNDS[4].url).play();}catch(e){}}
+    return function(){clearInterval(id);};
+  },[on,tl]);
+  var perc=tl/TDUR[mode]; var C=2*Math.PI*50;
+  return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:14,padding:'18px 16px'}},
+    h('div',{style:{display:'flex',gap:4}},
+      [{id:'focus',l:'Odak'},{id:'short',l:'Kisa'},{id:'long',l:'Uzun'}].map(function(m){
+        return h('button',{key:m.id,className:'btn btn-sm',style:{background:mode===m.id?'var(--blue)':'var(--bg3)',color:mode===m.id?'white':'var(--t2)'},onClick:function(){setMode(m.id);setTl(TDUR[m.id]);setOn(false);}},m.l);
       })
     ),
-    h('div', {style:{position:'relative',width:128,height:128}},
-      h('svg', {viewBox:'0 0 120 120',style:{position:'absolute',inset:0,width:'100%',height:'100%'}},
-        h('circle', {cx:60,cy:60,r:54,fill:'none',stroke:'var(--bg3)',strokeWidth:5}),
-        h('circle', {cx:60,cy:60,r:54,fill:'none',stroke:modeColor,strokeWidth:5,strokeLinecap:'round',
-          strokeDasharray:C, strokeDashoffset:C*(1-perc),
-          style:{transform:'rotate(-90deg)',transformOrigin:'center',transition:'stroke-dashoffset 1s linear'}})
+    h('div',{style:{position:'relative',width:116,height:116}},
+      h('svg',{viewBox:'0 0 108 108',style:{position:'absolute',inset:0,width:'100%',height:'100%'}},
+        h('circle',{cx:54,cy:54,r:50,fill:'none',stroke:'var(--bg3)',strokeWidth:5}),
+        h('circle',{cx:54,cy:54,r:50,fill:'none',stroke:mode==='focus'?'var(--blue)':'var(--green)',strokeWidth:5,strokeLinecap:'round',
+          strokeDasharray:C,strokeDashoffset:C*(1-perc),style:{transform:'rotate(-90deg)',transformOrigin:'center',transition:'stroke-dashoffset 1s linear'}})
       ),
-      h('div', {style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}},
-        h('span', {className:'timer-face', style:{fontSize:32}}, U.fmt(tl)),
-        h('span', {style:{fontSize:10,color:'var(--text3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em'}}, mode==='focus'?'Odak':'Mola')
+      h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:1}},
+        h('span',{style:{fontFamily:"'Inter',sans-serif",fontSize:28,fontWeight:700,letterSpacing:'-1px',lineHeight:1}},U.fmt(tl)),
+        h('span',{style:{fontSize:9,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em'}},mode==='focus'?'Odak':'Mola')
       )
     ),
-    h('div', {style:{display:'flex',gap:8}},
-      h('button', {
-        className: 'btn btn-primary',
-        onClick: function() { setOn(function(p){return !p;}); }
-      }, h(Ic, {n:on?'pause':'play',s:13}), on?'Durdur':'Baslat'),
-      h('button', {
-        className: 'btn btn-secondary btn-icon',
-        onClick: function() { setOn(false); setTl(TDUR[mode]); }
-      }, h(Ic, {n:'reset',s:14}))
+    h('div',{style:{display:'flex',gap:7}},
+      h('button',{className:'btn btn-p',onClick:function(){setOn(function(x){return !x;});}},h(Ic,{n:on?'pause':'play',s:12}),on?'Durdur':'Baslat'),
+      h('button',{className:'btn btn-s btn-ic',onClick:function(){setOn(false);setTl(TDUR[mode]);}},h(Ic,{n:'rst',s:13}))
     )
   );
 });
 
-// -- Modal -----------------------------------------------------------------
-function ModalForm(props) {
-  var type = props.type, onSave = props.onSave, onClose = props.onClose;
-  var vs = useState({}); var vals=vs[0],setVals=vs[1];
-  var fields = FORM_CFG[type] || [];
-  var TITLES = {goal:'Hedef',todo:'Gorev',book:'Kitap',quote:'Soz',journal:'Gunluk',principle:'Prensip',coaching:'Kocluk',vault:'Not',question:'Soru',routine:'Rutin'};
-
-  function setV(n, v) { setVals(function(p) { var x={}; x[n]=v; return Object.assign({},p,x); }); }
-
-  return h('div', {className:'overlay', onClick:function(e){if(e.target===e.currentTarget)onClose();}},
-    h('div', {className:'modal'},
-      h('div', {className:'modal-head', style:{display:'flex',alignItems:'center',justifyContent:'space-between'}},
-        h('span', {style:{fontWeight:700,fontSize:16}}, TITLES[type] + ' Ekle'),
-        h('button', {className:'btn btn-ghost btn-icon', onClick:onClose}, h(Ic,{n:'x',s:15}))
+// ---- Modal ----
+function MForm(p){
+  var vs=useState({}); var v=vs[0],sv=vs[1];
+  var ff=FORMS[p.type]||[];
+  function setV(n,val){sv(function(x){var o={};o[n]=val;return Object.assign({},x,o);});}
+  return h('div',{className:'ov',onClick:function(e){if(e.target===e.currentTarget)p.onClose();}},
+    h('div',{className:'mbox'},
+      h('div',{className:'mh'},
+        h('span',{style:{fontWeight:700,fontSize:15}},(MTITLES[p.type]||p.type)+' Ekle'),
+        h('button',{className:'btn btn-g btn-ic',onClick:p.onClose},h(Ic,{n:'x',s:14}))
       ),
-      h('div', {className:'modal-body'},
-        fields.map(function(f) {
-          if (f.t === 'cb') return h('label', {key:f.n, style:{display:'flex',alignItems:'center',gap:9,cursor:'pointer',fontSize:13}},
-            h('input', {type:'checkbox', className:'cb', checked:!!vals[f.n], onChange:function(e){setV(f.n,e.target.checked);}}),
-            f.lb
-          );
-          if (f.t === 'sel') return h('select', {key:f.n, className:'inp', value:vals[f.n]||f.opts[0], onChange:function(e){setV(f.n,e.target.value);}},
-            f.opts.map(function(o){return h('option',{key:o},o);})
-          );
-          if (f.t === 'ta') return h('textarea', {key:f.n, className:'inp', placeholder:f.ph||'', value:vals[f.n]||'', rows:3, onChange:function(e){setV(f.n,e.target.value);}});
-          return h('input', {key:f.n, className:'inp', type:f.t==='date'?'date':'text', placeholder:f.ph||'', value:vals[f.n]||'', onChange:function(e){setV(f.n,e.target.value);}});
+      h('div',{className:'mb'},
+        ff.map(function(f){
+          if(f.t==='cb') return h('label',{key:f.n,style:{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}},
+            h('input',{type:'checkbox',className:'cb',checked:!!v[f.n],onChange:function(e){setV(f.n,e.target.checked);}}),f.lb);
+          if(f.t==='sel') return h('select',{key:f.n,className:'inp',value:v[f.n]||f.opts[0],onChange:function(e){setV(f.n,e.target.value);}},
+            f.opts.map(function(o){return h('option',{key:o},o);}));
+          if(f.t==='ta') return h('textarea',{key:f.n,className:'inp',placeholder:f.ph||'',value:v[f.n]||'',rows:3,onChange:function(e){setV(f.n,e.target.value);}});
+          return h('input',{key:f.n,className:'inp',type:f.t==='date'?'date':'text',placeholder:f.ph||'',value:v[f.n]||'',onChange:function(e){setV(f.n,e.target.value);}});
         })
       ),
-      h('div', {className:'modal-foot'},
-        h('button', {className:'btn btn-secondary',style:{flex:1}, onClick:onClose}, 'Iptal'),
-        h('button', {className:'btn btn-primary',style:{flex:2}, onClick:function(){
-          var req = fields.filter(function(f){return f.req;});
-          if (!req.every(function(f){return vals[f.n]&&String(vals[f.n]).trim();})) { alert('Zorunlu alanlari doldurun.'); return; }
-          onSave(vals);
-        }}, 'Kaydet')
+      h('div',{className:'mf'},
+        h('button',{className:'btn btn-s',style:{flex:1},onClick:p.onClose},'Iptal'),
+        h('button',{className:'btn btn-p',style:{flex:2},onClick:function(){
+          var req=ff.filter(function(f){return f.req;});
+          if(!req.every(function(f){return v[f.n]&&String(v[f.n]).trim();})){alert('Zorunlu alanlari doldurun.');return;}
+          p.onSave(v);
+        }},'Kaydet')
       )
     )
   );
 }
 
-// -- Print modal -----------------------------------------------------------
-function PrintModal(props) {
-  var item = props.item, onClose = props.onClose;
-  return h('div', {className:'overlay no-print', onClick:function(e){if(e.target===e.currentTarget)onClose();}},
-    h('div', {className:'modal', style:{maxWidth:520}},
-      h('div', {className:'modal-head', style:{display:'flex',alignItems:'center',justifyContent:'space-between',paddingBottom:14}},
-        h('span', {style:{fontWeight:700,fontSize:16}}, 'Poster Baskisi'),
-        h('div', {style:{display:'flex',gap:8}},
-          h('button', {className:'btn btn-primary btn-sm', onClick:function(){window.print();}}, h(Ic,{n:'printer',s:13}), 'Yazdir'),
-          h('button', {className:'btn btn-ghost btn-icon', onClick:onClose}, h(Ic,{n:'x',s:15}))
-        )
-      ),
-      h('div', {style:{padding:'0 20px 20px'}},
-        h('div', {style:{border:'1px solid var(--border)',borderRadius:12,aspectRatio:'1/1.414',display:'flex',alignItems:'center',justifyContent:'center',padding:36,textAlign:'center',background:'white',color:'#1d1d1f'}},
-          h('div', null,
-            h('p', {style:{fontFamily:'Georgia,serif',fontStyle:'italic',fontSize:18,lineHeight:1.7,marginBottom:14}}, '"' + (item.text||item.title||'') + '"'),
-            item.author && h('p', {style:{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.14em',color:'#0071e3'}}, '- ' + item.author)
-          )
-        )
-      )
-    )
-  );
-}
-
-// -- Generic card ----------------------------------------------------------
-function ItemCard(props) {
-  var item=props.item, type=props.type, onDel=props.onDel, onPrint=props.onPrint;
-  return h('div', {className:'card card-p', style:{display:'flex',flexDirection:'column',gap:8}},
-    h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
-      h('span', {className:'pill pill-blue', style:{fontSize:10}}, item.cat||item.type||item.category||''),
-      h('div', {style:{display:'flex',gap:4}},
-        onPrint && h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28}, onClick:function(){onPrint(item);}}, h(Ic,{n:'printer',s:13,c:'var(--text3)'})),
-        h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28}, onClick:function(){onDel(item,type);}}, h(Ic,{n:'trash',s:13,c:'var(--text3)'}))
-      )
-    ),
-    item.title && h('p', {style:{fontWeight:600,fontSize:14}}, item.title),
-    h('p', {style:{fontSize:13,color:'var(--text2)',lineHeight:1.6,fontStyle:'italic'}}, '"' + (item.text||item.content||'') + '"'),
-    item.author && h('p', {style:{fontSize:11,color:'var(--text3)',fontWeight:500}}, '-- ' + item.author),
-    item.date   && h('p', {style:{fontSize:11,color:'var(--text3)'}}, item.date)
-  );
-}
-
-// -- Page header -----------------------------------------------------------
-function PH(props) {
-  return h('div', {className:'sh'},
-    h('h1', {className:'sh-title'}, props.title),
-    props.action && h('button', {className:'btn btn-primary', onClick:props.action.fn},
-      h(Ic,{n:'plus',s:14}), props.action.label
-    )
-  );
-}
-
-// -- Empty state -----------------------------------------------------------
-function Empty(props) {
-  return h('div', {className:'empty'},
-    h(Ic, {n:props.icon||'circle',s:32,c:'var(--text3)'}),
-    h('p', null, props.msg||'Henuz icerik yok')
-  );
-}
-
-// -- Grid wrapper ----------------------------------------------------------
-function Grid(props) {
-  return h('div', {style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax('+(props.min||260)+'px,1fr))',gap:14}}, props.children);
-}
-
-// -- App -------------------------------------------------------------------
-function App() {
-  var ds = useState(function(){
-    try { var s=localStorage.getItem('fu3'); if(s){var p=JSON.parse(s);return Object.assign({},INIT,p,{routines:Object.assign({},INIT.routines,p.routines||{}),stats:Object.assign({},INIT.stats,p.stats||{}),challenges:p.challenges||[]});} } catch(e){}
-    return INIT;
-  });
+// ---- App ----
+function App(){
+  var ds=useState(function(){try{var s=localStorage.getItem('fu4');if(s){var p=JSON.parse(s);return Object.assign({},INIT,p,{routines:Object.assign({},INIT.routines,p.routines||{}),stats:Object.assign({},INIT.stats,p.stats||{}),challenges:p.challenges||[],kpis:p.kpis||INIT.kpis,myBooks:p.myBooks||[]});}}catch(e){}return INIT;});
   var data=ds[0],setData=ds[1];
+  var dks=useState(function(){return localStorage.getItem('fu4_t')==='dark';}); var dark=dks[0],setDark=dks[1];
+  var hs=useState([]); var hist=hs[0],setHist=hs[1];
+  var ts=useState('dashboard'); var tab=ts[0],setTab=ts[1];
+  var qs=useState(''); var q=qs[0],setQ=qs[1];
+  var ms=useState({open:false,type:null}); var modal=ms[0],setModal=ms[1];
+  var ps=useState(null); var printItem=ps[0],setPrint=ps[1];
+  var audioRef=useRef(null);
 
-  var dks = useState(function(){return localStorage.getItem('fu3_theme')==='dark';});
-  var dark=dks[0],setDark=dks[1];
+  useEffect(function(){document.body.className=dark?'dark':'';localStorage.setItem('fu4_t',dark?'dark':'');},[dark]);
+  useEffect(function(){var t=setTimeout(function(){localStorage.setItem('fu4',JSON.stringify(data));},800);return function(){clearTimeout(t);};},[data]);
 
-  var hs  = useState([]); var hist=hs[0],setHist=hs[1];
-  var ts  = useState('dashboard'); var tab=ts[0],setTab=ts[1];
-  var qs  = useState(''); var q=qs[0],setQ=qs[1];
-  var ms  = useState({open:false,type:null}); var modal=ms[0],setModal=ms[1];
-  var ps  = useState(null); var printItem=ps[0],setPrint=ps[1];
-  var scs = useState(function(){return localStorage.getItem('fu3_sc')||'';});
-  var sc=scs[0],setSc=scs[1];
-  var audioRef = useRef(null);
-
-  useEffect(function(){document.body.className=dark?'dark':'';localStorage.setItem('fu3_theme',dark?'dark':'');},[dark]);
-  useEffect(function(){var t=setTimeout(function(){localStorage.setItem('fu3',JSON.stringify(data));},800);return function(){clearTimeout(t);};},[data]);
-  useEffect(function(){localStorage.setItem('fu3_sc',sc);},[sc]);
-
-  function log(msg) { return {time:U.ts(),action:msg}; }
-
-  var upd = useCallback(function(next, msg) {
+  function lg(msg){return {time:U.ts(),action:msg||'Degisiklik'};}
+  var upd=useCallback(function(next,msg){
     setHist(function(h){return [JSON.stringify(data)].concat(h).slice(0,50);});
-    setData(Object.assign({},next,{logs:[log(msg||'Degisiklik')].concat((next.logs||[])).slice(0,100)}));
-  }, [data]);
+    setData(Object.assign({},next,{logs:[lg(msg)].concat((next.logs||[])).slice(0,100)}));
+  },[data]);
 
-  function undo() { if (!hist.length) return; setData(JSON.parse(hist[0])); setHist(function(h){return h.slice(1);}); }
+  function undo(){if(!hist.length)return;setData(JSON.parse(hist[0]));setHist(function(h){return h.slice(1);});}
 
-  function gainXP(amt, why) {
-    setData(function(p) {
-      var xp=(p.stats.xp||0)+amt, level=Math.floor(xp/500)+1;
-      return Object.assign({},p,{stats:Object.assign({},p.stats,{xp:xp,level:level}),logs:[log('+'+amt+' XP: '+why)].concat((p.logs||[])).slice(0,100)});
+  function gainXP(amt,why){
+    setData(function(p){
+      var xp=(p.stats.xp||0)+amt,level=Math.floor(xp/500)+1;
+      return Object.assign({},p,{stats:Object.assign({},p.stats,{xp:xp,level:level}),logs:[lg('+'+amt+' XP: '+why)].concat((p.logs||[])).slice(0,100)});
     });
   }
 
-  function fil(list, keys) {
-    if (!q||!list) return list||[];
+  function fil(list,keys){
+    if(!q||!list)return list||[];
     var lq=q.toLowerCase();
     return list.filter(function(i){return keys.some(function(k){return i[k]&&String(i[k]).toLowerCase().indexOf(lq)>=0;});});
   }
 
-  function del(item, type) {
-    if (!confirm('Silinsin mi?')) return;
-    var KM={goal:'goals',todo:'todos',book:'books',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges'};
-    var k=KM[type]; var n=Object.assign({},data);
+  function del(item,type){
+    if(!confirm('Silinsin mi?'))return;
+    var KM={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges'};
+    var k=KM[type],n=Object.assign({},data);
     n[k]=(data[k]||[]).filter(function(i){return i.id!==item.id;});
     n.trash=[{item:item,type:type,at:U.ts()}].concat(data.trash||[]);
     upd(n,'Silindi');
   }
 
-  function addItem(vals) {
+  function addItem(vals){
     var type=modal.type;
-    if (type==='routine') {
-      var per=vals.period||'daily';
-      var nr=Object.assign({},vals,{id:Date.now(),last:null});
-      var ro=Object.assign({},data.routines);
+    if(type==='routine'){
+      var per=vals.period||'daily',nr=Object.assign({},vals,{id:Date.now(),last:null}),ro=Object.assign({},data.routines);
       ro[per]=(ro[per]||[]).concat([nr]);
-      upd(Object.assign({},data,{routines:ro}),'Rutin eklendi');
-      gainXP(10,'Rutin eklendi');
-      setModal({open:false}); return;
+      upd(Object.assign({},data,{routines:ro}),'Rutin eklendi');gainXP(10,'Rutin eklendi');setModal({open:false});return;
     }
-    var KM2={goal:'goals',todo:'todos',book:'books',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault'};
+    var KM2={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault'};
     var item=Object.assign({id:Date.now()},vals);
-    if (type==='goal'){item.frog=!!vals.frog;item.steps=[];}
-    if (type==='todo')item.done=false;
-    if (type==='book')item.status='queue';
-    if (type==='journal')item.date=U.today();
+    if(type==='goal'){item.frog=!!vals.frog;item.steps=[];}
+    if(type==='todo')item.done=false;
+    if(type==='kpi'){item.history=[parseFloat(item.current)||0];}
+    if(type==='journal')item.date=U.today();
     var n2=Object.assign({},data);
     n2[KM2[type]]=[item].concat(data[KM2[type]]||[]);
-    upd(n2,'Yeni '+type+' eklendi');
-    gainXP(20,'Yeni '+type);
-    setModal({open:false});
+    upd(n2,'Yeni '+type+' eklendi');gainXP(20,'Yeni '+type);setModal({open:false});
   }
 
-  function startChallenge(tpl, cname, cdesc) {
-    var s=new Date(), e=new Date(s); e.setDate(e.getDate()+90);
+  function addToMyBooks(libBook,status){
+    var exists=(data.myBooks||[]).find(function(b){return b.libId===libBook.id;});
+    if(exists)return;
+    var nb={id:Date.now(),libId:libBook.id,title:libBook.t,author:libBook.a,status:status||'queue',pages:libBook.pages,pagesRead:0,rating:0,notes:'',addedAt:U.today()};
+    upd(Object.assign({},data,{myBooks:[nb].concat(data.myBooks||[])}),'Kitap eklendi');
+    gainXP(10,'Kitap eklendi: '+libBook.t);
+  }
+
+  function updateMyBook(id,changes){
+    var prev=(data.myBooks||[]).find(function(b){return b.id===id;});
+    var nb=(data.myBooks||[]).map(function(b){return b.id===id?Object.assign({},b,changes):b;});
+    if(changes.status==='done'&&prev&&prev.status!=='done')gainXP(50,'Kitap tamamlandi');
+    upd(Object.assign({},data,{myBooks:nb}),'Kitap guncellendi');
+  }
+
+  function startChallenge(tpl,cname,cdesc){
+    var s=new Date(),e=new Date(s);e.setDate(e.getDate()+90);
     var ch={id:Date.now(),tplId:tpl.id,name:cname||tpl.name,desc:cdesc||tpl.desc,icon:tpl.icon,cat:tpl.cat,diff:tpl.diff,xp:tpl.xp,start:U.today(),end:e.toISOString().split('T')[0],checkins:[],status:'active'};
-    upd(Object.assign({},data,{challenges:[ch].concat(data.challenges||[])}),'Mucadele basladi');
-    gainXP(50,'Mucadele basladi');
+    upd(Object.assign({},data,{challenges:[ch].concat(data.challenges||[])}),'Mucadele basladi');gainXP(50,'Mucadele basladi');
   }
 
-  function checkin(id) {
+  function checkin(id){
     var today=U.today();
     var chs=(data.challenges||[]).map(function(c){
-      if (c.id!==id||( c.checkins&&c.checkins.indexOf(today)>=0)) return c;
+      if(c.id!==id||(c.checkins&&c.checkins.indexOf(today)>=0))return c;
       return Object.assign({},c,{checkins:(c.checkins||[]).concat([today])});
     });
-    upd(Object.assign({},data,{challenges:chs}),'Challenge check-in');
-    gainXP(15,'Check-in');
+    upd(Object.assign({},data,{challenges:chs}),'Check-in');gainXP(15,'Check-in');
   }
 
-  function finishChallenge(id) {
-    var ch=(data.challenges||[]).find(function(c){return c.id===id;});
-    if (!ch) return;
-    var chs=(data.challenges||[]).map(function(c){return c.id===id?Object.assign({},c,{status:'done'}):c;});
-    upd(Object.assign({},data,{challenges:chs}),'Mucadele tamamlandi');
-    gainXP(ch.xp||300,'Mucadele tamamlandi: '+ch.name);
+  function activateReadingPlan(planId){
+    var plan=READING_PLANS.find(function(p){return p.id===planId;});
+    if(!plan)return;
+    var today=new Date();
+    var books=plan.books.map(function(bid,i){
+      var lb=LIBRARY.find(function(b){return b.id===bid;});
+      if(!lb)return null;
+      var start=new Date(today);start.setDate(start.getDate()+i*Math.floor(plan.weeks*7/plan.books.length));
+      var end=new Date(start);end.setDate(end.getDate()+Math.floor(plan.weeks*7/plan.books.length)-2);
+      return {libId:bid,title:lb.t,author:lb.a,start:start.toISOString().split('T')[0],end:end.toISOString().split('T')[0]};
+    }).filter(Boolean);
+    var ap={planId:planId,name:plan.name,books:books,startedAt:U.today()};
+    upd(Object.assign({},data,{activeReadingPlan:ap}),'Okuma plani aktif edildi');gainXP(30,'Okuma plani basladi');
   }
 
-  function playSound(url) {
-    if (audioRef.current && data.activeSound===url) {
-      audioRef.current.pause();
-      upd(Object.assign({},data,{activeSound:null}),'Ses durdu');
-    } else {
-      if (audioRef.current) audioRef.current.pause();
-      audioRef.current=new Audio(url); audioRef.current.loop=true; audioRef.current.volume=data.vol;
-      audioRef.current.play();
-      upd(Object.assign({},data,{activeSound:url}),'Ses basladi');
-    }
+  function playSound(url){
+    if(audioRef.current&&data.activeSound===url){audioRef.current.pause();upd(Object.assign({},data,{activeSound:null}),'Ses durdu');}
+    else{if(audioRef.current)audioRef.current.pause();audioRef.current=new Audio(url);audioRef.current.loop=true;audioRef.current.volume=data.vol;audioRef.current.play();upd(Object.assign({},data,{activeSound:url}),'Ses basladi');}
   }
 
-  // -- NAV --------------------------------------------------------------
-  var NAV_GROUPS = [
+  var NAV_GROUPS=[
     {label:'Ana',items:[
-      {id:'dashboard',l:'Dashboard',i:'dashboard'},
-      {id:'challenges',l:'Kisisel Mucadele',i:'trophy',badge:true},
+      {id:'dashboard',l:'Dashboard',i:'dash'},
+      {id:'kpi',l:'KPI & Metrikler',i:'kpi'},
+      {id:'challenges',l:'90-Gun Mucadelesi',i:'trophy',badge:true},
     ]},
     {label:'Uretkenlik',items:[
-      {id:'goals',l:'Hedefler',i:'target'},
-      {id:'todos',l:'Yapilacaklar',i:'check_sq'},
-      {id:'routines',l:'Rutinler',i:'refresh'},
-      {id:'books',l:'Kitaplik',i:'book'},
+      {id:'goals',l:'Hedefler',i:'tgt'},
+      {id:'todos',l:'Yapilacaklar',i:'csq'},
+      {id:'routines',l:'Rutinler',i:'ref'},
+    ]},
+    {label:'Kitap Sistemi',items:[
+      {id:'library',l:'Kitap Kutuphanesi',i:'bk',badge:true},
+      {id:'mybooks',l:'Okuma Listesi',i:'book_open'},
+      {id:'readingplan',l:'Okuma Planlari',i:'checklist'},
     ]},
     {label:'Bilgi',items:[
-      {id:'vault',l:'Bilgi Kasasi',i:'archive'},
-      {id:'quotes',l:'Ozlu Sozler',i:'quote'},
+      {id:'vault',l:'Bilgi Kasasi',i:'arc'},
+      {id:'quotes',l:'Ozlu Sozler',i:'qt'},
       {id:'journal',l:'Gunluk',i:'pen'},
-      {id:'principles',l:'Prensipler',i:'shield'},
-      {id:'coaching',l:'Kocluk',i:'users'},
-      {id:'questions',l:'Sorular',i:'help'},
+      {id:'principles',l:'Prensipler',i:'sh'},
+      {id:'coaching',l:'Kocluk',i:'us'},
     ]},
-    {label:'Araçlar',items:[
-      {id:'tools',l:'Odak Araclari',i:'headphones'},
+    {label:'Araclar',items:[
+      {id:'tools',l:'Odak Araclari',i:'hp'},
     ]},
   ];
 
-  // -- Dashboard ----------------------------------------------------------
-  function DashView() {
+  // ======================== VIEWS ========================
+
+  // ---- Dashboard ----
+  function DashView(){
     var frog=data.todos.find(function(t){return !t.done&&t.priority==='urgent';})||data.todos.find(function(t){return !t.done;});
     var xpInLvl=(data.stats.xp||0)%500;
-    var doneR=(data.routines.daily||[]).filter(function(r){return !U.isActive('daily',r.last);}).length;
     var activeCh=(data.challenges||[]).filter(function(c){return c.status==='active';}).length;
-    var rq = useMemo(function(){return data.quotes.length?data.quotes[Math.floor(Math.random()*data.quotes.length)]:null;},[data.quotes.length]);
+    var booksRead=(data.myBooks||[]).filter(function(b){return b.status==='done';}).length;
+    var rq=useMemo(function(){return data.quotes.length?data.quotes[Math.floor(Math.random()*data.quotes.length)]:null;},[]);
+    var plan=data.activeReadingPlan;
+    var todayBook=plan&&plan.books?plan.books.find(function(b){var s=new Date(b.start),e=new Date(b.end),n=new Date();return n>=s&&n<=e;}):null;
 
-    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:20}},
-      // Stats row
-      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}},
-        [{l:'Seviye',v:data.stats.level,i:'zap',c:'var(--blue)'},
-         {l:'XP',v:data.stats.xp,i:'star',c:'var(--purple)'},
-         {l:'Bekleyen',v:data.todos.filter(function(t){return !t.done;}).length,i:'check_sq',c:'var(--orange)'},
-         {l:'Mucadele',v:activeCh,i:'trophy',c:'var(--green)'},
-        ].map(function(s){
-          return h('div', {key:s.l,className:'card stat'},
-            h(Ic,{n:s.i,s:16,c:s.c}),
-            h('div', {className:'stat-n',style:{color:s.c}}, s.v),
-            h('div', {className:'stat-l'}, s.l)
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      // Stats
+      h('div',{className:'grid4'},
+        [{l:'Seviye',v:data.stats.level,i:'zap',c:'var(--blue)'},{l:'XP Puani',v:data.stats.xp,i:'star',c:'var(--purple)'},{l:'Kitap Tamamlandi',v:booksRead,i:'bk',c:'var(--green)'},{l:'Aktif Mucadele',v:activeCh,i:'trophy',c:'var(--orange)'}].map(function(s){
+          return h('div',{key:s.l,className:'card kpi'},
+            h(Ic,{n:s.i,s:15,c:s.c}),
+            h('div',{className:'kpi-n',style:{color:s.c}},s.v),
+            h('div',{className:'kpi-l'},s.l)
           );
         })
       ),
-
       // XP bar
-      h('div', {className:'card card-p'},
-        h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}},
-          h('span', {style:{fontSize:13,fontWeight:600}}, 'Deneyim Puani'),
-          h('span', {style:{fontSize:12,color:'var(--text2)'}}, xpInLvl + ' / 500  (' + (500-xpInLvl) + ' kaldi)')
+      h('div',{className:'card cp',style:{paddingTop:12,paddingBottom:12}},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}},
+          h('span',{style:{fontWeight:600,fontSize:13}},'Seviye '+data.stats.level),
+          h('span',{style:{fontSize:12,color:'var(--t2)'}},xpInLvl+' / 500 XP')
         ),
-        h('div', {className:'bar'}, h('div', {className:'bar-fill',style:{width:(xpInLvl/5)+'%',background:'linear-gradient(90deg,var(--blue),var(--purple)'}}))
+        h('div',{className:'bar'},h('div',{className:'barf',style:{width:(xpInLvl/5)+'%',background:'linear-gradient(90deg,var(--blue),var(--purple))'}}))
       ),
-
-      // Pomodoro + Frog
-      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
-        h('div', {className:'card'}, h(TimerWidget, {onXP:gainXP})),
-        h('div', {className:'card card-p',style:{display:'flex',flexDirection:'column',gap:12,background:'linear-gradient(135deg,#1a3a2e,#0d2d1e)'}},
-          h('span', {style:{fontSize:24}}, '\uD83D\uDC38'),
-          h('p', {style:{fontWeight:700,fontSize:16,color:'#a7f3d0'}}, 'Kurbagayi Ye!'),
-          h('p', {style:{fontSize:13,color:'#6ee7b7',lineHeight:1.6,flex:1}}, frog?frog.text:'Tum oncelikler tamam!'),
-          h('button', {className:'btn',style:{background:'rgba(255,255,255,.15)',color:'white',alignSelf:'flex-start'},onClick:function(){setTab('todos');}},
-            'Gorevlere Git', h(Ic,{n:'arrow_r',s:13}))
-        )
-      ),
-
-      // Quick add + Scratch
-      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
-        h('div', {className:'card card-p'},
-          h('p', {className:'label',style:{marginBottom:10}}, 'Hizli Ekle'),
-          h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}},
-            ['goal','todo','book','quote','journal','principle','coaching','vault'].map(function(t){
-              return h('button', {key:t,onClick:function(){setModal({open:true,type:t});},
-                style:{display:'flex',flexDirection:'column',alignItems:'center',gap:4,padding:'9px 4px',borderRadius:8,background:'var(--bg3)',border:'none',cursor:'pointer',color:'var(--text2)',transition:'all .15s',fontFamily:'inherit'}},
-                h(Ic,{n:'plus',s:12,c:'var(--blue)'}),
-                h('span', {style:{fontSize:9,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}, t)
-              );
-            })
-          )
+      // Pomodoro + Frog + Today's book
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14}},
+        h('div',{className:'card'},h(TimerWidget,{onXP:gainXP})),
+        h('div',{className:'card cp',style:{display:'flex',flexDirection:'column',gap:11,background:'linear-gradient(135deg,#1a3a2e,#0d2d1e)'}},
+          h('span',{style:{fontSize:22}},'\uD83D\uDC38'),
+          h('p',{style:{fontWeight:700,fontSize:15,color:'#a7f3d0'}},'Kurbagayi Ye!'),
+          h('p',{style:{fontSize:12.5,color:'#6ee7b7',lineHeight:1.6,flex:1}},frog?frog.text:'Tum oncelikler tamam!'),
+          h('button',{className:'btn',style:{background:'rgba(255,255,255,.15)',color:'white',alignSelf:'flex-start',fontSize:12},onClick:function(){setTab('todos');}},
+            'Gorevlere Git',h(Ic,{n:'ar',s:12}))
         ),
-        h('div', {className:'scratch-area'},
-          h('p', {className:'label', style:{color:'#8a6d00',marginBottom:8}}, '\u270F Karalama Defteri'),
-          h('textarea', {className:'inp',value:sc,onChange:function(e){setSc(e.target.value);},placeholder:'Aklina geleni buraya yaz...',style:{height:88,background:'transparent',border:'none',padding:0,fontSize:13,boxShadow:'none'}}),
-          h('p', {style:{fontSize:10,color:'#a08010',textAlign:'right',marginTop:4,fontWeight:500}}, 'Otomatik kaydedilir')
-        )
-      ),
-
-      // Quote
-      rq && h('div', {className:'card card-p',style:{textAlign:'center'}},
-        h('p', {style:{fontSize:15,fontStyle:'italic',fontWeight:400,lineHeight:1.7,color:'var(--text)'}}, '"' + rq.text + '"'),
-        rq.author && h('p', {style:{marginTop:8,fontSize:11,fontWeight:600,color:'var(--blue)',textTransform:'uppercase',letterSpacing:'.1em'}}, '-- ' + rq.author)
-      )
-    );
-  }
-
-  // -- Challenges ---------------------------------------------------------
-  function ChallengesView() {
-    var pks=useState(false); var pk=pks[0],setPk=pks[1];
-    var sts=useState(null);  var sel=sts[0],setSel=sts[1];
-    var cns=useState('');    var cname=cns[0],setCname=cns[1];
-    var cds=useState('');    var cdesc=cds[0],setCdesc=cds[1];
-    var active=(data.challenges||[]).filter(function(c){return c.status==='active';});
-    var done=(data.challenges||[]).filter(function(c){return c.status==='done';});
-
-    function info(ch) {
-      var cis=ch.checkins||[], today=U.today();
-      var total=cis.length, perc=Math.round(total/90*100);
-      var elapsed=Math.max(0,Math.ceil((new Date()-new Date(ch.start))/(864e5)));
-      var left=Math.max(0,Math.ceil((new Date(ch.end)-new Date())/(864e5)));
-      return {today:cis.indexOf(today)>=0, total:total, perc:perc, elapsed:elapsed, left:left};
-    }
-
-    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:20}},
-      h(PH, {title:'Kisisel Mucadeleler',action:{label:'Mucadele Baslat',fn:function(){setPk(true);}}}),
-      h('p', {style:{fontSize:13,color:'var(--text2)',marginTop:-12}}, '90 gunluk zorluklarla sinirlarini as ve XP kazan'),
-
-      active.length > 0 && h('div', null,
-        h('p', {className:'label',style:{marginBottom:10}}, 'Aktif (' + active.length + ')'),
-        h(Grid, {min:300},
-          active.map(function(ch) {
-            var si=info(ch), dc=DIFF[ch.diff]||DIFF.medium;
-            return h('div', {key:ch.id, className:'card ch-card'},
-              h('div', {style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}},
-                h('div', {style:{display:'flex',gap:10,alignItems:'center'}},
-                  h('div', {className:'icon-box',style:{background:'var(--blue-light)',width:38,height:38,borderRadius:10}}, h(Ic,{n:ch.icon||'trophy',s:18,c:'var(--blue)'})),
-                  h('div', null,
-                    h('p', {style:{fontWeight:700,fontSize:14}}, ch.name),
-                    h('div', {style:{display:'flex',gap:5,marginTop:3}},
-                      h('span', {className:'pill '+dc.cls, style:{fontSize:10}}, dc.label),
-                      h('span', {className:'pill pill-gray', style:{fontSize:10}}, ch.cat)
-                    )
-                  )
-                ),
-                h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(ch,'challenge');}}, h(Ic,{n:'trash',s:13,c:'var(--text3)'}))
-              ),
-              h('p', {style:{fontSize:12,color:'var(--text2)',lineHeight:1.5}}, ch.desc),
-              h('div', null,
-                h('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:12}},
-                  h('span', {style:{color:'var(--text2)',fontWeight:500}}, si.total + ' / 90 gun'),
-                  h('span', {style:{color:'var(--blue)',fontWeight:600}}, si.perc + '%')
-                ),
-                h('div', {className:'bar'}, h('div', {className:'bar-fill',style:{width:si.perc+'%',background:'var(--blue)'}}))
-              ),
-              h('div', {style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}},
-                [{l:'Check-in',v:si.total,c:'var(--green)'},{l:'Gecen',v:si.elapsed+'g',c:'var(--blue)'},{l:'Kalan',v:si.left+'g',c:si.left<14?'var(--red)':'var(--orange)'}].map(function(s){
-                  return h('div', {key:s.l,style:{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',textAlign:'center'}},
-                    h('div', {style:{fontWeight:700,fontSize:18,letterSpacing:'-0.5px',color:s.c}}, s.v),
-                    h('div', {style:{fontSize:10,color:'var(--text3)',fontWeight:600,textTransform:'uppercase',marginTop:2}}, s.l)
-                  );
-                })
-              ),
-              h('div', {style:{display:'flex',gap:8}},
-                si.today
-                  ? h('button', {className:'btn btn-green',style:{flex:1,justifyContent:'center'},disabled:true}, h(Ic,{n:'check_c',s:14}), 'Bugun Yapildi')
-                  : h('button', {className:'btn btn-primary',style:{flex:1,justifyContent:'center'},onClick:function(){checkin(ch.id);}}, h(Ic,{n:'check',s:14}), 'Check-in Yap'),
-                si.perc>=100 && h('button', {className:'btn btn-secondary',onClick:function(){finishChallenge(ch.id);}}, h(Ic,{n:'trophy',s:13}), 'Bitir')
-              )
-            );
-          })
-        )
-      ),
-
-      done.length > 0 && h('div', null,
-        h('p', {className:'label',style:{marginBottom:10}}, 'Tamamlanan (' + done.length + ')'),
-        h(Grid, {min:220},
-          done.map(function(ch){
-            return h('div', {key:ch.id,className:'card',style:{padding:'14px 16px',display:'flex',gap:12,alignItems:'center',opacity:.6}},
-              h('div', {className:'icon-box',style:{background:'var(--green-light)',borderRadius:8}}, h(Ic,{n:'trophy',s:16,c:'var(--green)'})),
-              h('div', {flex:1},
-                h('p', {style:{fontWeight:600,fontSize:13}}, ch.name),
-                h('p', {style:{fontSize:11,color:'var(--text3)',marginTop:2}}, '+' + ch.xp + ' XP')
-              ),
-              h('span', {className:'pill pill-green', style:{fontSize:10}}, 'Bitti')
-            );
-          })
-        )
-      ),
-
-      active.length===0 && done.length===0 && h('div', {className:'card',style:{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:14}},
-        h('div', {className:'icon-box',style:{width:56,height:56,borderRadius:16,background:'var(--orange-light)'}}, h(Ic,{n:'trophy',s:28,c:'var(--orange)'})),
-        h('p', {style:{fontWeight:700,fontSize:17}}, 'Hic mucadeleniz yok'),
-        h('p', {style:{color:'var(--text2)',fontSize:13,maxWidth:280,lineHeight:1.6}}, '90 gunluk bir mucadele baslatin ve her gun check-in yaparak XP kazanin!'),
-        h('button', {className:'btn btn-primary',onClick:function(){setPk(true);}}, h(Ic,{n:'plus',s:14}), 'Mucadele Baslat')
-      ),
-
-      pk && h('div', {className:'overlay', onClick:function(e){if(e.target===e.currentTarget){setPk(false);setSel(null);}}},
-        h('div', {className:'modal', style:{maxWidth:560}},
-          h('div', {className:'modal-head',style:{display:'flex',alignItems:'center',justifyContent:'space-between',paddingBottom:14}},
-            h('span', {style:{fontWeight:700,fontSize:16}}, sel?'Mucadeleyi Onayla':'90 Gunluk Mucadele Sec'),
-            h('button', {className:'btn btn-ghost btn-icon',onClick:function(){setPk(false);setSel(null);}}, h(Ic,{n:'x',s:15}))
-          ),
-          !sel
-            ? h('div', {style:{padding:'0 20px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,maxHeight:'60vh',overflowY:'auto'}},
-                CH_TPLS.map(function(tpl){
-                  var dc=DIFF[tpl.diff]||DIFF.medium;
-                  return h('button', {key:tpl.id,onClick:function(){setSel(tpl);},
-                    style:{display:'flex',gap:10,padding:'12px 13px',borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',cursor:'pointer',textAlign:'left',width:'100%',fontFamily:'inherit',transition:'border .15s'},
-                    onMouseEnter:function(e){e.currentTarget.style.borderColor='var(--blue)';},
-                    onMouseLeave:function(e){e.currentTarget.style.borderColor='var(--border)';}
-                  },
-                    h('div', {className:'icon-box',style:{background:'var(--blue-light)',borderRadius:8,width:34,height:34,flexShrink:0}}, h(Ic,{n:tpl.icon,s:16,c:'var(--blue)'})),
-                    h('div', null,
-                      h('p', {style:{fontWeight:600,fontSize:13,color:'var(--text)'}}, tpl.name),
-                      h('div', {style:{display:'flex',gap:5,marginTop:3}},
-                        h('span', {className:'pill '+dc.cls,style:{fontSize:9}}, dc.label),
-                        h('span', {style:{fontSize:10,color:'var(--text3)',fontWeight:500}}, '+' + tpl.xp + ' XP')
-                      )
-                    )
-                  );
-                })
-              )
-            : h('div', {style:{padding:'0 20px 20px',display:'flex',flexDirection:'column',gap:12}},
-                h('div', {style:{background:'var(--bg3)',borderRadius:10,padding:'13px 14px',display:'flex',gap:11}},
-                  h('div', {className:'icon-box',style:{background:'var(--blue-light)',borderRadius:9,width:38,height:38,flexShrink:0}}, h(Ic,{n:sel.icon,s:18,c:'var(--blue)'})),
-                  h('div', null,
-                    h('p', {style:{fontWeight:700,fontSize:14}}, sel.name),
-                    h('p', {style:{fontSize:12,color:'var(--text2)',marginTop:3,lineHeight:1.5}}, sel.desc)
-                  )
-                ),
-                sel.id==='custom' && h('input',{className:'inp',placeholder:'Mucadele adi',value:cname,onChange:function(e){setCname(e.target.value);}}),
-                sel.id==='custom' && h('textarea',{className:'inp',placeholder:'Mucadele tanimi',value:cdesc,onChange:function(e){setCdesc(e.target.value);},rows:2}),
-                h('div', {style:{background:'var(--green-light)',border:'1px solid rgba(52,199,89,.25)',borderRadius:9,padding:'10px 13px',fontSize:12,color:'var(--green)',fontWeight:500}},
-                  'Basarirsan +' + sel.xp + ' XP kazanacaksin. 90 gun boyunca her gun check-in yapin!'
-                ),
-                h('div', {style:{display:'flex',gap:8}},
-                  h('button', {className:'btn btn-secondary',style:{flex:1},onClick:function(){setSel(null);}}, 'Geri'),
-                  h('button', {className:'btn btn-primary',style:{flex:2},onClick:function(){startChallenge(sel,cname,cdesc);setPk(false);setSel(null);setCname('');setCdesc('');}}, 'Mucadeleyi Baslat!')
-                )
-              )
-        )
-      )
-    );
-  }
-
-  // -- Goals --------------------------------------------------------------
-  function GoalsView() {
-    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH, {title:'Hedefler',action:{label:'Hedef Ekle',fn:function(){setModal({open:true,type:'goal'});}}}),
-      h(Grid, {min:300},
-        fil(data.goals,['title','desc']).map(function(goal) {
-          var dn=goal.steps.filter(function(s){return s.done;}).length;
-          var perc=goal.steps.length?Math.round(dn/goal.steps.length*100):0;
-          return h('div', {key:goal.id, className:'card card-p',style:{display:'flex',flexDirection:'column',gap:12}},
-            h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
-              h('div', {style:{display:'flex',alignItems:'center',gap:7}},
-                goal.frog && h('span', {style:{fontSize:18}}, '\uD83D\uDC38'),
-                h('div', null,
-                  h('p', {style:{fontWeight:700,fontSize:14,lineHeight:1.3}}, goal.title),
-                  h('span', {className:'pill pill-blue',style:{marginTop:4,fontSize:10}}, goal.quarter)
-                )
-              ),
-              h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(goal,'goal');}}, h(Ic,{n:'trash',s:13,c:'var(--text3)'}))
-            ),
-            h('p', {style:{fontSize:12,color:'var(--text2)',lineHeight:1.6,borderLeft:'2px solid var(--border)',paddingLeft:9}}, goal.desc),
-            h('div', null,
-              h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}},
-                h('span', {className:'label',style:{margin:0}}, 'Aksiyon Plani'),
-                h('button', {className:'btn btn-ghost btn-sm',onClick:function(){
-                  var t=prompt('Adim adi?'); if(!t) return;
-                  var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:t,done:false}])}):g;});
-                  upd(Object.assign({},data,{goals:ng}),'Adim eklendi');
-                }}, h(Ic,{n:'plus',s:12}), 'Adim')
-              ),
-              goal.steps.length===0 && h('p',{style:{fontSize:12,color:'var(--text3)',fontStyle:'italic',textAlign:'center',padding:'8px 0'}},'Adim eklenmedi'),
-              goal.steps.map(function(s) {
-                return h('div', {key:s.id, className:'step-row'},
-                  h('input',{type:'checkbox',className:'cb',checked:s.done,onChange:function(){
-                    if (!s.done) gainXP(10,'Adim tamamlandi');
-                    var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.map(function(ss){return ss.id===s.id?Object.assign({},ss,{done:!ss.done}):ss;})}):g;});
-                    upd(Object.assign({},data,{goals:ng}),'Adim guncellendi');
-                  }}),
-                  h('span',{style:{fontSize:13,textDecoration:s.done?'line-through':'none',color:s.done?'var(--text3)':'var(--text)',flex:1}}, s.t),
-                  h('button',{className:'btn btn-ghost btn-icon',style:{width:22,height:22},onClick:function(){
-                    var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.filter(function(ss){return ss.id!==s.id;})}):g;});
-                    upd(Object.assign({},data,{goals:ng}),'Adim silindi');
-                  }}, h(Ic,{n:'x',s:11,c:'var(--text3)'}))
-                );
-              })
-            ),
-            goal.steps.length>0 && h('div', null,
-              h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:5}},
-                h('span',{style:{color:'var(--text2)',fontWeight:500}},'Ilerleme'),
-                h('span',{style:{color:'var(--blue)',fontWeight:600}},perc+'%')
-              ),
-              h('div',{className:'bar'},h('div',{className:'bar-fill',style:{width:perc+'%',background:'var(--blue)'}}))
+        todayBook
+          ? h('div',{className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
+              h('div',{className:'lbl'},'Bugunun Kitabi'),
+              h('div',{style:{width:36,height:50,borderRadius:5,background:'var(--blue)',display:'flex',alignItems:'center',justifyContent:'center'}},h(Ic,{n:'bk',s:16,c:'white'})),
+              h('p',{style:{fontWeight:700,fontSize:13,lineHeight:1.3}},todayBook.title),
+              h('p',{style:{fontSize:11,color:'var(--t2)'}},todayBook.author),
+              h('p',{style:{fontSize:11,color:'var(--blue)',fontWeight:500}},todayBook.start+' \u2014 '+todayBook.end)
             )
-          );
-        }),
-        data.goals.length===0 && h(Empty,{icon:'target',msg:'Henuz hedef eklenmedi'})
-      )
-    );
-  }
-
-  // -- Todos --------------------------------------------------------------
-  function TodosView() {
-    var PCLS={urgent:'pill-red',high:'pill-orange',normal:'pill-gray'};
-    var PLBL={urgent:'Acil',high:'Onemli',normal:'Normal'};
-    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH,{title:'Yapilacaklar',action:{label:'Gorev Ekle',fn:function(){setModal({open:true,type:'todo'});}}}),
-      h('div', {className:'card',style:{overflow:'hidden'}},
-        h('table', {className:'tbl'},
-          h('thead',null,h('tr',null,
-            h('th',{style:{paddingLeft:18}},'Gorev'),
-            h('th',{style:{textAlign:'center'}},'Onem'),
-            h('th',{style:{textAlign:'center'}},'Kategori'),
-            h('th',{style:{textAlign:'center'}},'Bitis'),
-            h('th',{style:{width:36}})
-          )),
-          h('tbody',null,
-            fil(data.todos,['text']).map(function(todo){
-              var ov=todo.end&&new Date(todo.end)<new Date()&&!todo.done;
-              return h('tr',{key:todo.id,style:{opacity:todo.done?.45:1}},
-                h('td',{style:{paddingLeft:18}},
-                  h('div',{style:{display:'flex',alignItems:'center',gap:10}},
-                    h('input',{type:'checkbox',className:'cb',checked:todo.done,onChange:function(){
-                      if (!todo.done) gainXP(15,'Gorev tamamlandi');
-                      var nt=data.todos.map(function(t){return t.id===todo.id?Object.assign({},t,{done:!t.done}):t;});
-                      upd(Object.assign({},data,{todos:nt}),'Gorev guncellendi');
-                    }}),
-                    h('span',{style:{fontWeight:500,textDecoration:todo.done?'line-through':'none',fontSize:13.5}},todo.text)
-                  )
-                ),
-                h('td',{style:{textAlign:'center'}},h('span',{className:'pill '+(PCLS[todo.priority]||'pill-gray'),style:{fontSize:10}},PLBL[todo.priority]||todo.priority)),
-                h('td',{style:{textAlign:'center',fontSize:12,color:'var(--text2)'}},todo.category),
-                h('td',{style:{textAlign:'center',fontSize:12,color:ov?'var(--red)':'var(--text2)'}},todo.end||'--'),
-                h('td',null,h('button',{className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(todo,'todo');}},h(Ic,{n:'trash',s:13,c:'var(--text3)'})))
-              );
-            }),
-            data.todos.length===0&&h('tr',null,h('td',{colSpan:5},h(Empty,{icon:'check_sq',msg:'Gorev yok'})))
-          )
+          : h('div',{className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
+              h('div',{className:'lbl'},'Okuma Plani'),
+              h(Ic,{n:'bk',s:28,c:'var(--t3)'}),
+              h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.5}},'Bir okuma plani baslat ve bugunun kitabini gör.'),
+              h('button',{className:'btn btn-s btn-sm',onClick:function(){setTab('readingplan');}},h(Ic,{n:'ar',s:12}),'Planlara Git')
+            )
+      ),
+      // KPI snapshot
+      data.kpis&&data.kpis.length>0&&h('div',null,
+        h('div',{className:'lbl',style:{marginBottom:8}},'KPI Ozeti'),
+        h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:10}},
+          data.kpis.slice(0,4).map(function(kpi){
+            var perc=Math.min(100,Math.round((parseFloat(kpi.current)||0)/(parseFloat(kpi.target)||1)*100));
+            var c=perc>=100?'var(--green)':perc>=70?'var(--orange)':'var(--red)';
+            return h('div',{key:kpi.id,className:'card',style:{padding:'12px 14px',cursor:'pointer'},onClick:function(){setTab('kpi');}},
+              h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}},
+                h('span',{style:{fontSize:12,fontWeight:600,color:'var(--text)'}},(kpi.name||'').length>18?(kpi.name||'').slice(0,18)+'...':kpi.name),
+                h('span',{style:{fontSize:13,fontWeight:700,color:c}},perc+'%')
+              ),
+              h('div',{className:'bar'},h('div',{className:'barf',style:{width:perc+'%',background:c}})),
+              h('div',{style:{fontSize:11,color:'var(--t2)',marginTop:5}},(kpi.current||0)+' / '+(kpi.target||0)+' '+( kpi.unit||''))
+            );
+          })
+        )
+      ),
+      // Scratch + Quote
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}},
+        h('div',{className:'scratch'},
+          h('p',{className:'lbl',style:{color:'#7a6000',marginBottom:7}},'\u270F Karalama Defteri'),
+          h('textarea',{className:'inp',value:data.scratch||'',onChange:function(e){setData(function(p){return Object.assign({},p,{scratch:e.target.value});});},placeholder:'Aklina geleni buraya yaz...',style:{height:80,background:'transparent',border:'none',padding:0,fontSize:13,boxShadow:'none'}}),
+          h('p',{style:{fontSize:9,color:'#a08010',textAlign:'right',marginTop:3,fontWeight:500}},'Otomatik kaydedilir')
+        ),
+        rq&&h('div',{className:'card cp',style:{textAlign:'center',display:'flex',flexDirection:'column',justifyContent:'center'}},
+          h('p',{style:{fontSize:14,fontStyle:'italic',fontWeight:400,lineHeight:1.7}},'"'+rq.text+'"'),
+          rq.author&&h('p',{style:{marginTop:8,fontSize:10.5,fontWeight:600,color:'var(--blue)',textTransform:'uppercase',letterSpacing:'.1em'}},'-- '+rq.author)
         )
       )
     );
   }
 
-  // -- Books --------------------------------------------------------------
-  function BooksView() {
-    var SLBL={queue:'Sirada',reading:'Okunuyor',done:'Bitti'};
-    var SCLS={queue:'pill-gray',reading:'pill-blue',done:'pill-green'};
-    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH,{title:'Kitaplik',action:{label:'Kitap Ekle',fn:function(){setModal({open:true,type:'book'});}}}),
+  // ---- KPI Dashboard ----
+  function KPIView(){
+    var CATS=['Is','Saglik','Gelisim','Finans','Iliski'];
+    var CAT_COLORS={Is:'var(--blue)',Saglik:'var(--green)',Gelisim:'var(--purple)',Finans:'var(--orange)',Iliski:'var(--teal)'};
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},
+        h('div',null,
+          h('h1',{className:'sh-t'},'KPI & Metrikler'),
+          h('p',{className:'sh-sub'},'Olcemedin seyi gelistiremezsin. -- Peter Drucker')
+        ),
+        h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'kpi'});}},h(Ic,{n:'plus',s:13}),'KPI Ekle')
+      ),
+      // Ozet
+      h('div',{className:'grid4'},
+        [{l:'Toplam KPI',v:(data.kpis||[]).length,i:'bar',c:'var(--blue)'},
+         {l:'Hedefe Ulasan',v:(data.kpis||[]).filter(function(k){return (parseFloat(k.current)||0)>=(parseFloat(k.target)||1);}).length,i:'cc',c:'var(--green)'},
+         {l:'Kritik (<50%)',v:(data.kpis||[]).filter(function(k){var p=(parseFloat(k.current)||0)/(parseFloat(k.target)||1)*100;return p<50;}).length,i:'flame',c:'var(--red)'},
+         {l:'Ort. Basari',v:Math.round((data.kpis||[]).reduce(function(a,k){return a+(Math.min(100,(parseFloat(k.current)||0)/(parseFloat(k.target)||1)*100));},0)/Math.max(1,(data.kpis||[]).length))+'%',i:'kpi',c:'var(--orange)'},
+        ].map(function(s){return h('div',{key:s.l,className:'card kpi'},h(Ic,{n:s.i,s:15,c:s.c}),h('div',{className:'kpi-n',style:{color:s.c}},s.v),h('div',{className:'kpi-l'},s.l));})
+      ),
+      // Sistem bilgi karti
+      h('div',{className:'card',style:{padding:'14px 18px',borderLeft:'3px solid var(--blue)',background:'var(--bl)'}},
+        h('p',{style:{fontWeight:700,fontSize:13,marginBottom:4}},'KPI Sistemi Neden Kritik?'),
+        h('p',{style:{fontSize:12.5,color:'var(--t2)',lineHeight:1.7}},'Measure What Matters (John Doerr) ve The Effective Executive (Peter Drucker) kitaplari bir noktada birlesiyor: "Sadece olculen seyi yonetebilirsin." OKR sistemi: Her KPI bir Objective + Key Result ciftine baglanmali. Haftalik gozden gecirme + aylik kalibrasyon = sistem.')
+      ),
+      // KPI listesi
       h('div',{className:'card',style:{overflow:'hidden'}},
         h('table',{className:'tbl'},
           h('thead',null,h('tr',null,
-            h('th',{style:{paddingLeft:18}},'Kitap'),
-            h('th',{style:{textAlign:'center'}},'Bitis'),
-            h('th',{style:{textAlign:'center'}},'Durum'),
-            h('th',{style:{width:36}})
+            h('th',{style:{paddingLeft:16}},'Metrik'),h('th',null,'Kategori'),h('th',{style:{textAlign:'center'}},'Mevcut'),h('th',{style:{textAlign:'center'}},'Hedef'),h('th',{style:{width:120}},'Ilerleme'),h('th',{style:{width:36}})
           )),
           h('tbody',null,
-            fil(data.books,['title','author']).map(function(book){
-              var ov=book.end&&new Date(book.end)<new Date()&&book.status!=='done';
-              return h('tr',{key:book.id},
-                h('td',{style:{paddingLeft:18}},
-                  h('p',{style:{fontWeight:600,fontSize:13.5}},book.title),
-                  h('p',{style:{fontSize:11,color:'var(--text3)',marginTop:2}},book.author)
+            (data.kpis||[]).map(function(kpi){
+              var perc=Math.min(100,Math.round((parseFloat(kpi.current)||0)/(parseFloat(kpi.target)||1)*100));
+              var c=perc>=100?'var(--green)':perc>=70?'var(--orange)':'var(--red)';
+              return h('tr',{key:kpi.id},
+                h('td',{style:{paddingLeft:16}},
+                  h('p',{style:{fontWeight:600,fontSize:13}},kpi.name),
+                  kpi.unit&&h('p',{style:{fontSize:11,color:'var(--t3)',marginTop:1}},kpi.unit)
                 ),
-                h('td',{style:{textAlign:'center',fontSize:12,color:ov?'var(--red)':'var(--text2)'}},book.end||'--'),
-                h('td',{style:{textAlign:'center'}},
-                  h('select',{className:'inp',value:book.status,onChange:function(e){
-                    if(e.target.value==='done'&&book.status!=='done')gainXP(50,'Kitap bitirildi');
-                    var nb=data.books.map(function(b){return b.id===book.id?Object.assign({},b,{status:e.target.value}):b;});
-                    upd(Object.assign({},data,{books:nb}),'Kitap guncellendi');
-                  },style:{width:'auto',padding:'4px 8px',fontSize:12}},
-                    h('option',{value:'queue'},'Sirada'),h('option',{value:'reading'},'Okunuyor'),h('option',{value:'done'},'Bitti')
+                h('td',null,h('span',{className:'pill p-blue',style:{fontSize:10}},kpi.cat||'Is')),
+                h('td',{style:{textAlign:'center',fontWeight:700,fontSize:14,color:c}},(kpi.current||0)+''+(kpi.unit&&kpi.unit.length<=3?' '+kpi.unit:'')),
+                h('td',{style:{textAlign:'center',fontSize:12,color:'var(--t2)'}},(kpi.target||0)+''+(kpi.unit&&kpi.unit.length<=3?' '+kpi.unit:'')),
+                h('td',null,
+                  h('div',{style:{display:'flex',alignItems:'center',gap:7}},
+                    h('div',{className:'bar',style:{flex:1}},h('div',{className:'barf',style:{width:perc+'%',background:c}})),
+                    h('span',{style:{fontSize:11,fontWeight:700,color:c,minWidth:28,textAlign:'right'}},perc+'%')
                   )
                 ),
-                h('td',null,h('button',{className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(book,'book');}},h(Ic,{n:'trash',s:13,c:'var(--text3)'})))
+                h('td',null,
+                  h('div',{style:{display:'flex',gap:4}},
+                    h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){
+                      var newVal=prompt('Yeni deger gir ('+kpi.unit+'):', kpi.current||'');
+                      if(newVal===null)return;
+                      var hist=(kpi.history||[]).concat([parseFloat(newVal)||0]);
+                      var nk=(data.kpis||[]).map(function(k){return k.id===kpi.id?Object.assign({},k,{current:newVal,history:hist}):k;});
+                      upd(Object.assign({},data,{kpis:nk}),'KPI guncellendi: '+kpi.name);gainXP(5,'KPI guncellendi');
+                    }},h(Ic,{n:'edit',s:12,c:'var(--t3)'})),
+                    h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(kpi,'kpi');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
+                  )
+                )
               );
             }),
-            data.books.length===0&&h('tr',null,h('td',{colSpan:4},h(Empty,{icon:'book',msg:'Kitap yok'})))
+            (!data.kpis||data.kpis.length===0)&&h('tr',null,h('td',{colSpan:6},h('div',{className:'empty'},h(Ic,{n:'kpi',s:28,c:'var(--t3)'}),h('p',null,'Henuz KPI eklenmedi'))))
+          )
+        )
+      ),
+      // Sistem prensibi
+      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}},
+        [{icon:'kpi',title:'Olcum',desc:'Ne olcuyorsun? Her hafta KPI\'larini guncelle.',color:'var(--blue)'},
+         {icon:'ref',title:'Sistem',desc:'Hangi aliskanlik bu metrige hizmet ediyor?',color:'var(--green)'},
+         {icon:'tgt',title:'Odak',desc:'En kritik 3 KPI nedir? Hepsine degil, bunlara odaklan.',color:'var(--orange)'},
+        ].map(function(c){
+          return h('div',{key:c.title,className:'card cp',style:{borderTop:'3px solid '+c.color}},
+            h(Ic,{n:c.icon,s:18,c:c.color}),
+            h('p',{style:{fontWeight:700,fontSize:13,marginTop:8,marginBottom:4}},c.title),
+            h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.6}},c.desc)
+          );
+        })
+      )
+    );
+  }
+
+  // ---- Library ----
+  function LibraryView(){
+    var cats_s=useState('all'); var selCat=cats_s[0],setSelCat=cats_s[1];
+    var view_s=useState('grid'); var view=view_s[0],setView=view_s[1];
+    var core_s=useState(false); var coreOnly=core_s[0],setCoreOnly=core_s[1];
+    var myIds=(data.myBooks||[]).map(function(b){return b.libId;});
+    var filtered=LIBRARY.filter(function(b){
+      if(coreOnly&&!b.core)return false;
+      if(selCat!=='all'&&b.cat!==parseInt(selCat))return false;
+      if(q){var lq=q.toLowerCase();return b.t.toLowerCase().indexOf(lq)>=0||b.a.toLowerCase().indexOf(lq)>=0||( BOOK_CATS[b.cat]||'').toLowerCase().indexOf(lq)>=0;}
+      return true;
+    });
+    var CAT_PILL=['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},
+        h('div',null,
+          h('h1',{className:'sh-t'},'Kitap Kutuphanesi'),
+          h('p',{className:'sh-sub'},'100 kitap, 10 kategori, 1 sistem')
+        ),
+        h('div',{style:{display:'flex',gap:8,alignItems:'center'}},
+          h('button',{className:'btn btn-s btn-sm'+(coreOnly?' active':''),style:{background:coreOnly?'var(--orange)':'',color:coreOnly?'white':''},onClick:function(){setCoreOnly(function(x){return !x;});}},h(Ic,{n:'flame',s:12}),'Cekirdek 5+'),
+          h('button',{className:'btn btn-s btn-ic',onClick:function(){setView(view==='grid'?'list':'grid');}},h(Ic,{n:view==='grid'?'layers':'bk',s:14}))
+        )
+      ),
+      // Category filter
+      h('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},
+        h('button',{className:'btn btn-sm',style:{background:selCat==='all'?'var(--blue)':'var(--bg3)',color:selCat==='all'?'white':'var(--t2)'},onClick:function(){setSelCat('all');}},'Tumu ('+LIBRARY.length+')'),
+        BOOK_CATS.map(function(cat,i){
+          var cnt=LIBRARY.filter(function(b){return b.cat===i;}).length;
+          return h('button',{key:i,className:'btn btn-sm',style:{background:selCat===String(i)?'var(--blue)':'var(--bg3)',color:selCat===String(i)?'white':'var(--t2)'},onClick:function(){setSelCat(String(i));}},cat+' ('+cnt+')');
+        })
+      ),
+      h('p',{style:{fontSize:12,color:'var(--t2)'}},filtered.length+' kitap'),
+      // List/Grid
+      view==='grid'
+        ? h('div',{className:'grid-auto'},
+            filtered.map(function(lb){
+              var inList=myIds.indexOf(lb.id)>=0;
+              var mb=inList?(data.myBooks||[]).find(function(b){return b.libId===lb.id;}):null;
+              return h('div',{key:lb.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
+                h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}},
+                  h('div',{style:{width:38,height:52,borderRadius:5,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'},className:'cat-'+lb.cat},lb.cat),
+                  h('div',{style:{flex:1}},
+                    h('p',{style:{fontWeight:700,fontSize:13,lineHeight:1.3}},lb.t),
+                    h('p',{style:{fontSize:11,color:'var(--t2)',marginTop:2}},lb.a)
+                  ),
+                  lb.core&&h('span',{className:'pill p-orange',style:{fontSize:9,flexShrink:0}},'Cekirdek')
+                ),
+                h('span',{className:'pill '+CAT_PILL[lb.cat],style:{fontSize:10,alignSelf:'flex-start'}},BOOK_CATS[lb.cat]||''),
+                h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.5}},lb.desc),
+                h('p',{style:{fontSize:11,color:'var(--t3)'}},lb.pages+' sayfa'),
+                inList
+                  ? h('div',{style:{display:'flex',gap:6,alignItems:'center'}},
+                      h('span',{className:'pill p-green',style:{fontSize:10}},'Listede'),
+                      mb&&h('select',{className:'inp',value:mb.status,onChange:function(e){updateMyBook(mb.id,{status:e.target.value});},style:{flex:1,padding:'4px 8px',fontSize:11}},
+                        h('option',{value:'queue'},'Sirada'),h('option',{value:'reading'},'Okunuyor'),h('option',{value:'done'},'Bitti')
+                      )
+                    )
+                  : h('button',{className:'btn btn-p',style:{fontSize:11,alignSelf:'flex-start'},onClick:function(){addToMyBooks(lb,'queue');}},h(Ic,{n:'plus',s:12}),'Listeye Ekle')
+              );
+            })
+          )
+        : h('div',{className:'card',style:{overflow:'hidden'}},
+            h('table',{className:'tbl'},
+              h('thead',null,h('tr',null,h('th',{style:{paddingLeft:16}},'Kitap'),h('th',null,'Kategori'),h('th',null,'Yazar'),h('th',{style:{textAlign:'center'}},'Sayfa'),h('th',{style:{width:120}}))),
+              h('tbody',null,
+                filtered.map(function(lb){
+                  var inList=myIds.indexOf(lb.id)>=0;
+                  return h('tr',{key:lb.id},
+                    h('td',{style:{paddingLeft:16}},
+                      h('div',{style:{display:'flex',alignItems:'center',gap:8}},
+                        h('div',{style:{width:8,height:8,borderRadius:99,flexShrink:0},className:'cat-'+lb.cat}),
+                        h('div',null,
+                          h('p',{style:{fontWeight:600}},lb.t),
+                          lb.core&&h('span',{className:'pill p-orange',style:{fontSize:9}},'Cekirdek')
+                        )
+                      )
+                    ),
+                    h('td',null,h('span',{className:'pill '+CAT_PILL[lb.cat],style:{fontSize:10}},BOOK_CATS[lb.cat]||'')),
+                    h('td',{style:{fontSize:12,color:'var(--t2)'}},lb.a),
+                    h('td',{style:{textAlign:'center',fontSize:12,color:'var(--t2)'}},lb.pages),
+                    h('td',null,inList?h('span',{className:'pill p-green',style:{fontSize:10}},'Listede'):h('button',{className:'btn btn-p btn-sm',onClick:function(){addToMyBooks(lb,'queue');}},h(Ic,{n:'plus',s:11}),'Ekle'))
+                  );
+                })
+              )
+            )
+          )
+    );
+  }
+
+  // ---- My Books ----
+  function MyBooksView(){
+    var STATUS_LABELS={queue:'Sirada',reading:'Okunuyor',done:'Bitti'};
+    var STATUS_PILLS={queue:'p-gray',reading:'p-blue',done:'p-green'};
+    var CAT_PILL=['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
+    var stats={queue:(data.myBooks||[]).filter(function(b){return b.status==='queue';}).length,reading:(data.myBooks||[]).filter(function(b){return b.status==='reading';}).length,done:(data.myBooks||[]).filter(function(b){return b.status==='done';}).length};
+    var totalPages=(data.myBooks||[]).filter(function(b){return b.status==='done';}).reduce(function(a,b){return a+(b.pages||0);},0);
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},
+        h('h1',{className:'sh-t'},'Okuma Listesi'),
+        h('button',{className:'btn btn-s',onClick:function(){setTab('library');}},h(Ic,{n:'bk',s:13}),'Kutuphaneye Git')
+      ),
+      h('div',{className:'grid4'},
+        [{l:'Sirada',v:stats.queue,c:'var(--t2)'},{l:'Okunuyor',v:stats.reading,c:'var(--blue)'},{l:'Tamamlandi',v:stats.done,c:'var(--green)'},{l:'Toplam Sayfa',v:totalPages,c:'var(--purple)'}].map(function(s){
+          return h('div',{key:s.l,className:'card kpi'},h('div',{className:'kpi-n',style:{color:s.c,fontSize:24}},s.v),h('div',{className:'kpi-l'},s.l));
+        })
+      ),
+      (data.myBooks||[]).length===0
+        ? h('div',{className:'card',style:{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:12}},
+            h(Ic,{n:'bk',s:36,c:'var(--t3)'}),
+            h('p',{style:{fontWeight:700,fontSize:16}},'Okuma listen bos'),
+            h('p',{style:{fontSize:13,color:'var(--t2)',maxWidth:260,lineHeight:1.6}},'Kitap kutuphanesinden kitap ekle ve okuma yolculugunu takip et.'),
+            h('button',{className:'btn btn-p',onClick:function(){setTab('library');}},h(Ic,{n:'bk',s:13}),'Kutuphaneye Git')
+          )
+        : h('div',{className:'card',style:{overflow:'hidden'}},
+            h('table',{className:'tbl'},
+              h('thead',null,h('tr',null,h('th',{style:{paddingLeft:16}},'Kitap'),h('th',{style:{textAlign:'center'}},'Puan'),h('th',null,'Durum'),h('th',{style:{width:130}},'Ilerleme'),h('th',{style:{width:36}}))),
+              h('tbody',null,
+                (data.myBooks||[]).map(function(book){
+                  var lb=LIBRARY.find(function(b){return b.id===book.libId;});
+                  var perc=book.pages?Math.round((book.pagesRead||0)/book.pages*100):0;
+                  return h('tr',{key:book.id},
+                    h('td',{style:{paddingLeft:16}},
+                      h('div',{style:{display:'flex',alignItems:'center',gap:8}},
+                        lb&&h('div',{style:{width:8,height:8,borderRadius:99,flexShrink:0},className:'cat-'+lb.cat}),
+                        h('div',null,
+                          h('p',{style:{fontWeight:600,fontSize:13}},book.title),
+                          h('p',{style:{fontSize:11,color:'var(--t2)'}},book.author)
+                        )
+                      )
+                    ),
+                    h('td',{style:{textAlign:'center'}},
+                      h('div',{style:{display:'flex',justifyContent:'center',gap:2}},
+                        [1,2,3,4,5].map(function(i){
+                          return h('span',{key:i,className:'star'+(i<=(book.rating||0)?'':' off'),onClick:function(){updateMyBook(book.id,{rating:i});}},i<=(book.rating||0)?'\u2605':'\u2606');
+                        })
+                      )
+                    ),
+                    h('td',null,
+                      h('select',{className:'inp',value:book.status,onChange:function(e){updateMyBook(book.id,{status:e.target.value});},style:{width:'auto',padding:'3px 8px',fontSize:11}},
+                        h('option',{value:'queue'},'Sirada'),h('option',{value:'reading'},'Okunuyor'),h('option',{value:'done'},'Bitti')
+                      )
+                    ),
+                    h('td',null,
+                      book.status==='reading'&&h('div',{style:{display:'flex',alignItems:'center',gap:6}},
+                        h('div',{className:'bar',style:{flex:1}},h('div',{className:'barf',style:{width:perc+'%',background:'var(--blue)'}})),
+                        h('span',{style:{fontSize:10,fontWeight:600,color:'var(--blue)',minWidth:26}},perc+'%')
+                      )
+                    ),
+                    h('td',null,h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(book,'mybook');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'})))
+                  );
+                })
+              )
+            )
+          )
+    );
+  }
+
+  // ---- Reading Plans ----
+  function ReadingPlanView(){
+    var ap=data.activeReadingPlan;
+    var CAT_PILL=['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},
+        h('div',null,
+          h('h1',{className:'sh-t'},'Okuma Planlari'),
+          h('p',{className:'sh-sub'},'90 gun icin kuraturlu okuma yol haritalari')
+        )
+      ),
+      // Active plan
+      ap&&h('div',{className:'card',style:{padding:'16px 18px',borderLeft:'3px solid var(--green)',marginBottom:4}},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}},
+          h('div',null,
+            h('p',{className:'lbl'},'Aktif Plan'),
+            h('p',{style:{fontWeight:700,fontSize:15}},ap.name)
+          ),
+          h('button',{className:'btn btn-s btn-sm',onClick:function(){if(confirm('Plani iptal et?'))upd(Object.assign({},data,{activeReadingPlan:null}),'Plan iptal edildi');}},h(Ic,{n:'x',s:12}),'Iptal')
+        ),
+        h('div',{style:{display:'flex',flexDirection:'column',gap:8}},
+          ap.books.map(function(b,i){
+            var lb=LIBRARY.find(function(l){return l.id===b.libId;});
+            var mb=(data.myBooks||[]).find(function(m){return m.libId===b.libId;});
+            var today=new Date(),start=new Date(b.start),end=new Date(b.end);
+            var isCurrent=today>=start&&today<=end;
+            var isDone=mb&&mb.status==='done';
+            return h('div',{key:i,style:{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:8,background:isCurrent?'var(--bl)':'var(--bg3)',border:isCurrent?'1px solid var(--blue)':'1px solid transparent'}},
+              h('div',{style:{width:22,height:22,borderRadius:99,background:isDone?'var(--green)':isCurrent?'var(--blue)':'var(--bg4)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
+                isDone?h(Ic,{n:'chk',s:11,c:'white'}):h('span',{style:{fontSize:11,fontWeight:700,color:'white'}},i+1)
+              ),
+              h('div',{style:{flex:1}},
+                h('p',{style:{fontWeight:600,fontSize:12.5}},b.title),
+                h('p',{style:{fontSize:10.5,color:'var(--t2)'}},b.start+' -- '+b.end)
+              ),
+              isCurrent&&h('span',{className:'pill p-blue',style:{fontSize:9}},'Bugun'),
+              isDone&&h('span',{className:'pill p-green',style:{fontSize:9}},'Bitti')
+            );
+          })
+        )
+      ),
+      // Plan cards
+      h('div',{className:'grid-auto',style:{gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))'}},
+        READING_PLANS.map(function(plan){
+          var books=plan.books.map(function(bid){return LIBRARY.find(function(b){return b.id===bid;});}).filter(Boolean);
+          var isActive=ap&&ap.planId===plan.id;
+          return h('div',{key:plan.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:11,borderTop:isActive?'3px solid var(--green)':'3px solid var(--border)'}},
+            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+              h('div',null,
+                h('p',{style:{fontWeight:700,fontSize:14}},plan.name),
+                h('p',{style:{fontSize:11.5,color:'var(--t2)',marginTop:2}},plan.desc)
+              ),
+              h('span',{className:'pill p-gray',style:{fontSize:10}},plan.weeks+' hafta')
+            ),
+            h('div',{style:{display:'flex',flexDirection:'column',gap:5}},
+              books.slice(0,4).map(function(b,i){
+                return h('div',{key:i,style:{display:'flex',alignItems:'center',gap:8,fontSize:12}},
+                  h('div',{style:{width:14,height:18,borderRadius:2,flexShrink:0},className:'cat-'+b.cat}),
+                  h('span',{style:{flex:1,fontWeight:500}},b.t),
+                  h('span',{style:{fontSize:11,color:'var(--t3)'}},b.a.split(' ').pop())
+                );
+              }),
+              books.length>4&&h('p',{style:{fontSize:11,color:'var(--t3)',paddingLeft:22}},'+ '+(books.length-4)+' kitap daha')
+            ),
+            isActive
+              ? h('span',{className:'pill p-green',style:{alignSelf:'flex-start'}},'Aktif Plan')
+              : h('button',{className:'btn btn-p',style:{alignSelf:'flex-start'},onClick:function(){if(confirm(plan.name+' planini baslat?')){activateReadingPlan(plan.id);}},},h(Ic,{n:'play',s:12}),'Plani Baslat')
+          );
+        })
+      )
+    );
+  }
+
+  // ---- Goals ----
+  function GoalsView(){
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Hedefler'),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'goal'});}},h(Ic,{n:'plus',s:13}),'Hedef Ekle')),
+      h('div',{className:'grid-auto'},
+        fil(data.goals,['title','desc']).map(function(goal){
+          var dn=goal.steps.filter(function(s){return s.done;}).length;
+          var perc=goal.steps.length?Math.round(dn/goal.steps.length*100):0;
+          return h('div',{key:goal.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:12}},
+            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+              h('div',{style:{display:'flex',alignItems:'center',gap:7,flex:1}},
+                goal.frog&&h('span',{style:{fontSize:18}},'\uD83D\uDC38'),
+                h('div',null,
+                  h('p',{style:{fontWeight:700,fontSize:14,lineHeight:1.3}},goal.title),
+                  h('span',{className:'pill p-blue',style:{marginTop:4,fontSize:10}},goal.quarter)
+                )
+              ),
+              h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(goal,'goal');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
+            ),
+            h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.6,borderLeft:'2px solid var(--border)',paddingLeft:9}},goal.desc),
+            h('div',null,
+              h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}},
+                h('span',{className:'lbl',style:{margin:0}},'Aksiyon Plani'),
+                h('button',{className:'btn btn-g btn-sm',onClick:function(){var t=prompt('Adim adi?');if(!t)return;var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:t,done:false}])}):g;});upd(Object.assign({},data,{goals:ng}),'Adim eklendi');}},h(Ic,{n:'plus',s:11}),'Adim')
+              ),
+              goal.steps.length===0&&h('p',{style:{fontSize:12,color:'var(--t3)',fontStyle:'italic',textAlign:'center',padding:'6px 0'}},'Adim eklenmedi'),
+              goal.steps.map(function(s){
+                return h('div',{key:s.id,className:'step-row'},
+                  h('input',{type:'checkbox',className:'cb',checked:s.done,onChange:function(){if(!s.done)gainXP(10,'Adim tamamlandi');var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.map(function(ss){return ss.id===s.id?Object.assign({},ss,{done:!ss.done}):ss;})}):g;});upd(Object.assign({},data,{goals:ng}),'Adim');}}),
+                  h('span',{style:{fontSize:12.5,textDecoration:s.done?'line-through':'none',color:s.done?'var(--t3)':'var(--text)',flex:1}},s.t),
+                  h('button',{className:'btn btn-g btn-ic',style:{width:22,height:22},onClick:function(){var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.filter(function(ss){return ss.id!==s.id;})}):g;});upd(Object.assign({},data,{goals:ng}),'Adim silindi');}},h(Ic,{n:'x',s:10,c:'var(--t3)'}))
+                );
+              })
+            ),
+            goal.steps.length>0&&h('div',null,
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}},
+                h('span',{style:{color:'var(--t2)',fontWeight:500}},'Ilerleme'),h('span',{style:{color:'var(--blue)',fontWeight:700}},perc+'%')
+              ),
+              h('div',{className:'bar'},h('div',{className:'barf',style:{width:perc+'%',background:'var(--blue)'}}))
+            )
+          );
+        }),
+        data.goals.length===0&&h('div',{className:'empty',style:{gridColumn:'1/-1'}},h(Ic,{n:'tgt',s:32,c:'var(--t3)'}),h('p',null,'Henuz hedef eklenmedi'))
+      )
+    );
+  }
+
+  // ---- Todos ----
+  function TodosView(){
+    var PCLS={urgent:'p-red',high:'p-orange',normal:'p-gray'};
+    var PLBL={urgent:'Acil',high:'Onemli',normal:'Normal'};
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Yapilacaklar'),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'todo'});}},h(Ic,{n:'plus',s:13}),'Gorev Ekle')),
+      h('div',{className:'card',style:{overflow:'hidden'}},
+        h('table',{className:'tbl'},
+          h('thead',null,h('tr',null,h('th',{style:{paddingLeft:16}},'Gorev'),h('th',{style:{textAlign:'center'}},'Onem'),h('th',{style:{textAlign:'center'}},'Kategori'),h('th',{style:{textAlign:'center'}},'Bitis'),h('th',{style:{width:36}}))),
+          h('tbody',null,
+            fil(data.todos,['text']).map(function(todo){
+              var ov=todo.end&&new Date(todo.end)<new Date()&&!todo.done;
+              return h('tr',{key:todo.id,style:{opacity:todo.done?.42:1}},
+                h('td',{style:{paddingLeft:16}},h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+                  h('input',{type:'checkbox',className:'cb',checked:todo.done,onChange:function(){if(!todo.done)gainXP(15,'Gorev tamamlandi');var nt=data.todos.map(function(t){return t.id===todo.id?Object.assign({},t,{done:!t.done}):t;});upd(Object.assign({},data,{todos:nt}),'Gorev');}}),
+                  h('span',{style:{fontWeight:500,textDecoration:todo.done?'line-through':'none'}},todo.text)
+                )),
+                h('td',{style:{textAlign:'center'}},h('span',{className:'pill '+(PCLS[todo.priority]||'p-gray'),style:{fontSize:10}},PLBL[todo.priority]||todo.priority)),
+                h('td',{style:{textAlign:'center',fontSize:12,color:'var(--t2)'}},todo.category),
+                h('td',{style:{textAlign:'center',fontSize:12,color:ov?'var(--red)':'var(--t2)'}},todo.end||'--'),
+                h('td',null,h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(todo,'todo');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'})))
+              );
+            }),
+            data.todos.length===0&&h('tr',null,h('td',{colSpan:5},h('div',{className:'empty'},h(Ic,{n:'csq',s:28,c:'var(--t3)'}),h('p',null,'Gorev yok'))))
           )
         )
       )
     );
   }
 
-  // -- Routines ------------------------------------------------------------
-  function RoutinesView() {
-    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH,{title:'Rutin Carki',action:{label:'Rutin Ekle',fn:function(){setModal({open:true,type:'routine'});}}}),
-      h(Grid,{min:220},
+  // ---- Routines ----
+  function RoutinesView(){
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Rutinler'),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'routine'});}},h(Ic,{n:'plus',s:13}),'Rutin Ekle')),
+      h('div',{className:'grid-auto-sm'},
         Object.entries(data.routines).map(function(entry){
           var period=entry[0],items=entry[1];
-          var doneCount=(items||[]).filter(function(r){return !U.isActive(period,r.last);}).length;
-          return h('div',{key:period,className:'card card-p'},
-            h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}},
+          var done=(items||[]).filter(function(r){return !U.isActive(period,r.last);}).length;
+          return h('div',{key:period,className:'card cp'},
+            h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:11,alignItems:'center'}},
               h('p',{style:{fontWeight:700,fontSize:13,textTransform:'capitalize'}},period),
-              h('span',{className:'pill '+(doneCount===(items||[]).length&&(items||[]).length>0?'pill-green':'pill-gray'),style:{fontSize:10}},doneCount+'/'+(items||[]).length)
+              h('span',{className:'pill '+(done===(items||[]).length&&(items||[]).length>0?'p-green':'p-gray'),style:{fontSize:10}},done+'/'+(items||[]).length)
             ),
-            h('div',{style:{display:'flex',flexDirection:'column',gap:4}},
+            h('div',{style:{display:'flex',flexDirection:'column',gap:3}},
               (items||[]).map(function(item){
                 var active=U.isActive(period,item.last);
-                return h('div',{key:item.id,className:'rit'+(active?'':' done'),onClick:function(){
-                  if(active){gainXP(10,'Rutin tamamlandi');var nr=data.routines[period].map(function(r){return r.id===item.id?Object.assign({},r,{last:new Date().toISOString()}):r;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr})}),'Rutin tamamlandi');}
-                }},
-                  h('div',{className:'icon-box',style:{background:active?'var(--blue-light)':'var(--bg3)',borderRadius:6,width:26,height:26,flexShrink:0}},
-                    h(Ic,{n:active?'circle':'check_c',s:13,c:active?'var(--blue)':'var(--green)'})
+                return h('div',{key:item.id,className:'rit'+(active?'':' done'),onClick:function(){if(active){gainXP(10,'Rutin tamamlandi');var nr=data.routines[period].map(function(r){return r.id===item.id?Object.assign({},r,{last:new Date().toISOString()}):r;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr})}),'Rutin');}}},
+                  h('div',{style:{width:24,height:24,borderRadius:6,background:active?'var(--bl)':'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
+                    h(Ic,{n:active?'ci':'cc',s:12,c:active?'var(--blue)':'var(--green)'})
                   ),
-                  h('span',{style:{fontSize:13,fontWeight:500,flex:1}},item.t),
-                  h('button',{className:'btn btn-ghost btn-icon',style:{width:22,height:22,pointerEvents:'auto'},onClick:function(e){e.stopPropagation();var nr2=(data.routines[period]||[]).filter(function(i){return i.id!==item.id;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr2})}),'Rutin silindi');}},
-                    h(Ic,{n:'x',s:11,c:'var(--text3)'})
-                  )
+                  h('span',{style:{fontSize:12.5,fontWeight:500,flex:1}},item.t),
+                  h('button',{className:'btn btn-g btn-ic',style:{width:20,height:20,pointerEvents:'auto'},onClick:function(e){e.stopPropagation();var nr2=(data.routines[period]||[]).filter(function(i){return i.id!==item.id;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr2})}),'Rutin silindi');}},h(Ic,{n:'x',s:10,c:'var(--t3)'}))
                 );
               }),
-              (items||[]).length===0&&h('p',{style:{fontSize:12,color:'var(--text3)',fontStyle:'italic',textAlign:'center',padding:'8px 0'}},'Henuz rutin yok')
+              (items||[]).length===0&&h('p',{style:{fontSize:11,color:'var(--t3)',fontStyle:'italic',textAlign:'center',padding:'6px 0'}},'Henuz rutin yok')
             )
           );
         })
@@ -1121,189 +1181,273 @@ function App() {
     );
   }
 
-  // -- Tools ---------------------------------------------------------------
-  function ToolsView() {
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH,{title:'Odaklanma Araclari'}),
-      h(Grid,{min:200},
-        SOUNDS.map(function(s){
-          var on=data.activeSound===s.url;
-          return h('button',{key:s.name,className:'sound-btn'+(on?' on':''),onClick:function(){playSound(s.url);}},
-            h('div',{className:'icon-box',style:{background:on?'rgba(255,255,255,.2)':'var(--blue-light)',borderRadius:9,width:38,height:38,flexShrink:0}},
-              h(Ic,{n:s.icon,s:18,c:on?'white':'var(--blue)'})
-            ),
-            h('div',{style:{flex:1,textAlign:'left'}},
-              h('p',{style:{fontWeight:600,fontSize:13}},s.name),
-              h('p',{style:{fontSize:11,marginTop:2,opacity:.7}},on?'Caliniyor...':'Dinlemek icin tikla')
-            ),
-            on&&h('div',{style:{width:6,height:6,borderRadius:99,background:'white',animation:'blink 1.5s infinite'}})
-          );
-        })
-      ),
-      h('div',{className:'card card-p',style:{display:'flex',alignItems:'center',gap:14}},
-        h(Ic,{n:'vol',s:16,c:'var(--text3)'}),
-        h('input',{type:'range',min:0,max:1,step:.05,value:data.vol,onChange:function(e){var v=parseFloat(e.target.value);if(audioRef.current)audioRef.current.volume=v;upd(Object.assign({},data,{vol:v}),'Ses seviyesi');},style:{flex:1}}),
-        h('span',{style:{fontSize:12,color:'var(--text2)',fontWeight:500,minWidth:32,textAlign:'right'}},Math.round(data.vol*100)+'%')
-      )
-    );
-  }
-
-  // -- Vault ---------------------------------------------------------------
-  function VaultView() {
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH,{title:'Bilgi Kasasi',action:{label:'Not Ekle',fn:function(){setModal({open:true,type:'vault'});}}}),
-      h(Grid,{min:240},
-        fil(data.vault,['title','text']).map(function(note){
-          return h('div',{key:note.id,className:'card card-p',style:{display:'flex',flexDirection:'column',gap:9}},
-            h('div',{style:{display:'flex',justifyContent:'space-between'}},
-              h('span',{className:'pill pill-blue',style:{fontSize:10}},note.cat||'Genel'),
-              h('div',{style:{display:'flex',gap:3}},
-                h('button',{className:'btn btn-ghost btn-icon',style:{width:26,height:26},onClick:function(){setPrint(note);}},h(Ic,{n:'printer',s:12,c:'var(--text3)'})),
-                h('button',{className:'btn btn-ghost btn-icon',style:{width:26,height:26},onClick:function(){del(note,'vault');}},h(Ic,{n:'trash',s:12,c:'var(--text3)'}))
-              )
-            ),
-            h('p',{style:{fontWeight:700,fontSize:14}},note.title),
-            h('p',{style:{fontSize:12,color:'var(--text2)',lineHeight:1.6,flex:1}},note.text),
-            h('p',{style:{fontSize:10,color:'var(--text3)'}},new Date(note.id).toLocaleDateString('tr-TR'))
-          );
-        }),
-        data.vault.length===0&&h(Empty,{icon:'archive',msg:'Bilgi kasasi bos'})
-      )
-    );
-  }
-
-  // -- History -------------------------------------------------------------
-  function HistoryView() {
+  // ---- Challenges ----
+  function ChallengesView(){
+    var pks=useState(false); var pk=pks[0],setPk=pks[1];
+    var sts=useState(null); var sel=sts[0],setSel=sts[1];
+    var cns=useState(''); var cname=cns[0],setCname=cns[1];
+    var cds=useState(''); var cdesc=cds[0],setCdesc=cds[1];
+    var active=(data.challenges||[]).filter(function(c){return c.status==='active';});
+    var done=(data.challenges||[]).filter(function(c){return c.status==='done';});
+    function info(ch){
+      var cis=ch.checkins||[],today=U.today();
+      var total=cis.length,perc=Math.round(total/90*100);
+      var elapsed=Math.max(0,Math.ceil((new Date()-new Date(ch.start))/864e5));
+      var left=Math.max(0,Math.ceil((new Date(ch.end)-new Date())/864e5));
+      return {today:cis.indexOf(today)>=0,total:total,perc:perc,elapsed:elapsed,left:left};
+    }
     return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
       h('div',{className:'sh'},
-        h('h1',{className:'sh-title'},'Aktivite'),
-        h('span',{className:'pill pill-gray'},(data.logs||[]).length+' kayit')
+        h('div',null,h('h1',{className:'sh-t'},'90-Gun Mucadelesi'),h('p',{className:'sh-sub'},'Sinirlarini as, XP kazan')),
+        h('button',{className:'btn btn-p',onClick:function(){setPk(true);}},h(Ic,{n:'plus',s:13}),'Mucadele Baslat')
       ),
-      h('div',{className:'card',style:{padding:'4px 18px',maxHeight:'70vh',overflowY:'auto'}},
-        (data.logs||[]).map(function(lg,i){
-          var isXP=lg.action.indexOf('XP')>=0;
-          return h('div',{key:i,style:{display:'flex',gap:12,padding:'11px 0',borderBottom:'1px solid var(--border)'}},
-            h('div',{style:{width:8,height:8,borderRadius:99,background:isXP?'var(--green)':'var(--blue)',flexShrink:0,marginTop:4,boxShadow:isXP?'0 0 6px var(--green)':''}}),
-            h('div',null,
-              h('p',{style:{fontSize:11,color:'var(--text3)',fontWeight:500,marginBottom:2}},lg.time),
-              h('p',{style:{fontSize:13,fontWeight:500}},lg.action)
-            )
+      active.length>0&&h('div',null,
+        h('p',{className:'lbl',style:{marginBottom:9}},'Aktif ('+active.length+')'),
+        h('div',{className:'grid-auto'},
+          active.map(function(ch){
+            var si=info(ch),dc=DIFF[ch.diff]||DIFF.medium;
+            return h('div',{key:ch.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:12}},
+              h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}},
+                h('div',{style:{display:'flex',gap:9,alignItems:'center'}},
+                  h('div',{style:{width:36,height:36,borderRadius:9,background:'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:ch.icon||'trophy',s:17,c:'var(--blue)'})),
+                  h('div',null,h('p',{style:{fontWeight:700,fontSize:13}},ch.name),h('div',{style:{display:'flex',gap:4,marginTop:3}},h('span',{className:'pill '+dc.cls,style:{fontSize:9}},dc.l),h('span',{className:'pill p-gray',style:{fontSize:9}},ch.cat)))
+                ),
+                h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(ch,'challenge');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
+              ),
+              h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.5}},ch.desc),
+              h('div',null,
+                h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}},h('span',{style:{color:'var(--t2)',fontWeight:500}},si.total+' / 90'),h('span',{style:{color:'var(--blue)',fontWeight:700}},si.perc+'%')),
+                h('div',{className:'bar'},h('div',{className:'barf',style:{width:si.perc+'%',background:'var(--blue)'}}))
+              ),
+              h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:7}},
+                [{l:'Check-in',v:si.total,c:'var(--green)'},{l:'Gecen',v:si.elapsed+'g',c:'var(--blue)'},{l:'Kalan',v:si.left+'g',c:si.left<14?'var(--red)':'var(--orange)'}].map(function(s){
+                  return h('div',{key:s.l,style:{background:'var(--bg3)',borderRadius:7,padding:'7px 9px',textAlign:'center'}},h('div',{style:{fontWeight:700,fontSize:17,letterSpacing:'-.3px',color:s.c}},s.v),h('div',{style:{fontSize:9,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',marginTop:1}},s.l));
+                })
+              ),
+              h('div',{style:{display:'flex',gap:7}},
+                si.today
+                  ? h('button',{className:'btn btn-green',style:{flex:1,justifyContent:'center'},disabled:true},h(Ic,{n:'cc',s:13}),'Bugun Yapildi')
+                  : h('button',{className:'btn btn-p',style:{flex:1,justifyContent:'center'},onClick:function(){checkin(ch.id);}},h(Ic,{n:'chk',s:13}),'Check-in Yap'),
+                si.perc>=100&&h('button',{className:'btn btn-orange',onClick:function(){var chs=(data.challenges||[]).map(function(c){return c.id===ch.id?Object.assign({},c,{status:'done'}):c;});upd(Object.assign({},data,{challenges:chs}),'Mucadele bitti');gainXP(ch.xp||300,'Mucadele: '+ch.name);}},h(Ic,{n:'trophy',s:13}),'Bitir')
+              )
+            );
+          })
+        )
+      ),
+      done.length>0&&h('div',null,
+        h('p',{className:'lbl',style:{marginBottom:9}},'Tamamlanan ('+done.length+')'),
+        h('div',{className:'grid-auto-sm'},
+          done.map(function(ch){return h('div',{key:ch.id,className:'card',style:{padding:'13px 15px',display:'flex',gap:10,alignItems:'center',opacity:.65}},h('div',{style:{width:32,height:32,borderRadius:8,background:'var(--gl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:'trophy',s:15,c:'var(--green)'})),h('div',{flex:1},h('p',{style:{fontWeight:600,fontSize:13}},ch.name),h('p',{style:{fontSize:11,color:'var(--t2)',marginTop:1}},'+'+ch.xp+' XP')),h('span',{className:'pill p-green',style:{fontSize:10}},'Bitti'));})
+        )
+      ),
+      active.length===0&&done.length===0&&h('div',{className:'card',style:{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:12}},
+        h('div',{style:{width:52,height:52,borderRadius:14,background:'var(--ol)',display:'flex',alignItems:'center',justifyContent:'center'}},h(Ic,{n:'trophy',s:26,c:'var(--orange)'})),
+        h('p',{style:{fontWeight:700,fontSize:16}},'Hic mucadeleniz yok'),
+        h('p',{style:{fontSize:13,color:'var(--t2)',maxWidth:260,lineHeight:1.6}},'90 gunluk bir mucadele baslatin ve her gun check-in yaparak XP kazanin!'),
+        h('button',{className:'btn btn-p',onClick:function(){setPk(true);}},h(Ic,{n:'plus',s:13}),'Baslat')
+      ),
+      pk&&h('div',{className:'ov',onClick:function(e){if(e.target===e.currentTarget){setPk(false);setSel(null);}}},
+        h('div',{className:'mbox',style:{maxWidth:520}},
+          h('div',{className:'mh',style:{paddingBottom:14}},
+            h('span',{style:{fontWeight:700,fontSize:15}},sel?'Mucadeleyi Onayla':'90-Gun Mucadele Sec'),
+            h('button',{className:'btn btn-g btn-ic',onClick:function(){setPk(false);setSel(null);}},h(Ic,{n:'x',s:14}))
+          ),
+          !sel
+            ? h('div',{style:{padding:'0 20px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,maxHeight:'60vh',overflowY:'auto'}},
+                CH_TPLS.map(function(tpl){
+                  var dc=DIFF[tpl.diff]||DIFF.medium;
+                  return h('button',{key:tpl.id,onClick:function(){setSel(tpl);},style:{display:'flex',gap:9,padding:'11px 12px',borderRadius:9,background:'var(--bg3)',border:'1px solid var(--border)',cursor:'pointer',textAlign:'left',width:'100%',fontFamily:'inherit',transition:'border .12s'},
+                    onMouseEnter:function(e){e.currentTarget.style.borderColor='var(--blue)';},onMouseLeave:function(e){e.currentTarget.style.borderColor='var(--border)';}},
+                    h('div',{style:{width:32,height:32,borderRadius:8,background:'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:tpl.icon,s:15,c:'var(--blue)'})),
+                    h('div',null,h('p',{style:{fontWeight:600,fontSize:12.5,color:'var(--text)'}},tpl.name),h('div',{style:{display:'flex',gap:4,marginTop:3}},h('span',{className:'pill '+dc.cls,style:{fontSize:9}},dc.l),h('span',{style:{fontSize:10,color:'var(--t2)',fontWeight:500}},'+'+tpl.xp+' XP')))
+                  );
+                })
+              )
+            : h('div',{style:{padding:'0 20px 20px',display:'flex',flexDirection:'column',gap:10}},
+                h('div',{style:{background:'var(--bg3)',borderRadius:9,padding:'11px 13px',display:'flex',gap:10}},
+                  h('div',{style:{width:36,height:36,borderRadius:9,background:'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:sel.icon,s:17,c:'var(--blue)'})),
+                  h('div',null,h('p',{style:{fontWeight:700,fontSize:13}},sel.name),h('p',{style:{fontSize:11.5,color:'var(--t2)',marginTop:2,lineHeight:1.5}},sel.desc))
+                ),
+                sel.id==='custom'&&h('input',{className:'inp',placeholder:'Mucadele adi',value:cname,onChange:function(e){setCname(e.target.value);}}),
+                sel.id==='custom'&&h('textarea',{className:'inp',placeholder:'Mucadele tanimi',value:cdesc,onChange:function(e){setCdesc(e.target.value);},rows:2}),
+                h('div',{style:{background:'var(--gl)',border:'1px solid rgba(52,199,89,.25)',borderRadius:8,padding:'9px 12px',fontSize:12,color:'var(--green)',fontWeight:500}},'Basarirsan +'+sel.xp+' XP kazanacaksin. 90 gun boyunca her gun check-in yapin!'),
+                h('div',{style:{display:'flex',gap:7}},
+                  h('button',{className:'btn btn-s',style:{flex:1},onClick:function(){setSel(null);}},'Geri'),
+                  h('button',{className:'btn btn-p',style:{flex:2},onClick:function(){startChallenge(sel,cname,cdesc);setPk(false);setSel(null);setCname('');setCdesc('');}},h(Ic,{n:'play',s:12}),'Mucadeleyi Baslat!')
+                )
+              )
+        )
+      )
+    );
+  }
+
+  // ---- Tools ----
+  function ToolsView(){
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:14}},
+      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Odaklanma Araclari')),
+      h('div',{className:'grid-auto-sm'},
+        SOUNDS.map(function(s){
+          var on=data.activeSound===s.url;
+          return h('button',{key:s.name,className:'snd'+(on?' on':''),onClick:function(){playSound(s.url);}},
+            h('div',{style:{width:36,height:36,borderRadius:8,background:on?'rgba(255,255,255,.2)':'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:s.icon,s:17,c:on?'white':'var(--blue)'})),
+            h('div',{style:{flex:1,textAlign:'left'}},h('p',{style:{fontWeight:600,fontSize:13}},s.name),h('p',{style:{fontSize:11,marginTop:1,opacity:.7}},on?'Caliniyor...':'Dinlemek icin tikla')),
+            on&&h('div',{style:{width:6,height:6,borderRadius:99,background:'white'}})
+          );
+        })
+      ),
+      h('div',{className:'card cp',style:{display:'flex',alignItems:'center',gap:12}},
+        h(Ic,{n:'vol',s:15,c:'var(--t2)'}),
+        h('input',{type:'range',min:0,max:1,step:.05,value:data.vol,onChange:function(e){var v=parseFloat(e.target.value);if(audioRef.current)audioRef.current.volume=v;setData(function(p){return Object.assign({},p,{vol:v});});},style:{flex:1}}),
+        h('span',{style:{fontSize:12,color:'var(--t2)',fontWeight:500,minWidth:30,textAlign:'right'}},Math.round(data.vol*100)+'%')
+      )
+    );
+  }
+
+  // ---- Generic list view ----
+  function GenericList(){
+    var CFG={vault:{k:'vault',keys:['title','text'],type:'vault',t:'Bilgi Kasasi',i:'arc'},quotes:{k:'quotes',keys:['text','author'],type:'quote',t:'Ozlu Sozler',i:'qt'},journal:{k:'journal',keys:['text','cat'],type:'journal',t:'Gunluk',i:'pen'},principles:{k:'principles',keys:['text','type'],type:'principle',t:'Prensipler',i:'sh'},coaching:{k:'coaching',keys:['title','text'],type:'coaching',t:'Kocluk',i:'us'},questions:{k:'questions',keys:['text'],type:'question',t:'Sorular',i:'hlp'}};
+    var cfg=CFG[tab]; if(!cfg)return null;
+    var list=data[cfg.k]||[];
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},h('h1',{className:'sh-t'},cfg.t),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:cfg.type});}},h(Ic,{n:'plus',s:13}),'Ekle')),
+      h('div',{className:'grid-auto'},
+        fil(list,cfg.keys).map(function(item){
+          return h('div',{key:item.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
+            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+              h('span',{className:'pill p-blue',style:{fontSize:10}},item.cat||item.type||item.category||''),
+              h('div',{style:{display:'flex',gap:3}},
+                h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){setPrint(item);}},h(Ic,{n:'prn',s:12,c:'var(--t3)'})),
+                h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(item,cfg.type);}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
+              )
+            ),
+            item.title&&h('p',{style:{fontWeight:700,fontSize:13.5}},item.title),
+            h('p',{style:{fontSize:12.5,color:'var(--t2)',lineHeight:1.6,fontStyle:'italic',flex:1}},'"'+(item.text||item.content||'')+'"'),
+            item.author&&h('p',{style:{fontSize:11,color:'var(--t3)',fontWeight:500}},'-- '+item.author),
+            item.date&&h('p',{style:{fontSize:10.5,color:'var(--t3)'}},item.date)
           );
         }),
-        (!data.logs||data.logs.length===0)&&h(Empty,{icon:'activity',msg:'Henuz aktivite yok'})
+        list.length===0&&h('div',{className:'empty',style:{gridColumn:'1/-1'}},h(Ic,{n:cfg.i,s:32,c:'var(--t3)'}),h('p',null,'Henuz icerik yok'))
       )
     );
   }
 
-  // -- Generic list ---------------------------------------------------------
-  function GenericList(props) {
-    var LIST_CFG={quotes:{list:data.quotes,keys:['text','author'],type:'quote',title:'Ozlu Sozler',icon:'quote'},journal:{list:data.journal,keys:['text','cat'],type:'journal',title:'Gunluk',icon:'pen'},principles:{list:data.principles,keys:['text','type'],type:'principle',title:'Prensipler',icon:'shield'},coaching:{list:data.coaching,keys:['title','text'],type:'coaching',title:'Kocluk',icon:'users'},questions:{list:data.questions,keys:['text'],type:'question',title:'Sorular',icon:'help'}};
-    var cfg=LIST_CFG[tab];
-    if (!cfg) return null;
-    var addType=cfg.type;
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h(PH,{title:cfg.title,action:{label:'Ekle',fn:function(){setModal({open:true,type:addType});}}}),
-      h(Grid,{min:250},
-        fil(cfg.list,cfg.keys).map(function(item){
-          return h(ItemCard,{key:item.id,item:item,type:cfg.type,onDel:del,onPrint:setPrint});
+  // ---- History ----
+  function HistoryView(){
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:14}},
+      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Aktivite Gecmisi'),h('span',{className:'pill p-gray'},(data.logs||[]).length+' kayit')),
+      h('div',{className:'card',style:{padding:'4px 16px',maxHeight:'72vh',overflowY:'auto'}},
+        (data.logs||[]).map(function(lg,i){
+          var isXP=lg.action.indexOf('XP')>=0;
+          return h('div',{key:i,style:{display:'flex',gap:11,padding:'10px 0',borderBottom:'1px solid var(--border)'}},
+            h('div',{style:{width:7,height:7,borderRadius:99,background:isXP?'var(--green)':'var(--blue)',flexShrink:0,marginTop:4,boxShadow:isXP?'0 0 5px var(--green)':''}}),
+            h('div',null,h('p',{style:{fontSize:10.5,color:'var(--t2)',fontWeight:500,marginBottom:1}},lg.time),h('p',{style:{fontSize:13,fontWeight:500}},lg.action))
+          );
         }),
-        (!cfg.list||cfg.list.length===0)&&h(Empty,{icon:cfg.icon,msg:'Henuz icerik yok'})
+        (!data.logs||data.logs.length===0)&&h('div',{className:'empty'},h(Ic,{n:'act',s:28,c:'var(--t3)'}),h('p',null,'Henuz aktivite yok'))
       )
     );
   }
 
-  // -- Render content -------------------------------------------------------
-  function renderContent() {
-    if (tab==='dashboard') return h(DashView,null);
-    if (tab==='challenges') return h(ChallengesView,null);
-    if (tab==='goals') return h(GoalsView,null);
-    if (tab==='todos') return h(TodosView,null);
-    if (tab==='books') return h(BooksView,null);
-    if (tab==='routines') return h(RoutinesView,null);
-    if (tab==='tools') return h(ToolsView,null);
-    if (tab==='vault') return h(VaultView,null);
-    if (tab==='history') return h(HistoryView,null);
+  function renderContent(){
+    if(tab==='dashboard')return h(DashView,null);
+    if(tab==='kpi')return h(KPIView,null);
+    if(tab==='challenges')return h(ChallengesView,null);
+    if(tab==='goals')return h(GoalsView,null);
+    if(tab==='todos')return h(TodosView,null);
+    if(tab==='routines')return h(RoutinesView,null);
+    if(tab==='library')return h(LibraryView,null);
+    if(tab==='mybooks')return h(MyBooksView,null);
+    if(tab==='readingplan')return h(ReadingPlanView,null);
+    if(tab==='tools')return h(ToolsView,null);
+    if(tab==='history')return h(HistoryView,null);
     return h(GenericList,null);
   }
 
-  // -- Layout ----------------------------------------------------------------
-  return h('div', {className:'shell'},
-    // Sidebar
-    h('aside', {className:'sidebar no-print'},
-      h('div', {className:'logo'},
-        h('div', {className:'logo-mark'},
-          h('svg',{viewBox:'0 0 24 24'},h('path',{d:'M13 2L3 14h9l-1 8 10-12h-9l1-8z'}))
-        ),
-        h('span', {className:'logo-name'}, 'FocusUp')
+  return h('div',{className:'shell'},
+    h('aside',{className:'sidebar no-print'},
+      h('div',{className:'logo'},
+        h('div',{className:'logo-mark'},h('svg',{viewBox:'0 0 24 24'},h('path',{fill:'currentColor',stroke:'none',d:'M13 2L3 14h9l-1 8 10-12h-9z'}))),
+        h('span',{className:'logo-name'},'FocusUp'),
+        h('span',{className:'logo-ver'},'V4')
       ),
-      NAV_GROUPS.map(function(g) {
-        return h('div', {key:g.label},
-          h('p', {className:'nav-section'}, g.label),
-          g.items.map(function(n) {
-            return h('button', {key:n.id,className:'nav-btn'+(tab===n.id?' active':''),onClick:function(){setTab(n.id);}},
-              h('span', {className:'nav-icon'}, h(Ic,{n:n.i,s:14})),
+      NAV_GROUPS.map(function(g){
+        return h('div',{key:g.label},
+          h('p',{className:'nsec'},g.label),
+          g.items.map(function(n){
+            return h('button',{key:n.id,className:'nb'+(tab===n.id?' active':''),onClick:function(){setTab(n.id);}},
+              h('span',{className:'ni'},h(Ic,{n:n.i,s:13})),
               n.l,
-              n.badge&&tab!==n.id&&h('span',{className:'nav-badge'},'NEW')
+              n.badge&&tab!==n.id&&h('span',{className:'nb-badge'},'Yeni')
             );
           })
         );
       }),
-      h('div', {className:'div',style:{marginTop:'auto'}}),
-      h('div', {style:{display:'flex',flexDirection:'column',gap:1}},
-        h('button',{className:'nav-btn'+(tab==='history'?' active':''),onClick:function(){setTab('history');}},h('span',{className:'nav-icon'},h(Ic,{n:'activity',s:14})),'Aktivite'),
-        h('button',{className:'nav-btn',onClick:undo,disabled:hist.length===0,style:{opacity:hist.length?1:.35}},h('span',{className:'nav-icon'},h(Ic,{n:'undo',s:14})),'Geri Al '+(hist.length?'('+hist.length+')':'')),
-        h('button',{className:'nav-btn',onClick:function(){U.dl(data,'FocusUp_Backup.json');}},h('span',{className:'nav-icon'},h(Ic,{n:'download',s:14})),'Yedekle')
+      h('div',{className:'div',style:{marginTop:'auto'}}),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
+        h('button',{className:'nb'+(tab==='history'?' active':''),onClick:function(){setTab('history');}},h('span',{className:'ni'},h(Ic,{n:'act',s:13})),'Aktivite'),
+        h('button',{className:'nb',onClick:undo,disabled:hist.length===0,style:{opacity:hist.length?1:.3}},h('span',{className:'ni'},h(Ic,{n:'undo',s:13})),'Geri Al'+(hist.length?' ('+hist.length+')':'')),
+        h('button',{className:'nb',onClick:function(){U.dl(data,'FocusUp_V4_Backup.json');}},h('span',{className:'ni'},h(Ic,{n:'dl',s:13})),'Yedekle')
       ),
-      h('p',{style:{fontSize:10,color:'var(--text3)',textAlign:'center',paddingTop:10,letterSpacing:'.04em'}},'V.3 / 2026')
+      h('p',{style:{fontSize:9.5,color:'var(--t3)',textAlign:'center',paddingTop:8,letterSpacing:'.04em'}},'FocusUp V4 / 2026')
     ),
-
-    // Main
-    h('div', {className:'body'},
-      h('header', {className:'topbar no-print'},
-        h('div', {style:{display:'flex',gap:8,alignItems:'center'}},
-          h('span', {className:'pill pill-blue',style:{fontSize:11}}, U.quarter(new Date()) + ' Ceyrek'),
-          h('span', {className:'pill pill-gray',style:{fontSize:11}}, 'Hafta ' + U.isoWeek(new Date())),
-          h(Clock, null)
+    h('div',{className:'body'},
+      h('header',{className:'topbar no-print'},
+        h('div',{style:{display:'flex',gap:7,alignItems:'center'}},
+          h('span',{className:'pill p-blue',style:{fontSize:10.5}},U.quarter(new Date())+' Ceyrek'),
+          h('span',{className:'pill p-gray',style:{fontSize:10.5}},'Hafta '+U.isoWeek(new Date())),
+          h(Clock,null)
         ),
-        h('div', {style:{display:'flex',gap:8,alignItems:'center'}},
-          h('div', {style:{position:'relative'}},
-            h(Ic,{n:'search',s:13,c:'var(--text3)',st:{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)'}}),
-            h('input',{className:'inp',type:'text',placeholder:'Ara...',value:q,onChange:function(e){setQ(e.target.value);},style:{paddingLeft:30,width:160,height:32,fontSize:12}})
+        h('div',{style:{display:'flex',gap:7,alignItems:'center'}},
+          h('div',{style:{position:'relative'}},
+            h(Ic,{n:'srch',s:12,c:'var(--t3)',st:{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)'}}),
+            h('input',{className:'inp',type:'text',placeholder:'Ara...',value:q,onChange:function(e){setQ(e.target.value);},style:{paddingLeft:28,width:150,height:30,fontSize:12}})
           ),
-          h('button',{className:'btn btn-ghost btn-icon',onClick:function(){setDark(function(p){return !p;});}},h(Ic,{n:dark?'sun':'moon',s:15})),
-          h('button',{className:'btn btn-ghost btn-icon',style:{position:'relative'},onClick:function(){setTab('history');}},h(Ic,{n:'activity',s:15}))
+          h('button',{className:'btn btn-s btn-ic',onClick:function(){setDark(function(x){return !x;});}},h(Ic,{n:dark?'sun':'moon',s:14}))
         )
       ),
-      h('main', {className:'page no-print'},
-        h('div', {className:'page-inner'}, renderContent())
-      ),
-      // Mobile nav
-      h('nav', {className:'mob-nav'},
-        ['dashboard','challenges','goals','todos','routines'].map(function(id){
-          var g=NAV_GROUPS.find(function(g){return g.items.find(function(n){return n.id===id;});}); if(!g) return null;
+      h('main',{className:'page no-print'},h('div',{className:'pinner'},renderContent())),
+      h('nav',{className:'mob-nav'},
+        ['dashboard','kpi','goals','todos','library'].map(function(id){
+          var g=NAV_GROUPS.find(function(g){return g.items.find(function(n){return n.id===id;});});if(!g)return null;
           var n=g.items.find(function(n){return n.id===id;});
-          return h('button',{key:id,onClick:function(){setTab(id);},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,padding:'4px 2px',background:'none',border:'none',cursor:'pointer',color:tab===id?'var(--blue)':'var(--text3)',borderRadius:8}},
-            h(Ic,{n:n.i,s:18,c:tab===id?'var(--blue)':'var(--text3)'}),
+          return h('button',{key:id,onClick:function(){setTab(id);},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,padding:'4px 2px',background:'none',border:'none',cursor:'pointer',color:tab===id?'var(--blue)':'var(--t3)',borderRadius:7}},
+            h(Ic,{n:n.i,s:18,c:tab===id?'var(--blue)':'var(--t3)'}),
             h('span',{style:{fontSize:8,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}},n.l.split(' ')[0])
           );
         })
       )
     ),
-
-    // Modals
-    modal.open && h(ModalForm,{type:modal.type,onSave:addItem,onClose:function(){setModal({open:false});}}),
-    printItem && h(PrintModal,{item:printItem,onClose:function(){setPrint(null);}}),
-    printItem && h('div',{className:'for-print'},
+    modal.open&&h(MForm,{type:modal.type,onSave:addItem,onClose:function(){setModal({open:false});}}),
+    printItem&&h('div',{className:'ov no-print',onClick:function(e){if(e.target===e.currentTarget)setPrint(null);}},
+      h('div',{className:'mbox',style:{maxWidth:500}},
+        h('div',{className:'mh',style:{paddingBottom:14}},
+          h('span',{style:{fontWeight:700,fontSize:15}},'Poster Baskisi'),
+          h('div',{style:{display:'flex',gap:7}},
+            h('button',{className:'btn btn-p btn-sm',onClick:function(){window.print();}},h(Ic,{n:'prn',s:12}),'Yazdir'),
+            h('button',{className:'btn btn-s btn-ic',onClick:function(){setPrint(null);}},h(Ic,{n:'x',s:13}))
+          )
+        ),
+        h('div',{style:{padding:'0 20px 20px'}},
+          h('div',{style:{border:'1px solid var(--border)',borderRadius:10,aspectRatio:'1/1.414',display:'flex',alignItems:'center',justifyContent:'center',padding:32,textAlign:'center',background:'white',color:'#1d1d1f'}},
+            h('div',null,
+              h('p',{style:{fontFamily:'Georgia,serif',fontStyle:'italic',fontSize:18,lineHeight:1.7,marginBottom:12}},'"'+(printItem.text||printItem.title||'')+'"'),
+              printItem.author&&h('p',{style:{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'#0071e3'}},'-- '+printItem.author)
+            )
+          )
+        )
+      )
+    ),
+    printItem&&h('div',{className:'for-print'},
       h('div',{style:{fontFamily:'Georgia,serif',fontStyle:'italic',textAlign:'center',color:'#1d1d1f'}},
         h('h1',{style:{fontSize:'38pt',marginBottom:20,lineHeight:1.4}},'"'+(printItem.text||printItem.title||'')+'"'),
-        printItem.author&&h('p',{style:{fontSize:'16pt',color:'#0071e3',textTransform:'uppercase',letterSpacing:'.18em',fontWeight:700}},'- '+printItem.author)
+        printItem.author&&h('p',{style:{fontSize:'15pt',color:'#0071e3',textTransform:'uppercase',letterSpacing:'.18em',fontWeight:700}},'-- '+printItem.author)
       )
     )
   );
 }
 
-var root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(h(App, null));
+var root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(h(App,null));
 </script>
 </body>
 </html>
