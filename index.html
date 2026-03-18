@@ -3,1295 +3,1307 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocusUp Pro V2</title>
+<title>FocusUp</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ── Apple-inspired design system ── */
 :root {
-  --bg:#0c0d12; --surface:#13141c; --surface2:#1a1c27; --border:#242636;
-  --text:#e8eaf2; --muted:#6b6f8a;
-  --brand:#7c6eff; --brand-dim:rgba(124,110,255,0.13); --brand-glow:rgba(124,110,255,0.35);
-  --green:#34d399; --amber:#fbbf24; --red:#f87171; --pink:#f472b6;
-  --orange:#fb923c;
+  --bg: #f5f5f7;
+  --bg2: #ffffff;
+  --bg3: #f0f0f2;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.12);
+  --text: #1d1d1f;
+  --text2: #6e6e73;
+  --text3: #aeaeb2;
+  --blue: #0071e3;
+  --blue-light: rgba(0,113,227,0.1);
+  --green: #34c759;
+  --green-light: rgba(52,199,89,0.1);
+  --orange: #ff9500;
+  --orange-light: rgba(255,149,0,0.1);
+  --red: #ff3b30;
+  --red-light: rgba(255,59,48,0.1);
+  --purple: #af52de;
+  --purple-light: rgba(175,82,222,0.1);
+  --yellow: #ffcc00;
+  --yellow-light: rgba(255,204,0,0.12);
+  --sidebar-w: 220px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
 }
-.light {
-  --bg:#f1f2f8; --surface:#ffffff; --surface2:#eaebf5; --border:#dde0f0;
-  --text:#1a1c2e; --muted:#8083a3;
-  --brand:#5b4fd8; --brand-dim:rgba(91,79,216,0.09); --brand-glow:rgba(91,79,216,0.28);
+.dark {
+  --bg: #000000;
+  --bg2: #1c1c1e;
+  --bg3: #2c2c2e;
+  --border: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.15);
+  --text: #f5f5f7;
+  --text2: #98989d;
+  --text3: #636366;
+  --blue: #0a84ff;
+  --blue-light: rgba(10,132,255,0.15);
+  --green: #30d158;
+  --green-light: rgba(48,209,88,0.12);
+  --orange: #ff9f0a;
+  --orange-light: rgba(255,159,10,0.12);
+  --red: #ff453a;
+  --red-light: rgba(255,69,58,0.12);
+  --purple: #bf5af2;
+  --purple-light: rgba(191,90,242,0.12);
+  --yellow: #ffd60a;
+  --yellow-light: rgba(255,214,10,0.12);
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
 
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow: hidden; }
 
-.app{display:flex;height:100vh;overflow:hidden;}
-.sidebar{width:236px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 14px;gap:2px;flex-shrink:0;overflow-y:auto;}
-.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.topbar{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;}
-.content{flex:1;overflow-y:auto;padding:24px;background:var(--bg);}
-.content-inner{max-width:1100px;margin:0 auto;}
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 
-.logo{display:flex;align-items:center;gap:10px;padding:6px 8px 18px;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:var(--text);}
-.logo-icon{width:34px;height:34px;border-radius:10px;background:var(--brand);display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;}
+/* Layout */
+.shell { display: flex; height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px; flex-shrink: 0; overflow-y: auto; }
+.body { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.topbar { height: 52px; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0; }
+.page { flex: 1; overflow-y: auto; padding: 24px 28px; background: var(--bg); }
+.page-inner { max-width: 960px; margin: 0 auto; }
 
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:11px;cursor:pointer;transition:all .15s;font-size:13.5px;font-weight:500;color:var(--muted);border:none;background:none;width:100%;text-align:left;position:relative;}
-.nav-item:hover{background:var(--surface2);color:var(--text);}
-.nav-item.active{background:var(--brand-dim);color:var(--brand);font-weight:600;}
-.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);position:absolute;top:9px;right:10px;animation:blink 2s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
-.nav-sep{height:1px;background:var(--border);margin:7px 4px;}
+/* Logo */
+.logo { display: flex; align-items: center; gap: 9px; padding: 6px 8px 18px; }
+.logo-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--text); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.logo-mark svg { width: 14px; height: 14px; fill: var(--bg2); }
+.logo-name { font-weight: 600; font-size: 15px; letter-spacing: -0.3px; color: var(--text); }
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;transition:border-color .2s;}
-.card:hover{border-color:rgba(124,110,255,0.35);}
+/* Nav */
+.nav-section { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 8px 6px; margin-top: 8px; }
+.nav-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 8px; border-radius: 8px; border: none; background: none; cursor: pointer; font-size: 13.5px; font-weight: 500; color: var(--text2); text-align: left; transition: background 0.15s, color 0.15s; position: relative; }
+.nav-btn:hover { background: var(--bg3); color: var(--text); }
+.nav-btn.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+.nav-icon { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+.nav-btn.active .nav-icon { background: var(--blue-light); }
+.nav-badge { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: var(--orange); color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 99px; }
 
-.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif;}
-.btn-primary{background:var(--brand);color:white;}
-.btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 6px 18px var(--brand-glow);}
-.btn-ghost{background:var(--surface2);color:var(--muted);}
-.btn-ghost:hover{color:var(--text);background:var(--border);}
-.btn-icon{width:34px;height:34px;padding:0;justify-content:center;border-radius:9px;}
-.btn-success{background:rgba(52,211,153,0.12);color:var(--green);}
-.btn-orange{background:rgba(251,146,60,0.12);color:var(--orange);}
+/* Cards */
+.card { background: var(--bg2); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+.card-p { padding: 18px 20px; }
 
-.inp{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 14px;font-size:13.5px;color:var(--text);font-family:'DM Sans',sans-serif;width:100%;outline:none;transition:border .15s;}
-.inp:focus{border-color:var(--brand);}
-.inp::placeholder{color:var(--muted);}
-textarea.inp{resize:none;}
-select.inp{cursor:pointer;}
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:active { filter: brightness(0.95); transform: scale(0.98); }
+.btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-ghost { background: none; color: var(--text2); }
+.btn-ghost:hover { background: var(--bg3); color: var(--text); }
+.btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 7px; }
+.btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 8px; }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover { filter: brightness(1.1); }
 
-.xp-bar{height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;}
-.xp-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--pink));border-radius:99px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+/* Inputs */
+.inp { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 13px; font-size: 13.5px; color: var(--text); font-family: inherit; width: 100%; outline: none; transition: border 0.15s, box-shadow 0.15s; }
+.inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.12); background: var(--bg2); }
+.inp::placeholder { color: var(--text3); }
+textarea.inp { resize: none; }
+select.inp { cursor: pointer; appearance: none; }
 
-.prog{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
-.prog-fill{height:100%;border-radius:99px;transition:width .8s ease;}
+/* Tags / Pills */
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+.pill-blue { background: var(--blue-light); color: var(--blue); }
+.pill-green { background: var(--green-light); color: var(--green); }
+.pill-orange { background: var(--orange-light); color: var(--orange); }
+.pill-red { background: var(--red-light); color: var(--red); }
+.pill-purple { background: var(--purple-light); color: var(--purple); }
+.pill-gray { background: var(--bg3); color: var(--text2); }
+.pill-yellow { background: var(--yellow-light); color: #8a6d00; }
+.dark .pill-yellow { color: var(--yellow); }
 
-.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
-.tag-brand{background:var(--brand-dim);color:var(--brand);}
-.tag-green{background:rgba(52,211,153,.1);color:var(--green);}
-.tag-amber{background:rgba(251,191,36,.1);color:var(--amber);}
-.tag-red{background:rgba(248,113,113,.1);color:var(--red);}
-.tag-muted{background:var(--surface2);color:var(--muted);}
-.tag-orange{background:rgba(251,146,60,.1);color:var(--orange);}
-.tag-pink{background:rgba(244,114,182,.1);color:var(--pink);}
+/* Checkbox */
+.cb { appearance: none; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--border2); cursor: pointer; transition: all 0.15s; position: relative; flex-shrink: 0; background: transparent; }
+.cb:checked { background: var(--blue); border-color: var(--blue); }
+.cb:checked::after { content: ''; position: absolute; left: 4px; top: 1.5px; width: 5px; height: 8px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg); }
 
-.cb{appearance:none;width:17px;height:17px;border-radius:5px;border:2px solid var(--border);cursor:pointer;transition:all .15s;position:relative;flex-shrink:0;background:var(--surface2);}
-.cb:checked{background:var(--brand);border-color:var(--brand);}
-.cb:checked::after{content:'v';position:absolute;color:white;font-size:10px;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:900;font-style:normal;}
+/* Modal */
+.overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; animation: fade-in 0.15s ease; }
+.modal { background: var(--bg2); border-radius: var(--radius-xl); box-shadow: 0 20px 60px rgba(0,0,0,0.2); width: 100%; max-width: 480px; overflow: hidden; animation: slide-up 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+.modal-head { padding: 18px 20px 0; }
+.modal-body { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
+.modal-foot { padding: 14px 20px; display: flex; gap: 8px; border-top: 1px solid var(--border); }
 
-.modal-bg{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fin .18s ease;}
-.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:22px;width:100%;max-width:500px;overflow:hidden;animation:sup .22s cubic-bezier(.4,0,.2,1);}
-.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:11px;max-height:70vh;overflow-y:auto;}
-.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:9px;}
+/* Table */
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+.tbl td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--bg3); }
 
-@keyframes fin{from{opacity:0;}to{opacity:1;}}
-@keyframes sup{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-.fade-in{animation:fin .25s ease;}
-.slide-up{animation:sup .25s ease;}
+/* Progress */
+.bar { height: 4px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
 
-.tbl{width:100%;border-collapse:collapse;font-size:13px;}
-.tbl th{padding:11px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);border-bottom:1px solid var(--border);}
-.tbl td{padding:13px 14px;border-bottom:1px solid var(--border);}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tr:hover td{background:var(--surface2);}
+/* Stat tile */
+.stat { padding: 16px 18px; }
+.stat-n { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; margin-top: 6px; }
+.stat-l { font-size: 12px; color: var(--text2); margin-top: 4px; font-weight: 500; }
 
-.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.st{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;letter-spacing:-.3px;}
+/* Section header */
+.sh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.sh-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
 
-.rit{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:var(--surface);transition:all .15s;cursor:pointer;}
-.rit:hover{border-color:var(--brand);}
-.rit.done{opacity:.35;filter:grayscale(.4);pointer-events:none;}
+/* List item */
+.list-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+.list-item:last-child { border-bottom: none; }
+.list-item:hover { background: var(--bg3); }
 
-.step{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);transition:border .15s;}
-.step:hover{border-color:var(--brand);}
+/* Icon container */
+.icon-box { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-.log-item{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid var(--border);}
-.ldot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex-shrink:0;margin-top:4px;}
-.ldot.xp{box-shadow:0 0 7px var(--brand-glow);}
+/* Timer */
+.timer-face { font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1; font-variant-numeric: tabular-nums; }
 
-.snd{display:flex;align-items:center;gap:13px;padding:15px 18px;border-radius:15px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .15s;text-align:left;width:100%;}
-.snd:hover{border-color:var(--brand);}
-.snd.playing{background:var(--brand);border-color:var(--brand);color:white;}
+/* Animations */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.fade { animation: fade-in 0.2s ease; }
 
-.ring-svg{position:absolute;inset:0;width:100%;height:100%;}
-.ring-bg{stroke:var(--surface2);}
-.ring-prog{stroke:var(--brand);stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s linear;}
-.ring-break{stroke:var(--green);}
+/* Routine row */
+.rit { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; cursor: pointer; transition: background 0.1s; border: 1px solid transparent; }
+.rit:hover { background: var(--bg3); }
+.rit.done { opacity: 0.4; pointer-events: none; }
 
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;gap:10px;color:var(--muted);font-size:13px;}
-.frog-card{background:linear-gradient(135deg,#064e3b,#065f46)!important;border-color:#065f46!important;}
-.scratch{background:rgba(251,191,36,.06)!important;border-color:rgba(251,191,36,.2)!important;}
+/* Step row */
+.step-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.step-row:last-child { border-bottom: none; }
 
-.diff-easy{background:rgba(52,211,153,.12);color:var(--green);}
-.diff-medium{background:rgba(251,191,36,.12);color:var(--amber);}
-.diff-hard{background:rgba(251,146,60,.12);color:var(--orange);}
-.diff-extreme{background:rgba(248,113,113,.12);color:var(--red);}
+/* Challenge card */
+.ch-card { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
 
-.ndot{position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--brand);border:2px solid var(--surface);}
+/* Sound btn */
+.sound-btn { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg2); cursor: pointer; text-align: left; transition: all 0.15s; width: 100%; font-family: inherit; }
+.sound-btn:hover { border-color: var(--blue); background: var(--bg3); }
+.sound-btn.on { background: var(--blue); border-color: var(--blue); color: white; }
 
-@media print{
-  @page{size:A4;margin:0;}
-  .no-print{display:none!important;}
-  .print-area{display:flex!important;}
+/* Range */
+input[type=range] { -webkit-appearance: none; width: 100%; height: 3px; border-radius: 99px; background: var(--bg3); outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--blue); cursor: pointer; border: 2px solid var(--bg2); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+/* Empty */
+.empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 48px 20px; color: var(--text3); font-size: 13px; }
+
+/* Print */
+@media print {
+  @page { size: A4; margin: 0; }
+  .no-print { display: none !important; }
+  .for-print { display: flex !important; }
 }
-.print-area{display:none;position:fixed;inset:0;background:white;z-index:9999;align-items:center;justify-content:center;padding:40mm;text-align:center;}
+.for-print { display: none; position: fixed; inset: 0; background: white; z-index: 9999; align-items: center; justify-content: center; padding: 50mm; text-align: center; }
 
-input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:99px;background:var(--surface2);outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--brand);cursor:pointer;}
+/* Scratch */
+.scratch-area { background: var(--yellow-light); border: 1.5px solid var(--yellow); border-radius: var(--radius-lg); padding: 16px 18px; }
 
-@media(max-width:768px){
-  .sidebar{display:none;}
-  .mobile-nav{display:flex!important;}
-  .content{padding:14px;}
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .mob-nav { display: flex !important; }
+  .page { padding: 16px; }
 }
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:8px 8px 14px;z-index:40;gap:2px;}
+.mob-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 4px 16px; z-index: 40; gap: 0; }
+
+/* Tooltip-like label */
+.label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.03em; text-transform: uppercase; margin-bottom: 6px; }
+
+/* Divider */
+.div { height: 1px; background: var(--border); margin: 8px 0; }
+
+/* Focus ring for buttons */
+.btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 </style>
-<script>tailwind.config={darkMode:'class',theme:{extend:{}}}</script>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useEffect, useMemo, useCallback, useRef } = React;
+/* eslint-disable */
+var R = React;
+var useState = R.useState;
+var useEffect = R.useEffect;
+var useMemo = R.useMemo;
+var useCallback = R.useCallback;
+var useRef = R.useRef;
+var memo = R.memo;
+var h = R.createElement;
 
-const APP_VERSION = "V.2.0 / 2026";
+// -- SVG Icons (inline, no external dep) ----------------------------------
+var ICONS = {
+  zap: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
+  dashboard: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+  trophy: 'M8 21h8M12 17v4M7 4H4a1 1 0 0 0-1 1v3c0 3.3 2.7 6 6 6h6c3.3 0 6-2.7 6-6V5a1 1 0 0 0-1-1h-3M7 4V2M17 4V2M7 4h10',
+  headphones: 'M3 18v-6a9 9 0 0 1 18 0v6 M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z',
+  archive: 'M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.3 7l8.7 5 8.7-5 M12 22V12',
+  target: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M12 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z M12 14c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z',
+  check_sq: 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  book: 'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
+  quote: 'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
+  pen: 'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
+  refresh: 'M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
+  shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  users: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M9 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
+  help: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
+  activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
+  download: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
+  undo: 'M9 14L4 9l5-5 M4 9h11a4 4 0 0 1 0 8h-1',
+  plus: 'M12 5v14M5 12h14',
+  x: 'M18 6L6 18M6 6l12 12',
+  trash: 'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+  play: 'M5 3l14 9-14 9V3z',
+  pause: 'M6 4h4v16H6zM14 4h4v16h-4z',
+  reset: 'M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15',
+  sun: 'M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
+  moon: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
+  search: 'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
+  check: 'M20 6L9 17l-5-5',
+  printer: 'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z',
+  vol: 'M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07',
+  rain: 'M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2',
+  tree: 'M17 14v5M7 14v5M12 2L2 22h20z',
+  coffee: 'M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3',
+  wind: 'M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2',
+  bell: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
+  cloud: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z',
+  star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+  grad: 'M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c3 3 9 3 12 0v-5',
+  piggy: 'M19 12a7 7 0 1 0-7 7M19 12c0 3.87-3.13 7-7 7M19 12h2M13 7h.01M8 13.5c0-2.5 1.5-4.5 4-5.5',
+  skull: 'M12 2a7 7 0 0 1 7 7v2c1.1 0 2 .9 2 2v2a2 2 0 0 1-2 2h-.5l-1 4H6.5l-1-4H5a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2V9a7 7 0 0 1 7-7zM9 17v-2M15 17v-2',
+  flame: 'M8.5 14.5A2.5 2.5 0 0 0 11 17c0-1.5 1-3 1-3s1 1.5 1 3a2.5 2.5 0 0 0 2.5-2.5c0-1.5-.8-3-3.5-5.5C9.3 11.5 8.5 13 8.5 14.5zM12 2C6.5 7 4 10.5 4 14a8 8 0 0 0 16 0c0-5.5-5-10-8-12z',
+  smile: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01',
+  brain: 'M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04zM14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04z',
+  wifi_off: 'M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01',
+  dumbbell: 'M6.5 6.5h11M6.5 17.5h11M3 8.5h4v7H3zM17 8.5h4v7h-4z',
+  cookie: 'M12 2a10 10 0 1 0 10 10M8.5 8.5h.01M16 15.5h.01M12 12h.01',
+  arrow_r: 'M5 12h14M12 5l7 7-7 7',
+  circle: 'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z',
+  check_c: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3',
+  lock: 'M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2zM7 11V7a5 5 0 0 1 10 0v4',
+};
 
-const U = {
+function Ic(props) {
+  var n = props.n, s = props.s || 16, c = props.c, st = props.st || {};
+  var d = ICONS[n];
+  if (!d) return null;
+  var paths = d.split('M').filter(Boolean).map(function(p) { return 'M' + p; });
+  return h('svg', {
+    width: s, height: s, viewBox: '0 0 24 24', fill: 'none',
+    stroke: c || 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round',
+    style: Object.assign({display:'inline-block',flexShrink:0,verticalAlign:'middle'}, st)
+  }, paths.map(function(p, i) { return h('path', {key: i, d: p}); }));
+}
+
+// -- Utils -----------------------------------------------------------------
+var U = {
   isoWeek: function(d) {
-    var dt = new Date(d.getTime());
-    dt.setHours(0,0,0,0);
+    var dt = new Date(d.getTime()); dt.setHours(0,0,0,0);
     dt.setDate(dt.getDate() + 3 - (dt.getDay()+6)%7);
     var w1 = new Date(dt.getFullYear(),0,4);
-    return 1 + Math.round(((dt - w1) / 86400000 - 3 + (w1.getDay()+6)%7) / 7);
+    return 1 + Math.round(((dt-w1)/86400000 - 3 + (w1.getDay()+6)%7) / 7);
   },
-  quarter: function(d) { return "Q" + (Math.floor((d.getMonth()+3)/3)); },
-  isActive: function(period, lastDone) {
-    if (!lastDone) return true;
-    var last = new Date(lastDone), now = new Date();
-    if (period === 'daily') return last.toDateString() !== now.toDateString();
-    if (period === 'weekly') return (now - last) > (7 * 864e5);
-    if (period === 'monthly') return last.getMonth() !== now.getMonth() || last.getFullYear() !== now.getFullYear();
+  quarter: function(d) { return 'Q' + Math.floor((d.getMonth()+3)/3); },
+  isActive: function(p, last) {
+    if (!last) return true;
+    var l = new Date(last), n = new Date();
+    if (p==='daily') return l.toDateString() !== n.toDateString();
+    if (p==='weekly') return (n-l) > 7*864e5;
+    if (p==='monthly') return l.getMonth()!==n.getMonth() || l.getFullYear()!==n.getFullYear();
     return true;
   },
-  downloadJSON: function(data, fn) {
+  fmt: function(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); },
+  today: function() { return new Date().toISOString().split('T')[0]; },
+  ts: function() { return new Date().toLocaleString('tr-TR'); },
+  dl: function(data, fn) {
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)], {type:'application/json'}));
     a.download = fn; a.click();
-  },
-  fmtTime: function(s) {
-    return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
-  },
-  dateStr: function(d) { return (d || new Date()).toISOString().split('T')[0]; },
-  localStr: function(d) { return (d || new Date()).toLocaleString('tr-TR'); }
+  }
 };
 
-const IK = function(props) {
-  var name = props.name, size = props.size || 18, color = props.color, className = props.className || '', extraStyle = props.extraStyle || {};
-  var ref = useRef(null);
-  useEffect(function() { if (window.lucide) window.lucide.createIcons(); }, [name]);
-  return React.createElement('i', {
-    ref: ref,
-    'data-lucide': name,
-    style: Object.assign({width:size,height:size,display:'inline-block',flexShrink:0,color:color||'currentColor',verticalAlign:'middle'}, extraStyle),
-    className: className
-  });
-};
-
-var CH_TEMPLATES = [
-  {id:'no-sugar',name:'Seker Yok',icon:'cookie',cat:'Saglik',desc:'90 gun boyunca ilave seker tuketme. Hazir gidalardan, tatli iceceklerden uzak dur.',diff:'hard',xpReward:300},
-  {id:'cold-shower',name:'Soguk Dus',icon:'droplets',cat:'Saglik',desc:'Her sabah en az 60 saniye soguk sus al. Zihin ve beden sagligini guclendiriyor.',diff:'medium',xpReward:200},
-  {id:'read-daily',name:'Her Gun Oku',icon:'book-open',cat:'Gelisim',desc:'Her gun en az 20 sayfa oku. Konu fark etmez, sadece oku.',diff:'easy',xpReward:150},
-  {id:'no-social',name:'Sosyal Medya Detoks',icon:'wifi-off',cat:'Odak',desc:'90 gun boyunca sosyal medyayi sil. Zamanin ve dikkatinin sahibi ol.',diff:'extreme',xpReward:500},
-  {id:'workout',name:'Antrenman Serisi',icon:'dumbbell',cat:'Saglik',desc:'Haftada 4 gun en az 30 dk egzersiz yap.',diff:'medium',xpReward:250},
-  {id:'meditate',name:'Meditasyon',icon:'brain',cat:'Zihin',desc:'Her gun 10 dakika sessiz otur ve odaklan.',diff:'easy',xpReward:150},
-  {id:'journal-daily',name:'Gunluk Yazimi',icon:'pen-line',cat:'Zihin',desc:'Her gun en az 200 kelime yaz. Dusuncelerin kagida dokulsun.',diff:'medium',xpReward:200},
-  {id:'learn-skill',name:'Yeni Beceri',icon:'graduation-cap',cat:'Gelisim',desc:'90 gun boyunca her gun 30 dk yeni bir sey ogren.',diff:'hard',xpReward:350},
-  {id:'save-money',name:'Birikim Mucadelesi',icon:'piggy-bank',cat:'Finans',desc:'90 gun boyunca her gunluk harcamayi kaydet ve tasarruf hedefi belirle.',diff:'medium',xpReward:200},
-  {id:'custom',name:'Ozel Mucadele',icon:'star',cat:'Ozel',desc:'Kendi meydan okumani kendin belirle!',diff:'medium',xpReward:250},
-];
-
-var DIFF_COLORS = {
-  easy:    {cls:'diff-easy',   label:'Kolay',   icon:'smile'},
-  medium:  {cls:'diff-medium', label:'Orta',    icon:'zap'},
-  hard:    {cls:'diff-hard',   label:'Zor',     icon:'flame'},
-  extreme: {cls:'diff-extreme',label:'Ekstrem', icon:'skull'}
-};
-
+// -- Data ------------------------------------------------------------------
 var INIT = {
   goals: [
-    {id:1, title:'Ingilizce C1 Sertifikasyonu', description:'Uluslararasi projelerde liderlik icin dil seviyesini gelistirmek.', quarter:'Q1', isFrog:true, steps:[{id:101,text:'IELTS Kurs Kaydi',done:true},{id:102,text:'Haftalik Essay',done:false},{id:103,text:'Mock Sinav',done:false}]},
-    {id:2, title:'Sabah Rutini Olustur', description:'Erken kalkis ve gunluk egzersiz aliskanligini kazanmak.', quarter:'Q1', isFrog:false, steps:[{id:201,text:'Alarm kurulumu',done:true},{id:202,text:'7 gun surdur',done:false}]},
+    {id:1,title:'Ingilizce C1 Sertifikasyonu',desc:'Uluslararasi projelerde liderlik icin.',quarter:'Q1',frog:true,steps:[{id:101,t:'IELTS Kurs Kaydi',done:true},{id:102,t:'Haftalik Essay',done:false}]},
+    {id:2,title:'Sabah Rutini Olustur',desc:'Erken kalkis ve egzersiz aliskanligini kazanmak.',quarter:'Q1',frog:false,steps:[{id:201,t:'Alarm kurulumu',done:true},{id:202,t:'7 gun surdur',done:false}]},
   ],
   todos: [
-    {id:11, text:'Onemli Raporu Teslim Et', end:'2026-04-15', priority:'Acil & Onemli', category:'Is', completed:false},
-    {id:12, text:'Haftalik planlama toplantisi', end:'', priority:'Onemli', category:'Is', completed:false},
-    {id:13, text:'Kitap ozeti cikar', end:'', priority:'Normal', category:'Gelisim', completed:true},
+    {id:11,text:'Onemli Raporu Teslim Et',end:'2026-04-15',priority:'urgent',category:'Is',done:false},
+    {id:12,text:'Haftalik planlama toplantisi',end:'',priority:'high',category:'Is',done:false},
+    {id:13,text:'Kitap ozeti cikar',end:'',priority:'normal',category:'Gelisim',done:true},
   ],
   books: [
-    {id:31, title:'Atomik Aliskanliklar', author:'James Clear', end:'2026-04-01', status:'Okunuyor'},
-    {id:32, title:'Deep Work', author:'Cal Newport', end:'', status:'Sirada'},
+    {id:31,title:'Atomik Aliskanliklar',author:'James Clear',end:'2026-04-01',status:'reading'},
+    {id:32,title:'Deep Work',author:'Cal Newport',end:'',status:'queue'},
   ],
   quotes: [
-    {id:41, text:'Olcemedin seyi gelistiremezsin.', author:'Peter Drucker', category:'Yonetim'},
-    {id:42, text:'Her seye hayir diyebildiginde, onemli seylere evet diyebilirsin.', author:'Steve Jobs', category:'Odak'},
-    {id:43, text:'Baslangi mukemmel olmak zorunda degil, sadece baslamak zorunda.', author:'Joe Sabah', category:'Motivasyon'},
+    {id:41,text:'Olcemedin seyi gelistiremezsin.',author:'Peter Drucker',cat:'Yonetim'},
+    {id:42,text:'Her seye hayir diyebildiginde, onemli seylere evet diyebilirsin.',author:'Steve Jobs',cat:'Odak'},
+    {id:43,text:'Mukemmellik bir eylem degil, bir aliskanligin sonucudur.',author:'Aristotle',cat:'Gelisim'},
   ],
-  journal: [{id:501, date:'2026-03-18', category:'Sukran', content:'Bugün odaklanmayi basardim ve planlarimi tamamladim.'}],
+  journal: [{id:501,date:'2026-03-18',cat:'Sukran',text:'Bugün odaklanmayi basardim ve planlarimi tamamladim.'}],
   routines: {
-    daily:    [{id:61,text:'Sabah Meditasyonu',lastDone:null},{id:62,text:'500ml Su',lastDone:null},{id:63,text:'Gunluk Planlama',lastDone:null}],
-    weekly:   [{id:71,text:'Haftalik Gozden Gecirme',lastDone:null}],
-    monthly:  [{id:81,text:'Aylik Hedef Degerlendirmesi',lastDone:null}],
+    daily:    [{id:61,t:'Sabah Meditasyonu',last:null},{id:62,t:'500ml Su',last:null},{id:63,t:'Gunluk Planlama',last:null}],
+    weekly:   [{id:71,t:'Haftalik Gozden Gecirme',last:null}],
+    monthly:  [{id:81,t:'Aylik Hedef Degerlendirmesi',last:null}],
     quarterly:[], yearly:[],
   },
-  principles: [
-    {id:91, type:'Vizyon', content:'Her gun %1 daha iyi olmak.'},
-    {id:92, type:'Kural', content:'Ilk iki saatimi derin calisma icin koru.'},
-  ],
-  coaching:  [{id:101, title:'GROW Modeli', content:'Goal, Reality, Options, Will adimlarini takip et.', category:'Yontem'}],
-  questions: [{id:1,text:'Korkmasaydim bugün ne yapardim?'},{id:2,text:'Gelecekteki ben bugünkü kararimdan memnun kalacak mi?'}],
-  vault: [],
-  challenges: [],
-  trash: [], logs: [],
-  stats: {xp:120, totalFocusMinutes:0, level:1},
-  sounds: {active:null, volume:0.6},
+  principles: [{id:91,type:'Vizyon',text:'Her gun %1 daha iyi olmak.'},{id:92,type:'Kural',text:'Ilk iki saatimi derin calisma icin koru.'}],
+  coaching:   [{id:101,title:'GROW Modeli',text:'Goal, Reality, Options, Will adimlarini takip et.',cat:'Yontem'}],
+  questions:  [{id:1,text:'Korkmasaydim bugün ne yapardim?'},{id:2,text:'Gelecekteki ben bugünkü kararimdan memnun kalacak mi?'}],
+  vault: [], challenges: [], trash: [], logs: [],
+  stats: {xp:120, focus:0, level:1},
+  vol: 0.6, activeSound: null,
+};
+
+var CH_TPLS = [
+  {id:'no-sugar',  name:'Seker Yok',         icon:'cookie',   cat:'Saglik', desc:'90 gun boyunca ilave seker tuketme.',                      diff:'hard',    xp:300},
+  {id:'cold',      name:'Soguk Dus',          icon:'cloud',    cat:'Saglik', desc:'Her sabah 60 saniye soguk sus al.',                        diff:'medium',  xp:200},
+  {id:'read',      name:'Her Gun Oku',        icon:'book',     cat:'Gelisim',desc:'Her gun en az 20 sayfa oku.',                              diff:'easy',    xp:150},
+  {id:'no-social', name:'Sosyal Medya Detoks',icon:'wifi_off', cat:'Odak',   desc:'90 gun boyunca sosyal medyayi sil.',                       diff:'extreme', xp:500},
+  {id:'workout',   name:'Antrenman',          icon:'dumbbell', cat:'Saglik', desc:'Haftada 4 gun en az 30 dk egzersiz yap.',                  diff:'medium',  xp:250},
+  {id:'meditate',  name:'Meditasyon',         icon:'brain',    cat:'Zihin',  desc:'Her gun 10 dakika meditasyon yap.',                        diff:'easy',    xp:150},
+  {id:'journal',   name:'Gunluk Yazimi',      icon:'pen',      cat:'Zihin',  desc:'Her gun en az 200 kelime yaz.',                            diff:'medium',  xp:200},
+  {id:'learn',     name:'Yeni Beceri',        icon:'grad',     cat:'Gelisim',desc:'Her gun 30 dk yeni bir beceri ogren.',                     diff:'hard',    xp:350},
+  {id:'save',      name:'Birikim Mucadelesi', icon:'piggy',    cat:'Finans', desc:'90 gun boyunca her harcamayi kaydet.',                     diff:'medium',  xp:200},
+  {id:'custom',    name:'Ozel Mucadele',      icon:'star',     cat:'Ozel',   desc:'Kendi meydan okumani belirle!',                            diff:'medium',  xp:250},
+];
+
+var DIFF = {
+  easy:    {label:'Kolay',   cls:'pill-green',  ic:'smile'},
+  medium:  {label:'Orta',    cls:'pill-orange',  ic:'flame'},
+  hard:    {label:'Zor',     cls:'pill-red',    ic:'zap'},
+  extreme: {label:'Ekstrem', cls:'pill-purple', ic:'skull'},
 };
 
 var SOUNDS = [
-  {name:'Yagmur', url:'https://actions.google.com/google_around_the_world/notifications/rain_stick.ogg', icon:'cloud-rain'},
-  {name:'Sabah Kuslari', url:'https://actions.google.com/google_around_the_world/notifications/morning_birds.ogg', icon:'trees'},
-  {name:'Kafe Ambiyans', url:'https://actions.google.com/google_around_the_world/notifications/busy_street.ogg', icon:'coffee'},
-  {name:'Beyaz Gurultu', url:'https://actions.google.com/google_around_the_world/notifications/wind_climes.ogg', icon:'wind'},
-  {name:'Meditasyon Zili', url:'https://actions.google.com/google_around_the_world/notifications/meditation_bell.ogg', icon:'bell'},
+  {name:'Yagmur',       url:'https://actions.google.com/google_around_the_world/notifications/rain_stick.ogg',     icon:'rain'},
+  {name:'Sabah Kuslari',url:'https://actions.google.com/google_around_the_world/notifications/morning_birds.ogg',  icon:'tree'},
+  {name:'Kafe',         url:'https://actions.google.com/google_around_the_world/notifications/busy_street.ogg',    icon:'coffee'},
+  {name:'Beyaz Gurultu',url:'https://actions.google.com/google_around_the_world/notifications/wind_climes.ogg',    icon:'wind'},
+  {name:'Meditasyon',   url:'https://actions.google.com/google_around_the_world/notifications/meditation_bell.ogg',icon:'bell'},
 ];
 
-var FORM_FIELDS = {
-  goal: [
-    {name:'title', placeholder:'Hedef basligi', type:'text', required:true},
-    {name:'description', placeholder:'Hedef tanimi', type:'textarea', required:true},
-    {name:'quarter', type:'select', options:['Q1','Q2','Q3','Q4']},
-    {name:'isFrog', label:'Bu en kritik hedefiniz mi? (Kurbaga)', type:'checkbox'},
-  ],
-  todo: [
-    {name:'text', placeholder:'Gorev nedir?', type:'text', required:true},
-    {name:'priority', type:'select', options:['Normal','Onemli','Acil & Onemli']},
-    {name:'category', type:'select', options:['Is','Kisisel','Aile','Sosyal','Finans','Gelisim']},
-    {name:'end', type:'date'},
-  ],
-  book: [
-    {name:'title', placeholder:'Kitap adi', type:'text', required:true},
-    {name:'author', placeholder:'Yazar', type:'text'},
-    {name:'end', type:'date'},
-  ],
-  quote: [
-    {name:'text', placeholder:'Soz metni', type:'textarea', required:true},
-    {name:'author', placeholder:'Kaynak / Yazar', type:'text'},
-    {name:'category', placeholder:'Kategori', type:'text'},
-  ],
-  journal: [
-    {name:'category', placeholder:'Kategori (Sukran, Fikir...)', type:'text'},
-    {name:'content', placeholder:'Bugün ne dusundun?', type:'textarea', required:true},
-  ],
-  principle: [
-    {name:'type', placeholder:'Tur (Vizyon, Kural, Deger...)', type:'text'},
-    {name:'content', placeholder:'Prensip icerigi', type:'textarea', required:true},
-  ],
-  coaching: [
-    {name:'title', placeholder:'Baslik', type:'text', required:true},
-    {name:'category', placeholder:'Kategori', type:'text'},
-    {name:'content', placeholder:'Icerik', type:'textarea', required:true},
-  ],
-  vault: [
-    {name:'title', placeholder:'Not basligi', type:'text', required:true},
-    {name:'category', placeholder:'Kategori', type:'text'},
-    {name:'content', placeholder:'Icerik', type:'textarea', required:true},
-  ],
-  question: [{name:'text', placeholder:'Soru metni', type:'textarea', required:true}],
-  routine: [
-    {name:'text', placeholder:'Rutin adi', type:'text', required:true},
-    {name:'period', type:'select', options:['daily','weekly','monthly','quarterly','yearly']},
-  ],
+var FORM_CFG = {
+  goal:      [{n:'title',ph:'Hedef basligi',t:'text',req:true},{n:'desc',ph:'Tanim',t:'ta',req:true},{n:'quarter',t:'sel',opts:['Q1','Q2','Q3','Q4']},{n:'frog',lb:'Bu en kritik hedefiniz mi?',t:'cb'}],
+  todo:      [{n:'text',ph:'Gorev nedir?',t:'text',req:true},{n:'priority',t:'sel',opts:['normal','high','urgent']},{n:'category',t:'sel',opts:['Is','Kisisel','Aile','Finans','Gelisim','Sosyal']},{n:'end',t:'date'}],
+  book:      [{n:'title',ph:'Kitap adi',t:'text',req:true},{n:'author',ph:'Yazar',t:'text'},{n:'end',t:'date'}],
+  quote:     [{n:'text',ph:'Soz',t:'ta',req:true},{n:'author',ph:'Kaynak',t:'text'},{n:'cat',ph:'Kategori',t:'text'}],
+  journal:   [{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Bugün ne dusundun?',t:'ta',req:true}],
+  principle: [{n:'type',ph:'Tur (Vizyon, Kural...)',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
+  coaching:  [{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
+  vault:     [{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
+  question:  [{n:'text',ph:'Soru',t:'ta',req:true}],
+  routine:   [{n:'t',ph:'Rutin adi',t:'text',req:true},{n:'period',t:'sel',opts:['daily','weekly','monthly','quarterly','yearly']}],
 };
 
-var MODAL_TITLES = {goal:'Hedef',todo:'Gorev',book:'Kitap',quote:'Soz',journal:'Gunluk',principle:'Prensip',coaching:'Kocluk',vault:'Not',question:'Soru',routine:'Rutin'};
-
-function App() {
-  var savedData = useState(function() {
-    try {
-      var s = localStorage.getItem('focusup_v2');
-      if (s) {
-        var p = JSON.parse(s);
-        return Object.assign({}, INIT, p, {
-          routines: Object.assign({}, INIT.routines, p.routines || {}),
-          stats: Object.assign({}, INIT.stats, p.stats || {}),
-          challenges: p.challenges || []
-        });
-      }
-    } catch(e) {}
-    return INIT;
-  });
-  var data = savedData[0], setData = savedData[1];
-
-  var darkState = useState(function() { return localStorage.getItem('focusup_theme') !== 'light'; });
-  var isDark = darkState[0], setIsDark = darkState[1];
-
-  var histState = useState([]); var hist = histState[0], setHist = histState[1];
-  var tabState = useState('dashboard'); var tab = tabState[0], setTab = tabState[1];
-  var nowState = useState(new Date()); var now = nowState[0], setNow = nowState[1];
-  var qState = useState(''); var q = qState[0], setQ = qState[1];
-  var modalState = useState({open:false,type:null}); var modal = modalState[0], setModal = modalState[1];
-  var printState = useState({item:null}); var print = printState[0], setPrint = printState[1];
-  var scratchState = useState(function() { return localStorage.getItem('focusup_scratch') || ''; });
-  var scratch = scratchState[0], setScratch = scratchState[1];
-
-  var timerModeState = useState('focus'); var timerMode = timerModeState[0], setTimerMode = timerModeState[1];
-  var timeLeftState = useState(25*60); var timeLeft = timeLeftState[0], setTimeLeft = timeLeftState[1];
-  var timerOnState = useState(false); var timerOn = timerOnState[0], setTimerOn = timerOnState[1];
-
-  var TDUR = {focus:25*60, short:5*60, long:15*60};
-  var audioRef = useRef(null);
-
+// -- Clock component (isolated to prevent app re-render) -------------------
+var Clock = memo(function() {
+  var ts = useState(new Date());
+  var t = ts[0], setT = ts[1];
   useEffect(function() {
-    document.body.className = isDark ? '' : 'light';
-    localStorage.setItem('focusup_theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
-
-  useEffect(function() {
-    var t = setInterval(function() { setNow(new Date()); }, 1000);
-    return function() { clearInterval(t); };
+    var id = setInterval(function() { setT(new Date()); }, 1000);
+    return function() { clearInterval(id); };
   }, []);
+  return h('span', {style:{fontSize:12,color:'var(--text2)',fontWeight:500}},
+    t.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}) + '  ' + t.toLocaleTimeString('tr-TR')
+  );
+});
+
+// -- Timer component (isolated) --------------------------------------------
+var TimerWidget = memo(function(props) {
+  var onXP = props.onXP;
+  var ms = useState('focus');   var mode=ms[0],setMode=ms[1];
+  var tls = useState(25*60);    var tl=tls[0],setTl=tls[1];
+  var ons = useState(false);    var on=ons[0],setOn=ons[1];
+  var TDUR = {focus:25*60,short:5*60,long:15*60};
 
   useEffect(function() {
-    var t = setTimeout(function() { localStorage.setItem('focusup_v2', JSON.stringify(data)); }, 800);
-    return function() { clearTimeout(t); };
-  }, [data]);
-
-  useEffect(function() { localStorage.setItem('focusup_scratch', scratch); }, [scratch]);
-
-  useEffect(function() {
-    var t;
-    if (timerOn && timeLeft > 0) {
-      t = setInterval(function() { setTimeLeft(function(p) { return p - 1; }); }, 1000);
-    } else if (timerOn && timeLeft === 0) {
-      setTimerOn(false);
-      if (timerMode === 'focus') {
-        gainXP(50, 'Pomodoro tamamlandi');
-        setData(function(p) { return Object.assign({}, p, {stats: Object.assign({}, p.stats, {totalFocusMinutes: (p.stats.totalFocusMinutes || 0) + 25})}); });
-      }
+    var id;
+    if (on && tl > 0) { id = setInterval(function() { setTl(function(p) { return p-1; }); }, 1000); }
+    else if (on && tl === 0) {
+      setOn(false);
+      if (mode === 'focus') { onXP(50, 'Pomodoro tamamlandi'); }
       try { new Audio(SOUNDS[4].url).play(); } catch(e) {}
     }
-    return function() { clearInterval(t); };
-  }, [timerOn, timeLeft]);
+    return function() { clearInterval(id); };
+  }, [on, tl]);
 
-  function gainXP(amount, reason) {
-    setData(function(p) {
-      var xp = (p.stats ? p.stats.xp || 0 : 0) + amount;
-      var level = Math.floor(xp / 500) + 1;
-      var newLog = {time: U.localStr(), action: '+' + amount + ' XP: ' + reason};
-      return Object.assign({}, p, {
-        stats: Object.assign({}, p.stats, {xp: xp, level: level}),
-        logs: [newLog].concat((p.logs || []).slice(0, 99))
-      });
-    });
-  }
+  var perc = tl / TDUR[mode];
+  var C = 2 * Math.PI * 54;
+  var modeColor = mode === 'focus' ? 'var(--blue)' : 'var(--green)';
+
+  return h('div', {style:{display:'flex',flexDirection:'column',alignItems:'center',gap:16,padding:'20px'}},
+    h('div', {style:{display:'flex',gap:4}},
+      [{id:'focus',l:'Odak 25'},{id:'short',l:'Kisa 5'},{id:'long',l:'Uzun 15'}].map(function(m) {
+        return h('button', {
+          key: m.id, className:'btn btn-sm',
+          style:{background:mode===m.id?'var(--blue)':'var(--bg3)',color:mode===m.id?'white':'var(--text2)'},
+          onClick: function() { setMode(m.id); setTl(TDUR[m.id]); setOn(false); }
+        }, m.l);
+      })
+    ),
+    h('div', {style:{position:'relative',width:128,height:128}},
+      h('svg', {viewBox:'0 0 120 120',style:{position:'absolute',inset:0,width:'100%',height:'100%'}},
+        h('circle', {cx:60,cy:60,r:54,fill:'none',stroke:'var(--bg3)',strokeWidth:5}),
+        h('circle', {cx:60,cy:60,r:54,fill:'none',stroke:modeColor,strokeWidth:5,strokeLinecap:'round',
+          strokeDasharray:C, strokeDashoffset:C*(1-perc),
+          style:{transform:'rotate(-90deg)',transformOrigin:'center',transition:'stroke-dashoffset 1s linear'}})
+      ),
+      h('div', {style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:2}},
+        h('span', {className:'timer-face', style:{fontSize:32}}, U.fmt(tl)),
+        h('span', {style:{fontSize:10,color:'var(--text3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em'}}, mode==='focus'?'Odak':'Mola')
+      )
+    ),
+    h('div', {style:{display:'flex',gap:8}},
+      h('button', {
+        className: 'btn btn-primary',
+        onClick: function() { setOn(function(p){return !p;}); }
+      }, h(Ic, {n:on?'pause':'play',s:13}), on?'Durdur':'Baslat'),
+      h('button', {
+        className: 'btn btn-secondary btn-icon',
+        onClick: function() { setOn(false); setTl(TDUR[mode]); }
+      }, h(Ic, {n:'reset',s:14}))
+    )
+  );
+});
+
+// -- Modal -----------------------------------------------------------------
+function ModalForm(props) {
+  var type = props.type, onSave = props.onSave, onClose = props.onClose;
+  var vs = useState({}); var vals=vs[0],setVals=vs[1];
+  var fields = FORM_CFG[type] || [];
+  var TITLES = {goal:'Hedef',todo:'Gorev',book:'Kitap',quote:'Soz',journal:'Gunluk',principle:'Prensip',coaching:'Kocluk',vault:'Not',question:'Soru',routine:'Rutin'};
+
+  function setV(n, v) { setVals(function(p) { var x={}; x[n]=v; return Object.assign({},p,x); }); }
+
+  return h('div', {className:'overlay', onClick:function(e){if(e.target===e.currentTarget)onClose();}},
+    h('div', {className:'modal'},
+      h('div', {className:'modal-head', style:{display:'flex',alignItems:'center',justifyContent:'space-between'}},
+        h('span', {style:{fontWeight:700,fontSize:16}}, TITLES[type] + ' Ekle'),
+        h('button', {className:'btn btn-ghost btn-icon', onClick:onClose}, h(Ic,{n:'x',s:15}))
+      ),
+      h('div', {className:'modal-body'},
+        fields.map(function(f) {
+          if (f.t === 'cb') return h('label', {key:f.n, style:{display:'flex',alignItems:'center',gap:9,cursor:'pointer',fontSize:13}},
+            h('input', {type:'checkbox', className:'cb', checked:!!vals[f.n], onChange:function(e){setV(f.n,e.target.checked);}}),
+            f.lb
+          );
+          if (f.t === 'sel') return h('select', {key:f.n, className:'inp', value:vals[f.n]||f.opts[0], onChange:function(e){setV(f.n,e.target.value);}},
+            f.opts.map(function(o){return h('option',{key:o},o);})
+          );
+          if (f.t === 'ta') return h('textarea', {key:f.n, className:'inp', placeholder:f.ph||'', value:vals[f.n]||'', rows:3, onChange:function(e){setV(f.n,e.target.value);}});
+          return h('input', {key:f.n, className:'inp', type:f.t==='date'?'date':'text', placeholder:f.ph||'', value:vals[f.n]||'', onChange:function(e){setV(f.n,e.target.value);}});
+        })
+      ),
+      h('div', {className:'modal-foot'},
+        h('button', {className:'btn btn-secondary',style:{flex:1}, onClick:onClose}, 'Iptal'),
+        h('button', {className:'btn btn-primary',style:{flex:2}, onClick:function(){
+          var req = fields.filter(function(f){return f.req;});
+          if (!req.every(function(f){return vals[f.n]&&String(vals[f.n]).trim();})) { alert('Zorunlu alanlari doldurun.'); return; }
+          onSave(vals);
+        }}, 'Kaydet')
+      )
+    )
+  );
+}
+
+// -- Print modal -----------------------------------------------------------
+function PrintModal(props) {
+  var item = props.item, onClose = props.onClose;
+  return h('div', {className:'overlay no-print', onClick:function(e){if(e.target===e.currentTarget)onClose();}},
+    h('div', {className:'modal', style:{maxWidth:520}},
+      h('div', {className:'modal-head', style:{display:'flex',alignItems:'center',justifyContent:'space-between',paddingBottom:14}},
+        h('span', {style:{fontWeight:700,fontSize:16}}, 'Poster Baskisi'),
+        h('div', {style:{display:'flex',gap:8}},
+          h('button', {className:'btn btn-primary btn-sm', onClick:function(){window.print();}}, h(Ic,{n:'printer',s:13}), 'Yazdir'),
+          h('button', {className:'btn btn-ghost btn-icon', onClick:onClose}, h(Ic,{n:'x',s:15}))
+        )
+      ),
+      h('div', {style:{padding:'0 20px 20px'}},
+        h('div', {style:{border:'1px solid var(--border)',borderRadius:12,aspectRatio:'1/1.414',display:'flex',alignItems:'center',justifyContent:'center',padding:36,textAlign:'center',background:'white',color:'#1d1d1f'}},
+          h('div', null,
+            h('p', {style:{fontFamily:'Georgia,serif',fontStyle:'italic',fontSize:18,lineHeight:1.7,marginBottom:14}}, '"' + (item.text||item.title||'') + '"'),
+            item.author && h('p', {style:{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.14em',color:'#0071e3'}}, '- ' + item.author)
+          )
+        )
+      )
+    )
+  );
+}
+
+// -- Generic card ----------------------------------------------------------
+function ItemCard(props) {
+  var item=props.item, type=props.type, onDel=props.onDel, onPrint=props.onPrint;
+  return h('div', {className:'card card-p', style:{display:'flex',flexDirection:'column',gap:8}},
+    h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+      h('span', {className:'pill pill-blue', style:{fontSize:10}}, item.cat||item.type||item.category||''),
+      h('div', {style:{display:'flex',gap:4}},
+        onPrint && h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28}, onClick:function(){onPrint(item);}}, h(Ic,{n:'printer',s:13,c:'var(--text3)'})),
+        h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28}, onClick:function(){onDel(item,type);}}, h(Ic,{n:'trash',s:13,c:'var(--text3)'}))
+      )
+    ),
+    item.title && h('p', {style:{fontWeight:600,fontSize:14}}, item.title),
+    h('p', {style:{fontSize:13,color:'var(--text2)',lineHeight:1.6,fontStyle:'italic'}}, '"' + (item.text||item.content||'') + '"'),
+    item.author && h('p', {style:{fontSize:11,color:'var(--text3)',fontWeight:500}}, '-- ' + item.author),
+    item.date   && h('p', {style:{fontSize:11,color:'var(--text3)'}}, item.date)
+  );
+}
+
+// -- Page header -----------------------------------------------------------
+function PH(props) {
+  return h('div', {className:'sh'},
+    h('h1', {className:'sh-title'}, props.title),
+    props.action && h('button', {className:'btn btn-primary', onClick:props.action.fn},
+      h(Ic,{n:'plus',s:14}), props.action.label
+    )
+  );
+}
+
+// -- Empty state -----------------------------------------------------------
+function Empty(props) {
+  return h('div', {className:'empty'},
+    h(Ic, {n:props.icon||'circle',s:32,c:'var(--text3)'}),
+    h('p', null, props.msg||'Henuz icerik yok')
+  );
+}
+
+// -- Grid wrapper ----------------------------------------------------------
+function Grid(props) {
+  return h('div', {style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax('+(props.min||260)+'px,1fr))',gap:14}}, props.children);
+}
+
+// -- App -------------------------------------------------------------------
+function App() {
+  var ds = useState(function(){
+    try { var s=localStorage.getItem('fu3'); if(s){var p=JSON.parse(s);return Object.assign({},INIT,p,{routines:Object.assign({},INIT.routines,p.routines||{}),stats:Object.assign({},INIT.stats,p.stats||{}),challenges:p.challenges||[]});} } catch(e){}
+    return INIT;
+  });
+  var data=ds[0],setData=ds[1];
+
+  var dks = useState(function(){return localStorage.getItem('fu3_theme')==='dark';});
+  var dark=dks[0],setDark=dks[1];
+
+  var hs  = useState([]); var hist=hs[0],setHist=hs[1];
+  var ts  = useState('dashboard'); var tab=ts[0],setTab=ts[1];
+  var qs  = useState(''); var q=qs[0],setQ=qs[1];
+  var ms  = useState({open:false,type:null}); var modal=ms[0],setModal=ms[1];
+  var ps  = useState(null); var printItem=ps[0],setPrint=ps[1];
+  var scs = useState(function(){return localStorage.getItem('fu3_sc')||'';});
+  var sc=scs[0],setSc=scs[1];
+  var audioRef = useRef(null);
+
+  useEffect(function(){document.body.className=dark?'dark':'';localStorage.setItem('fu3_theme',dark?'dark':'');},[dark]);
+  useEffect(function(){var t=setTimeout(function(){localStorage.setItem('fu3',JSON.stringify(data));},800);return function(){clearTimeout(t);};},[data]);
+  useEffect(function(){localStorage.setItem('fu3_sc',sc);},[sc]);
+
+  function log(msg) { return {time:U.ts(),action:msg}; }
 
   var upd = useCallback(function(next, msg) {
-    msg = msg || 'Degisiklik';
-    setHist(function(h) { return [JSON.stringify(data)].concat(h).slice(0, 50); });
-    var log = {time: U.localStr(), action: msg};
-    setData(Object.assign({}, next, {logs: [log].concat((next.logs || [])).slice(0, 100)}));
+    setHist(function(h){return [JSON.stringify(data)].concat(h).slice(0,50);});
+    setData(Object.assign({},next,{logs:[log(msg||'Degisiklik')].concat((next.logs||[])).slice(0,100)}));
   }, [data]);
 
-  function undo() {
-    if (!hist.length) return;
-    setData(JSON.parse(hist[0]));
-    setHist(function(h) { return h.slice(1); });
+  function undo() { if (!hist.length) return; setData(JSON.parse(hist[0])); setHist(function(h){return h.slice(1);}); }
+
+  function gainXP(amt, why) {
+    setData(function(p) {
+      var xp=(p.stats.xp||0)+amt, level=Math.floor(xp/500)+1;
+      return Object.assign({},p,{stats:Object.assign({},p.stats,{xp:xp,level:level}),logs:[log('+'+amt+' XP: '+why)].concat((p.logs||[])).slice(0,100)});
+    });
   }
 
   function fil(list, keys) {
-    if (!q || !list) return list || [];
-    var lq = q.toLowerCase();
-    return list.filter(function(i) {
-      return keys.some(function(k) { return i[k] && String(i[k]).toLowerCase().indexOf(lq) >= 0; });
-    });
+    if (!q||!list) return list||[];
+    var lq=q.toLowerCase();
+    return list.filter(function(i){return keys.some(function(k){return i[k]&&String(i[k]).toLowerCase().indexOf(lq)>=0;});});
   }
 
   function del(item, type) {
-    if (!confirm('Bu ogeyi silmek istiyor musun?')) return;
-    var km = {goal:'goals',todo:'todos',book:'books',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges'};
-    var key = km[type];
-    var next = Object.assign({}, data);
-    next[key] = (data[key] || []).filter(function(i) { return i.id !== item.id; });
-    next.trash = [{item: item, itemType: type, deletedAt: U.localStr()}].concat(data.trash || []);
-    upd(next, 'Silindi');
+    if (!confirm('Silinsin mi?')) return;
+    var KM={goal:'goals',todo:'todos',book:'books',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges'};
+    var k=KM[type]; var n=Object.assign({},data);
+    n[k]=(data[k]||[]).filter(function(i){return i.id!==item.id;});
+    n.trash=[{item:item,type:type,at:U.ts()}].concat(data.trash||[]);
+    upd(n,'Silindi');
   }
 
-  function submitModal(vals) {
-    var type = modal.type;
-    if (type === 'routine') {
-      var period = vals.period || 'daily';
-      var nr = {id: Date.now(), text: vals.text, lastDone: null};
-      var newRoutines = Object.assign({}, data.routines);
-      newRoutines[period] = (newRoutines[period] || []).concat([nr]);
-      upd(Object.assign({}, data, {routines: newRoutines}), 'Yeni rutin');
-      gainXP(10, 'Rutin eklendi');
-      setModal({open:false});
-      return;
+  function addItem(vals) {
+    var type=modal.type;
+    if (type==='routine') {
+      var per=vals.period||'daily';
+      var nr=Object.assign({},vals,{id:Date.now(),last:null});
+      var ro=Object.assign({},data.routines);
+      ro[per]=(ro[per]||[]).concat([nr]);
+      upd(Object.assign({},data,{routines:ro}),'Rutin eklendi');
+      gainXP(10,'Rutin eklendi');
+      setModal({open:false}); return;
     }
-    var km = {goal:'goals',todo:'todos',book:'books',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault'};
-    var item = Object.assign({id: Date.now()}, vals);
-    if (type === 'goal') { item.isFrog = !!vals.isFrog; item.steps = []; }
-    if (type === 'todo') item.completed = false;
-    if (type === 'book') item.status = 'Sirada';
-    if (type === 'journal') item.date = U.dateStr();
-    var next2 = Object.assign({}, data);
-    next2[km[type]] = [item].concat(data[km[type]] || []);
-    upd(next2, 'Yeni oge eklendi');
-    gainXP(20, 'Yeni ' + type);
+    var KM2={goal:'goals',todo:'todos',book:'books',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault'};
+    var item=Object.assign({id:Date.now()},vals);
+    if (type==='goal'){item.frog=!!vals.frog;item.steps=[];}
+    if (type==='todo')item.done=false;
+    if (type==='book')item.status='queue';
+    if (type==='journal')item.date=U.today();
+    var n2=Object.assign({},data);
+    n2[KM2[type]]=[item].concat(data[KM2[type]]||[]);
+    upd(n2,'Yeni '+type+' eklendi');
+    gainXP(20,'Yeni '+type);
     setModal({open:false});
   }
 
-  function startChallenge(tpl, customName, customDesc) {
-    var now2 = new Date();
-    var end = new Date(now2); end.setDate(end.getDate() + 90);
-    var ch = {
-      id: Date.now(),
-      templateId: tpl.id,
-      name: customName || tpl.name,
-      desc: customDesc || tpl.desc,
-      icon: tpl.icon, cat: tpl.cat, diff: tpl.diff,
-      xpReward: tpl.xpReward,
-      startDate: U.dateStr(now2),
-      endDate: U.dateStr(end),
-      checkins: [], status: 'active',
-      quarter: U.quarter(now2)
-    };
-    upd(Object.assign({}, data, {challenges: [ch].concat(data.challenges || [])}), 'Yeni 90-gun mucadelesi');
-    gainXP(50, 'Mucadele basladi');
+  function startChallenge(tpl, cname, cdesc) {
+    var s=new Date(), e=new Date(s); e.setDate(e.getDate()+90);
+    var ch={id:Date.now(),tplId:tpl.id,name:cname||tpl.name,desc:cdesc||tpl.desc,icon:tpl.icon,cat:tpl.cat,diff:tpl.diff,xp:tpl.xp,start:U.today(),end:e.toISOString().split('T')[0],checkins:[],status:'active'};
+    upd(Object.assign({},data,{challenges:[ch].concat(data.challenges||[])}),'Mucadele basladi');
+    gainXP(50,'Mucadele basladi');
   }
 
-  function checkinChallenge(chId) {
-    var today = U.dateStr();
-    var chs = (data.challenges || []).map(function(c) {
-      if (c.id !== chId) return c;
-      if (c.checkins && c.checkins.indexOf(today) >= 0) return c;
-      return Object.assign({}, c, {checkins: (c.checkins || []).concat([today])});
+  function checkin(id) {
+    var today=U.today();
+    var chs=(data.challenges||[]).map(function(c){
+      if (c.id!==id||( c.checkins&&c.checkins.indexOf(today)>=0)) return c;
+      return Object.assign({},c,{checkins:(c.checkins||[]).concat([today])});
     });
-    upd(Object.assign({}, data, {challenges: chs}), 'Mucadele check-in');
-    gainXP(15, 'Gunluk mucadele check-in');
+    upd(Object.assign({},data,{challenges:chs}),'Challenge check-in');
+    gainXP(15,'Check-in');
   }
 
-  function completeChallenge(chId) {
-    var ch = (data.challenges || []).find(function(c) { return c.id === chId; });
+  function finishChallenge(id) {
+    var ch=(data.challenges||[]).find(function(c){return c.id===id;});
     if (!ch) return;
-    var chs = (data.challenges || []).map(function(c) { return c.id === chId ? Object.assign({}, c, {status:'completed'}) : c; });
-    upd(Object.assign({}, data, {challenges: chs}), 'Mucadele tamamlandi');
-    gainXP(ch.xpReward || 300, 'Mucadele tamamlandi: ' + ch.name);
+    var chs=(data.challenges||[]).map(function(c){return c.id===id?Object.assign({},c,{status:'done'}):c;});
+    upd(Object.assign({},data,{challenges:chs}),'Mucadele tamamlandi');
+    gainXP(ch.xp||300,'Mucadele tamamlandi: '+ch.name);
   }
 
-  var timerPerc = timeLeft / TDUR[timerMode];
-  var C = 2 * Math.PI * 88;
+  function playSound(url) {
+    if (audioRef.current && data.activeSound===url) {
+      audioRef.current.pause();
+      upd(Object.assign({},data,{activeSound:null}),'Ses durdu');
+    } else {
+      if (audioRef.current) audioRef.current.pause();
+      audioRef.current=new Audio(url); audioRef.current.loop=true; audioRef.current.volume=data.vol;
+      audioRef.current.play();
+      upd(Object.assign({},data,{activeSound:url}),'Ses basladi');
+    }
+  }
 
-  var NAV = [
-    {id:'dashboard', label:'Dashboard', icon:'layout-dashboard'},
-    {id:'challenges', label:'Kisisel Mucadele', icon:'trophy', badge:true},
-    {id:'tools', label:'Odak Araclari', icon:'headphones'},
-    {id:'vault', label:'Bilgi Kasasi', icon:'archive'},
-    {id:'goals', label:'Hedefler', icon:'target'},
-    {id:'todos', label:'Yapilacaklar', icon:'check-square'},
-    {id:'books', label:'Kitaplik', icon:'book-open'},
-    {id:'quotes', label:'Ozlu Sozler', icon:'quote'},
-    {id:'journal', label:'Gunluk', icon:'pen-line'},
-    {id:'routines', label:'Rutinler', icon:'refresh-ccw'},
-    {id:'principles', label:'Prensipler', icon:'shield-check'},
-    {id:'coaching', label:'Kocluk', icon:'users'},
-    {id:'questions', label:'Sorular', icon:'help-circle'},
+  // -- NAV --------------------------------------------------------------
+  var NAV_GROUPS = [
+    {label:'Ana',items:[
+      {id:'dashboard',l:'Dashboard',i:'dashboard'},
+      {id:'challenges',l:'Kisisel Mucadele',i:'trophy',badge:true},
+    ]},
+    {label:'Uretkenlik',items:[
+      {id:'goals',l:'Hedefler',i:'target'},
+      {id:'todos',l:'Yapilacaklar',i:'check_sq'},
+      {id:'routines',l:'Rutinler',i:'refresh'},
+      {id:'books',l:'Kitaplik',i:'book'},
+    ]},
+    {label:'Bilgi',items:[
+      {id:'vault',l:'Bilgi Kasasi',i:'archive'},
+      {id:'quotes',l:'Ozlu Sozler',i:'quote'},
+      {id:'journal',l:'Gunluk',i:'pen'},
+      {id:'principles',l:'Prensipler',i:'shield'},
+      {id:'coaching',l:'Kocluk',i:'users'},
+      {id:'questions',l:'Sorular',i:'help'},
+    ]},
+    {label:'Araçlar',items:[
+      {id:'tools',l:'Odak Araclari',i:'headphones'},
+    ]},
   ];
 
-  // ---- VIEWS ----
-
+  // -- Dashboard ----------------------------------------------------------
   function DashView() {
-    var frog = data.todos.find(function(t) { return !t.completed && t.priority === 'Acil & Onemli'; }) || data.todos.find(function(t) { return !t.completed; });
-    var rq = useMemo(function() { return data.quotes[Math.floor(Math.random() * data.quotes.length)]; }, []);
-    var xpInLvl = (data.stats.xp || 0) % 500;
-    var doneR = (data.routines.daily || []).filter(function(r) { return !U.isActive('daily', r.lastDone); }).length;
-    var activeCh = (data.challenges || []).filter(function(c) { return c.status === 'active'; }).length;
-    return (
-      <div className="slide-up" style={{display:'flex',flexDirection:'column',gap:20}}>
-        <div className="card" style={{padding:'16px 20px'}}>
-          <div className="xp-bar" style={{marginBottom:10}}><div className="xp-fill" style={{width:(xpInLvl/5)+'%'}}></div></div>
-          <div style={{display:'flex',alignItems:'center',gap:14}}>
-            <div style={{width:48,height:48,borderRadius:13,background:'linear-gradient(135deg,var(--brand),var(--pink))',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,flexDirection:'column'}}>
-              <span style={{fontFamily:'Syne',fontWeight:800,fontSize:18,color:'white',lineHeight:1}}>{data.stats.level}</span>
-              <span style={{fontSize:8,color:'rgba(255,255,255,.7)',fontWeight:700,textTransform:'uppercase'}}>LVL</span>
-            </div>
-            <div style={{flex:1}}><span style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>Zirve Yolcusu</span></div>
-            <div style={{textAlign:'right'}}>
-              <div style={{fontSize:13,fontWeight:700,color:'var(--brand)'}}>{data.stats.xp} XP</div>
-              <div style={{fontSize:10,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'.05em'}}>{500-xpInLvl} sonraki</div>
-            </div>
-          </div>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14}}>
-          {[
-            {label:'Hedefler',val:data.goals.length,icon:'target',color:'var(--brand)'},
-            {label:'Bekleyen',val:data.todos.filter(function(t){return !t.completed;}).length,icon:'clock',color:'var(--amber)'},
-            {label:'Rutin',val:doneR+'/'+(data.routines.daily||[]).length,icon:'check-circle',color:'var(--green)'},
-            {label:'Mucadele',val:activeCh,icon:'trophy',color:'var(--orange)'},
-          ].map(function(s) { return (
-            <div key={s.label} className="card" style={{padding:'16px 18px'}}>
-              <IK name={s.icon} size={18} color={s.color}/>
-              <div style={{fontFamily:'Syne',fontWeight:800,fontSize:26,color:s.color,lineHeight:1,margin:'6px 0 4px'}}>{s.val}</div>
-              <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.07em',color:'var(--muted)'}}>{s.label}</div>
-            </div>
-          ); })}
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-          <div className="card" style={{padding:20,display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
-            <div style={{display:'flex',gap:5,width:'100%'}}>
-              {[{id:'focus',label:'25 dk'},{id:'short',label:'5 dk'},{id:'long',label:'15 dk'}].map(function(m) { return (
-                <button key={m.id} onClick={function(){setTimerMode(m.id);setTimeLeft(TDUR[m.id]);setTimerOn(false);}} className="btn" style={{flex:1,justifyContent:'center',fontSize:11,padding:'5px 6px',background:timerMode===m.id?'var(--brand)':'var(--surface2)',color:timerMode===m.id?'white':'var(--muted)'}}>{m.label}</button>
-              ); })}
-            </div>
-            <div style={{position:'relative',width:180,height:180}}>
-              <svg viewBox="0 0 200 200" className="ring-svg">
-                <circle className="ring-bg" cx="100" cy="100" r="88" fill="none" strokeWidth="6"/>
-                <circle className={"ring-prog"+(timerMode!=='focus'?' ring-break':'')} cx="100" cy="100" r="88" fill="none" strokeWidth="6" strokeDasharray={C} strokeDashoffset={C*(1-timerPerc)}/>
-              </svg>
-              <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:3}}>
-                <div style={{fontFamily:'Syne',fontSize:48,fontWeight:800,letterSpacing:'-2px',lineHeight:1}}>{U.fmtTime(timeLeft)}</div>
-                <div style={{fontSize:10,color:'var(--muted)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.07em'}}>{timerMode==='focus'?'Odaklan':'Mola'}</div>
-              </div>
-            </div>
-            <div style={{display:'flex',gap:9}}>
-              <button className="btn btn-primary" onClick={function(){setTimerOn(function(p){return !p;});}}>
-                {timerOn ? <><IK name="pause" size={15}/>Durdur</> : <><IK name="play" size={15}/>Baslat</>}
-              </button>
-              <button className="btn btn-ghost btn-icon" onClick={function(){setTimerOn(false);setTimeLeft(TDUR[timerMode]);}}><IK name="rotate-ccw" size={15}/></button>
-            </div>
-          </div>
-          <div className="card frog-card" style={{padding:22,display:'flex',flexDirection:'column',gap:11}}>
-            <div style={{fontSize:28}}>🐸</div>
-            <div style={{fontFamily:'Syne',fontWeight:800,fontSize:17,color:'#a7f3d0'}}>Kurbagayi Ye!</div>
-            <p style={{color:'#6ee7b7',fontSize:13,lineHeight:1.5,flex:1}}>{frog ? frog.text : 'Harika! Tum oncelikli isler bitti.'}</p>
-            <button className="btn" style={{background:'rgba(255,255,255,.15)',color:'white'}} onClick={function(){setTab('todos');}}>
-              <IK name="arrow-right" size={14}/>Goreve Git
-            </button>
-          </div>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-          <div className="card" style={{padding:18}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.09em',color:'var(--muted)',marginBottom:12}}>Hizli Ekle</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:7}}>
-              {['goal','todo','book','quote','journal','principle','coaching','vault'].map(function(t) { return (
-                <button key={t} onClick={function(){setModal({open:true,type:t});}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'9px 4px',borderRadius:10,background:'var(--surface2)',border:'1px solid var(--border)',cursor:'pointer',color:'var(--muted)'}}>
-                  <IK name="plus" size={13} color="var(--brand)"/>
-                  <span style={{fontSize:8,fontWeight:700,textTransform:'uppercase',letterSpacing:'.04em'}}>{t}</span>
-                </button>
-              ); })}
-            </div>
-          </div>
-          <div className="card scratch" style={{padding:18}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.09em',color:'var(--amber)',marginBottom:9}}>Karalama Defteri</div>
-            <textarea className="inp" value={scratch} onChange={function(e){setScratch(e.target.value);}} placeholder="Aklina geleni buraya yaz..." style={{height:100,background:'transparent',border:'none',padding:0,fontSize:13}}/>
-            <div style={{fontSize:9,color:'var(--muted)',textAlign:'right',marginTop:3,fontWeight:700,textTransform:'uppercase'}}>Otomatik kaydedilir</div>
-          </div>
-        </div>
-        {rq && <div className="card" style={{padding:20,textAlign:'center'}}>
-          <p style={{fontSize:16,fontStyle:'italic',fontWeight:500,lineHeight:1.6}}>"{rq.text}"</p>
-          {rq.author && <p style={{marginTop:10,fontSize:11,fontWeight:700,color:'var(--brand)',textTransform:'uppercase',letterSpacing:'.09em'}}>&mdash; {rq.author}</p>}
-        </div>}
-      </div>
+    var frog=data.todos.find(function(t){return !t.done&&t.priority==='urgent';})||data.todos.find(function(t){return !t.done;});
+    var xpInLvl=(data.stats.xp||0)%500;
+    var doneR=(data.routines.daily||[]).filter(function(r){return !U.isActive('daily',r.last);}).length;
+    var activeCh=(data.challenges||[]).filter(function(c){return c.status==='active';}).length;
+    var rq = useMemo(function(){return data.quotes.length?data.quotes[Math.floor(Math.random()*data.quotes.length)]:null;},[data.quotes.length]);
+
+    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:20}},
+      // Stats row
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}},
+        [{l:'Seviye',v:data.stats.level,i:'zap',c:'var(--blue)'},
+         {l:'XP',v:data.stats.xp,i:'star',c:'var(--purple)'},
+         {l:'Bekleyen',v:data.todos.filter(function(t){return !t.done;}).length,i:'check_sq',c:'var(--orange)'},
+         {l:'Mucadele',v:activeCh,i:'trophy',c:'var(--green)'},
+        ].map(function(s){
+          return h('div', {key:s.l,className:'card stat'},
+            h(Ic,{n:s.i,s:16,c:s.c}),
+            h('div', {className:'stat-n',style:{color:s.c}}, s.v),
+            h('div', {className:'stat-l'}, s.l)
+          );
+        })
+      ),
+
+      // XP bar
+      h('div', {className:'card card-p'},
+        h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}},
+          h('span', {style:{fontSize:13,fontWeight:600}}, 'Deneyim Puani'),
+          h('span', {style:{fontSize:12,color:'var(--text2)'}}, xpInLvl + ' / 500  (' + (500-xpInLvl) + ' kaldi)')
+        ),
+        h('div', {className:'bar'}, h('div', {className:'bar-fill',style:{width:(xpInLvl/5)+'%',background:'linear-gradient(90deg,var(--blue),var(--purple)'}}))
+      ),
+
+      // Pomodoro + Frog
+      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        h('div', {className:'card'}, h(TimerWidget, {onXP:gainXP})),
+        h('div', {className:'card card-p',style:{display:'flex',flexDirection:'column',gap:12,background:'linear-gradient(135deg,#1a3a2e,#0d2d1e)'}},
+          h('span', {style:{fontSize:24}}, '\uD83D\uDC38'),
+          h('p', {style:{fontWeight:700,fontSize:16,color:'#a7f3d0'}}, 'Kurbagayi Ye!'),
+          h('p', {style:{fontSize:13,color:'#6ee7b7',lineHeight:1.6,flex:1}}, frog?frog.text:'Tum oncelikler tamam!'),
+          h('button', {className:'btn',style:{background:'rgba(255,255,255,.15)',color:'white',alignSelf:'flex-start'},onClick:function(){setTab('todos');}},
+            'Gorevlere Git', h(Ic,{n:'arrow_r',s:13}))
+        )
+      ),
+
+      // Quick add + Scratch
+      h('div', {style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        h('div', {className:'card card-p'},
+          h('p', {className:'label',style:{marginBottom:10}}, 'Hizli Ekle'),
+          h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6}},
+            ['goal','todo','book','quote','journal','principle','coaching','vault'].map(function(t){
+              return h('button', {key:t,onClick:function(){setModal({open:true,type:t});},
+                style:{display:'flex',flexDirection:'column',alignItems:'center',gap:4,padding:'9px 4px',borderRadius:8,background:'var(--bg3)',border:'none',cursor:'pointer',color:'var(--text2)',transition:'all .15s',fontFamily:'inherit'}},
+                h(Ic,{n:'plus',s:12,c:'var(--blue)'}),
+                h('span', {style:{fontSize:9,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}, t)
+              );
+            })
+          )
+        ),
+        h('div', {className:'scratch-area'},
+          h('p', {className:'label', style:{color:'#8a6d00',marginBottom:8}}, '\u270F Karalama Defteri'),
+          h('textarea', {className:'inp',value:sc,onChange:function(e){setSc(e.target.value);},placeholder:'Aklina geleni buraya yaz...',style:{height:88,background:'transparent',border:'none',padding:0,fontSize:13,boxShadow:'none'}}),
+          h('p', {style:{fontSize:10,color:'#a08010',textAlign:'right',marginTop:4,fontWeight:500}}, 'Otomatik kaydedilir')
+        )
+      ),
+
+      // Quote
+      rq && h('div', {className:'card card-p',style:{textAlign:'center'}},
+        h('p', {style:{fontSize:15,fontStyle:'italic',fontWeight:400,lineHeight:1.7,color:'var(--text)'}}, '"' + rq.text + '"'),
+        rq.author && h('p', {style:{marginTop:8,fontSize:11,fontWeight:600,color:'var(--blue)',textTransform:'uppercase',letterSpacing:'.1em'}}, '-- ' + rq.author)
+      )
     );
   }
 
+  // -- Challenges ---------------------------------------------------------
   function ChallengesView() {
-    var showPickerState = useState(false); var showPicker = showPickerState[0], setShowPicker = showPickerState[1];
-    var selTplState = useState(null); var selectedTpl = selTplState[0], setSelectedTpl = selTplState[1];
-    var cnState = useState(''); var customName = cnState[0], setCustomName = cnState[1];
-    var cdState = useState(''); var customDesc = cdState[0], setCustomDesc = cdState[1];
-    var active = (data.challenges || []).filter(function(c) { return c.status === 'active'; });
-    var completed = (data.challenges || []).filter(function(c) { return c.status === 'completed'; });
+    var pks=useState(false); var pk=pks[0],setPk=pks[1];
+    var sts=useState(null);  var sel=sts[0],setSel=sts[1];
+    var cns=useState('');    var cname=cns[0],setCname=cns[1];
+    var cds=useState('');    var cdesc=cds[0],setCdesc=cds[1];
+    var active=(data.challenges||[]).filter(function(c){return c.status==='active';});
+    var done=(data.challenges||[]).filter(function(c){return c.status==='done';});
 
-    function getCatTag(cat) {
-      var m = {Saglik:'tag-green',Odak:'tag-brand',Gelisim:'tag-brand',Zihin:'tag-pink',Finans:'tag-amber',Ozel:'tag-orange'};
-      return m[cat] || 'tag-muted';
-    }
-    function getInfo(ch) {
-      var cis = ch.checkins || [];
-      var today = U.dateStr();
-      var checkedToday = cis.indexOf(today) >= 0;
-      var total = cis.length;
-      var totalDays = 90;
-      var perc = Math.round(total / totalDays * 100);
-      var start = new Date(ch.startDate);
-      var end = new Date(ch.endDate);
-      var elapsed = Math.max(0, Math.ceil((new Date() - start) / (1000*60*60*24)));
-      var daysLeft = Math.max(0, Math.ceil((end - new Date()) / (1000*60*60*24)));
-      return {checkedToday:checkedToday,total:total,perc:perc,elapsed:elapsed,daysLeft:daysLeft,totalDays:totalDays};
+    function info(ch) {
+      var cis=ch.checkins||[], today=U.today();
+      var total=cis.length, perc=Math.round(total/90*100);
+      var elapsed=Math.max(0,Math.ceil((new Date()-new Date(ch.start))/(864e5)));
+      var left=Math.max(0,Math.ceil((new Date(ch.end)-new Date())/(864e5)));
+      return {today:cis.indexOf(today)>=0, total:total, perc:perc, elapsed:elapsed, left:left};
     }
 
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <div>
-            <h2 className="st"><IK name="trophy" size={21} color="var(--orange)" extraStyle={{marginRight:8}}/>Kisisel Mucadeleler</h2>
-            <p style={{fontSize:12,color:'var(--muted)',marginTop:3}}>90 gunluk hedefler ile sinirlarini as ve XP kazan</p>
-          </div>
-          <button className="btn btn-primary" onClick={function(){setShowPicker(true);}}><IK name="plus" size={15}/>Mucadele Baslat</button>
-        </div>
+    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:20}},
+      h(PH, {title:'Kisisel Mucadeleler',action:{label:'Mucadele Baslat',fn:function(){setPk(true);}}}),
+      h('p', {style:{fontSize:13,color:'var(--text2)',marginTop:-12}}, '90 gunluk zorluklarla sinirlarini as ve XP kazan'),
 
-        {active.length > 0 && (
-          <div style={{marginBottom:24}}>
-            <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.09em',color:'var(--muted)',marginBottom:12}}>Aktif ({active.length})</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:16}}>
-              {active.map(function(ch) {
-                var si = getInfo(ch);
-                var dc = DIFF_COLORS[ch.diff] || DIFF_COLORS.medium;
-                return (
-                  <div key={ch.id} className="card" style={{padding:20,display:'flex',flexDirection:'column',gap:14}}>
-                    <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}}>
-                      <div style={{display:'flex',alignItems:'center',gap:10}}>
-                        <div style={{width:42,height:42,borderRadius:12,background:'var(--brand-dim)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                          <IK name={ch.icon||'trophy'} size={20} color="var(--brand)"/>
-                        </div>
-                        <div>
-                          <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>{ch.name}</div>
-                          <div style={{display:'flex',gap:5,marginTop:4}}>
-                            <span className={"tag "+dc.cls}>{dc.label}</span>
-                            <span className={"tag "+getCatTag(ch.cat)}>{ch.cat}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <button onClick={function(){del(ch,'challenge');}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:4}}><IK name="trash-2" size={14}/></button>
-                    </div>
-                    <p style={{fontSize:12,color:'var(--muted)',lineHeight:1.5}}>{ch.desc}</p>
-                    <div>
-                      <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:11}}>
-                        <span style={{color:'var(--muted)',fontWeight:600}}>{si.total} / {si.totalDays} gun</span>
-                        <span style={{color:'var(--brand)',fontWeight:700}}>{si.perc}%</span>
-                      </div>
-                      <div className="prog"><div className="prog-fill" style={{width:si.perc+'%',background:'var(--brand)'}}></div></div>
-                    </div>
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                      {[
-                        {label:'Check-in',val:si.total,color:'var(--green)'},
-                        {label:'Gecen',val:si.elapsed+'g',color:'var(--brand)'},
-                        {label:'Kalan',val:si.daysLeft+'g',color:si.daysLeft<14?'var(--red)':'var(--amber)'},
-                      ].map(function(s) { return (
-                        <div key={s.label} style={{background:'var(--surface2)',borderRadius:10,padding:'8px 10px',textAlign:'center'}}>
-                          <div style={{fontFamily:'Syne',fontWeight:800,fontSize:18,color:s.color}}>{s.val}</div>
-                          <div style={{fontSize:9,fontWeight:700,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--muted)',marginTop:2}}>{s.label}</div>
-                        </div>
-                      ); })}
-                    </div>
-                    <div style={{display:'flex',gap:8}}>
-                      {si.checkedToday ? (
-                        <button className="btn btn-success" style={{flex:1,justifyContent:'center'}} disabled><IK name="check-circle" size={15}/>Bugun Yapildi!</button>
-                      ) : (
-                        <button className="btn btn-primary" style={{flex:1,justifyContent:'center'}} onClick={function(){checkinChallenge(ch.id);}}><IK name="check" size={15}/>Bugunku Check-in</button>
-                      )}
-                      {si.perc >= 100 && <button className="btn btn-orange" onClick={function(){completeChallenge(ch.id);}}><IK name="trophy" size={15}/>Bitir!</button>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+      active.length > 0 && h('div', null,
+        h('p', {className:'label',style:{marginBottom:10}}, 'Aktif (' + active.length + ')'),
+        h(Grid, {min:300},
+          active.map(function(ch) {
+            var si=info(ch), dc=DIFF[ch.diff]||DIFF.medium;
+            return h('div', {key:ch.id, className:'card ch-card'},
+              h('div', {style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}},
+                h('div', {style:{display:'flex',gap:10,alignItems:'center'}},
+                  h('div', {className:'icon-box',style:{background:'var(--blue-light)',width:38,height:38,borderRadius:10}}, h(Ic,{n:ch.icon||'trophy',s:18,c:'var(--blue)'})),
+                  h('div', null,
+                    h('p', {style:{fontWeight:700,fontSize:14}}, ch.name),
+                    h('div', {style:{display:'flex',gap:5,marginTop:3}},
+                      h('span', {className:'pill '+dc.cls, style:{fontSize:10}}, dc.label),
+                      h('span', {className:'pill pill-gray', style:{fontSize:10}}, ch.cat)
+                    )
+                  )
+                ),
+                h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(ch,'challenge');}}, h(Ic,{n:'trash',s:13,c:'var(--text3)'}))
+              ),
+              h('p', {style:{fontSize:12,color:'var(--text2)',lineHeight:1.5}}, ch.desc),
+              h('div', null,
+                h('div', {style:{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:12}},
+                  h('span', {style:{color:'var(--text2)',fontWeight:500}}, si.total + ' / 90 gun'),
+                  h('span', {style:{color:'var(--blue)',fontWeight:600}}, si.perc + '%')
+                ),
+                h('div', {className:'bar'}, h('div', {className:'bar-fill',style:{width:si.perc+'%',background:'var(--blue)'}}))
+              ),
+              h('div', {style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}},
+                [{l:'Check-in',v:si.total,c:'var(--green)'},{l:'Gecen',v:si.elapsed+'g',c:'var(--blue)'},{l:'Kalan',v:si.left+'g',c:si.left<14?'var(--red)':'var(--orange)'}].map(function(s){
+                  return h('div', {key:s.l,style:{background:'var(--bg3)',borderRadius:8,padding:'8px 10px',textAlign:'center'}},
+                    h('div', {style:{fontWeight:700,fontSize:18,letterSpacing:'-0.5px',color:s.c}}, s.v),
+                    h('div', {style:{fontSize:10,color:'var(--text3)',fontWeight:600,textTransform:'uppercase',marginTop:2}}, s.l)
+                  );
+                })
+              ),
+              h('div', {style:{display:'flex',gap:8}},
+                si.today
+                  ? h('button', {className:'btn btn-green',style:{flex:1,justifyContent:'center'},disabled:true}, h(Ic,{n:'check_c',s:14}), 'Bugun Yapildi')
+                  : h('button', {className:'btn btn-primary',style:{flex:1,justifyContent:'center'},onClick:function(){checkin(ch.id);}}, h(Ic,{n:'check',s:14}), 'Check-in Yap'),
+                si.perc>=100 && h('button', {className:'btn btn-secondary',onClick:function(){finishChallenge(ch.id);}}, h(Ic,{n:'trophy',s:13}), 'Bitir')
+              )
+            );
+          })
+        )
+      ),
 
-        {completed.length > 0 && (
-          <div style={{marginBottom:24}}>
-            <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.09em',color:'var(--muted)',marginBottom:12}}>Tamamlanan ({completed.length})</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:12}}>
-              {completed.map(function(ch) { return (
-                <div key={ch.id} className="card" style={{padding:16,display:'flex',gap:12,alignItems:'center',opacity:.7}}>
-                  <div style={{width:38,height:38,borderRadius:10,background:'rgba(52,211,153,.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                    <IK name="trophy" size={18} color="var(--green)"/>
-                  </div>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:14}}>{ch.name}</div>
-                    <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>+{ch.xpReward} XP kazanildi</div>
-                  </div>
-                  <span className="tag tag-green">Bitti</span>
-                </div>
-              ); })}
-            </div>
-          </div>
-        )}
+      done.length > 0 && h('div', null,
+        h('p', {className:'label',style:{marginBottom:10}}, 'Tamamlanan (' + done.length + ')'),
+        h(Grid, {min:220},
+          done.map(function(ch){
+            return h('div', {key:ch.id,className:'card',style:{padding:'14px 16px',display:'flex',gap:12,alignItems:'center',opacity:.6}},
+              h('div', {className:'icon-box',style:{background:'var(--green-light)',borderRadius:8}}, h(Ic,{n:'trophy',s:16,c:'var(--green)'})),
+              h('div', {flex:1},
+                h('p', {style:{fontWeight:600,fontSize:13}}, ch.name),
+                h('p', {style:{fontSize:11,color:'var(--text3)',marginTop:2}}, '+' + ch.xp + ' XP')
+              ),
+              h('span', {className:'pill pill-green', style:{fontSize:10}}, 'Bitti')
+            );
+          })
+        )
+      ),
 
-        {active.length === 0 && completed.length === 0 && (
-          <div className="card" style={{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
-            <div style={{width:64,height:64,borderRadius:18,background:'rgba(251,146,60,.12)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-              <IK name="trophy" size={32} color="var(--orange)"/>
-            </div>
-            <div style={{fontFamily:'Syne',fontWeight:800,fontSize:18}}>Hic mucadeleniz yok</div>
-            <p style={{color:'var(--muted)',fontSize:13,maxWidth:320,lineHeight:1.6}}>90 gunluk bir kisisel mucadele baslatin, her gun check-in yapin ve XP kazanin!</p>
-            <button className="btn btn-primary" onClick={function(){setShowPicker(true);}}><IK name="plus" size={15}/>Mucadele Baslat</button>
-          </div>
-        )}
+      active.length===0 && done.length===0 && h('div', {className:'card',style:{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:14}},
+        h('div', {className:'icon-box',style:{width:56,height:56,borderRadius:16,background:'var(--orange-light)'}}, h(Ic,{n:'trophy',s:28,c:'var(--orange)'})),
+        h('p', {style:{fontWeight:700,fontSize:17}}, 'Hic mucadeleniz yok'),
+        h('p', {style:{color:'var(--text2)',fontSize:13,maxWidth:280,lineHeight:1.6}}, '90 gunluk bir mucadele baslatin ve her gun check-in yaparak XP kazanin!'),
+        h('button', {className:'btn btn-primary',onClick:function(){setPk(true);}}, h(Ic,{n:'plus',s:14}), 'Mucadele Baslat')
+      ),
 
-        {showPicker && (
-          <div className="modal-bg" onClick={function(e){if(e.target===e.currentTarget){setShowPicker(false);setSelectedTpl(null);}}}>
-            <div className="modal-box" style={{maxWidth:600}}>
-              <div className="modal-head">
-                <h3 style={{fontFamily:'Syne',fontWeight:800,fontSize:16}}>90 Gunluk Mucadele Sec</h3>
-                <button className="btn btn-ghost btn-icon" onClick={function(){setShowPicker(false);setSelectedTpl(null);}}><IK name="x" size={15}/></button>
-              </div>
-              {!selectedTpl ? (
-                <div style={{padding:20,display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:10,maxHeight:'65vh',overflowY:'auto'}}>
-                  {CH_TEMPLATES.map(function(tpl) {
-                    var dc = DIFF_COLORS[tpl.diff] || DIFF_COLORS.medium;
-                    return (
-                      <button key={tpl.id} onClick={function(){setSelectedTpl(tpl);}} style={{display:'flex',gap:12,padding:'13px 14px',borderRadius:13,background:'var(--surface2)',border:'1px solid var(--border)',cursor:'pointer',textAlign:'left',width:'100%',fontFamily:'inherit'}}>
-                        <div style={{width:38,height:38,borderRadius:10,background:'var(--brand-dim)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                          <IK name={tpl.icon} size={18} color="var(--brand)"/>
-                        </div>
-                        <div style={{flex:1}}>
-                          <div style={{fontWeight:700,fontSize:13,color:'var(--text)'}}>{tpl.name}</div>
-                          <div style={{display:'flex',gap:5,marginTop:4}}>
-                            <span className={"tag "+dc.cls} style={{fontSize:9}}>{dc.label}</span>
-                            <span style={{fontSize:10,color:'var(--muted)',fontWeight:600}}>+{tpl.xpReward} XP</span>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{padding:20,display:'flex',flexDirection:'column',gap:12}}>
-                  <div style={{display:'flex',gap:12,padding:14,borderRadius:13,background:'var(--surface2)'}}>
-                    <div style={{width:42,height:42,borderRadius:11,background:'var(--brand-dim)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                      <IK name={selectedTpl.icon} size={20} color="var(--brand)"/>
-                    </div>
-                    <div>
-                      <div style={{fontFamily:'Syne',fontWeight:700,fontSize:15}}>{selectedTpl.name}</div>
-                      <p style={{fontSize:12,color:'var(--muted)',marginTop:3}}>{selectedTpl.desc}</p>
-                    </div>
-                  </div>
-                  {selectedTpl.id === 'custom' && (
-                    <>
-                      <input className="inp" placeholder="Mucadele adi" value={customName} onChange={function(e){setCustomName(e.target.value);}}/>
-                      <textarea className="inp" placeholder="Mucadele tanimi" value={customDesc} onChange={function(e){setCustomDesc(e.target.value);}} style={{height:80}}/>
-                    </>
-                  )}
-                  <div style={{background:'rgba(52,211,153,.07)',border:'1px solid rgba(52,211,153,.2)',borderRadius:11,padding:'10px 14px',fontSize:12,color:'var(--green)'}}>
-                    Basarirsan +{selectedTpl.xpReward} XP kazanacaksin! 90 gun boyunca her gun check-in yapmaya calis.
-                  </div>
-                  <div style={{display:'flex',gap:9}}>
-                    <button className="btn btn-ghost" style={{flex:1}} onClick={function(){setSelectedTpl(null);}}>Geri</button>
-                    <button className="btn btn-primary" style={{flex:2}} onClick={function(){startChallenge(selectedTpl,customName,customDesc);setShowPicker(false);setSelectedTpl(null);setCustomName('');setCustomDesc('');}}>Mucadeleyi Baslat!</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      pk && h('div', {className:'overlay', onClick:function(e){if(e.target===e.currentTarget){setPk(false);setSel(null);}}},
+        h('div', {className:'modal', style:{maxWidth:560}},
+          h('div', {className:'modal-head',style:{display:'flex',alignItems:'center',justifyContent:'space-between',paddingBottom:14}},
+            h('span', {style:{fontWeight:700,fontSize:16}}, sel?'Mucadeleyi Onayla':'90 Gunluk Mucadele Sec'),
+            h('button', {className:'btn btn-ghost btn-icon',onClick:function(){setPk(false);setSel(null);}}, h(Ic,{n:'x',s:15}))
+          ),
+          !sel
+            ? h('div', {style:{padding:'0 20px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,maxHeight:'60vh',overflowY:'auto'}},
+                CH_TPLS.map(function(tpl){
+                  var dc=DIFF[tpl.diff]||DIFF.medium;
+                  return h('button', {key:tpl.id,onClick:function(){setSel(tpl);},
+                    style:{display:'flex',gap:10,padding:'12px 13px',borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',cursor:'pointer',textAlign:'left',width:'100%',fontFamily:'inherit',transition:'border .15s'},
+                    onMouseEnter:function(e){e.currentTarget.style.borderColor='var(--blue)';},
+                    onMouseLeave:function(e){e.currentTarget.style.borderColor='var(--border)';}
+                  },
+                    h('div', {className:'icon-box',style:{background:'var(--blue-light)',borderRadius:8,width:34,height:34,flexShrink:0}}, h(Ic,{n:tpl.icon,s:16,c:'var(--blue)'})),
+                    h('div', null,
+                      h('p', {style:{fontWeight:600,fontSize:13,color:'var(--text)'}}, tpl.name),
+                      h('div', {style:{display:'flex',gap:5,marginTop:3}},
+                        h('span', {className:'pill '+dc.cls,style:{fontSize:9}}, dc.label),
+                        h('span', {style:{fontSize:10,color:'var(--text3)',fontWeight:500}}, '+' + tpl.xp + ' XP')
+                      )
+                    )
+                  );
+                })
+              )
+            : h('div', {style:{padding:'0 20px 20px',display:'flex',flexDirection:'column',gap:12}},
+                h('div', {style:{background:'var(--bg3)',borderRadius:10,padding:'13px 14px',display:'flex',gap:11}},
+                  h('div', {className:'icon-box',style:{background:'var(--blue-light)',borderRadius:9,width:38,height:38,flexShrink:0}}, h(Ic,{n:sel.icon,s:18,c:'var(--blue)'})),
+                  h('div', null,
+                    h('p', {style:{fontWeight:700,fontSize:14}}, sel.name),
+                    h('p', {style:{fontSize:12,color:'var(--text2)',marginTop:3,lineHeight:1.5}}, sel.desc)
+                  )
+                ),
+                sel.id==='custom' && h('input',{className:'inp',placeholder:'Mucadele adi',value:cname,onChange:function(e){setCname(e.target.value);}}),
+                sel.id==='custom' && h('textarea',{className:'inp',placeholder:'Mucadele tanimi',value:cdesc,onChange:function(e){setCdesc(e.target.value);},rows:2}),
+                h('div', {style:{background:'var(--green-light)',border:'1px solid rgba(52,199,89,.25)',borderRadius:9,padding:'10px 13px',fontSize:12,color:'var(--green)',fontWeight:500}},
+                  'Basarirsan +' + sel.xp + ' XP kazanacaksin. 90 gun boyunca her gun check-in yapin!'
+                ),
+                h('div', {style:{display:'flex',gap:8}},
+                  h('button', {className:'btn btn-secondary',style:{flex:1},onClick:function(){setSel(null);}}, 'Geri'),
+                  h('button', {className:'btn btn-primary',style:{flex:2},onClick:function(){startChallenge(sel,cname,cdesc);setPk(false);setSel(null);setCname('');setCdesc('');}}, 'Mucadeleyi Baslat!')
+                )
+              )
+        )
+      )
     );
   }
 
+  // -- Goals --------------------------------------------------------------
   function GoalsView() {
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name="target" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Hedefler</h2>
-          <button className="btn btn-primary" onClick={function(){setModal({open:true,type:'goal'});}}><IK name="plus" size={15}/>Hedef Ekle</button>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:18}}>
-          {fil(data.goals,['title','description']).map(function(goal) {
-            var done = goal.steps.filter(function(s){return s.done;}).length;
-            var perc = goal.steps.length ? Math.round(done / goal.steps.length * 100) : 0;
-            return (
-              <div key={goal.id} className="card" style={{padding:20,display:'flex',flexDirection:'column',gap:14}}>
-                <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}}>
-                  <div style={{display:'flex',alignItems:'center',gap:9,flex:1}}>
-                    {goal.isFrog && <span style={{fontSize:20}}>🐸</span>}
-                    <div>
-                      <h3 style={{fontFamily:'Syne',fontWeight:800,fontSize:15,lineHeight:1.3}}>{goal.title}</h3>
-                      <span className="tag tag-brand" style={{marginTop:5}}>{goal.quarter}</span>
-                    </div>
-                  </div>
-                  <button onClick={function(){del(goal,'goal');}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3}}><IK name="trash-2" size={14}/></button>
-                </div>
-                <p style={{fontSize:12,color:'var(--muted)',lineHeight:1.6,borderLeft:'2px solid var(--border)',paddingLeft:10}}>{goal.description}</p>
-                <div>
-                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:7,alignItems:'center'}}>
-                    <span style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.07em',color:'var(--muted)'}}>Aksiyon Plani</span>
-                    <button onClick={function(){var t=prompt('Adim adi?');if(t){var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),text:t,done:false}])}):g;});upd(Object.assign({},data,{goals:ng}),'Adim eklendi');}}} style={{fontSize:10,fontWeight:700,color:'var(--brand)',background:'var(--brand-dim)',border:'none',cursor:'pointer',padding:'3px 9px',borderRadius:99}}>+ Adim</button>
-                  </div>
-                  <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                    {goal.steps.map(function(s) { return (
-                      <div key={s.id} className="step">
-                        <input type="checkbox" className="cb" checked={s.done} onChange={function(){
-                          if (!s.done) gainXP(10,'Adim tamamlandi');
-                          var ng = data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.map(function(ss){return ss.id===s.id?Object.assign({},ss,{done:!ss.done}):ss;})}):g;});
-                          upd(Object.assign({},data,{goals:ng}),'Adim guncellendi');
-                        }}/>
-                        <span style={{fontSize:12,fontWeight:500,textDecoration:s.done?'line-through':'none',color:s.done?'var(--muted)':'var(--text)',flex:1}}>{s.text}</span>
-                      </div>
-                    ); })}
-                    {goal.steps.length === 0 && <p style={{fontSize:11,color:'var(--muted)',fontStyle:'italic',textAlign:'center',padding:'6px 0'}}>Henuz adim eklenmedi</p>}
-                  </div>
-                </div>
-                {goal.steps.length > 0 && (
-                  <div>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:11}}>
-                      <span style={{color:'var(--muted)',fontWeight:600}}>Ilerleme</span>
-                      <span style={{color:'var(--brand)',fontWeight:700}}>{perc}%</span>
-                    </div>
-                    <div className="prog"><div className="prog-fill" style={{width:perc+'%',background:'var(--brand)'}}></div></div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          {data.goals.length === 0 && <div className="empty" style={{gridColumn:'1/-1'}}><IK name="target" size={36} color="var(--muted)"/><span>Henuz hedef eklenmedi</span></div>}
-        </div>
-      </div>
+    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH, {title:'Hedefler',action:{label:'Hedef Ekle',fn:function(){setModal({open:true,type:'goal'});}}}),
+      h(Grid, {min:300},
+        fil(data.goals,['title','desc']).map(function(goal) {
+          var dn=goal.steps.filter(function(s){return s.done;}).length;
+          var perc=goal.steps.length?Math.round(dn/goal.steps.length*100):0;
+          return h('div', {key:goal.id, className:'card card-p',style:{display:'flex',flexDirection:'column',gap:12}},
+            h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
+              h('div', {style:{display:'flex',alignItems:'center',gap:7}},
+                goal.frog && h('span', {style:{fontSize:18}}, '\uD83D\uDC38'),
+                h('div', null,
+                  h('p', {style:{fontWeight:700,fontSize:14,lineHeight:1.3}}, goal.title),
+                  h('span', {className:'pill pill-blue',style:{marginTop:4,fontSize:10}}, goal.quarter)
+                )
+              ),
+              h('button', {className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(goal,'goal');}}, h(Ic,{n:'trash',s:13,c:'var(--text3)'}))
+            ),
+            h('p', {style:{fontSize:12,color:'var(--text2)',lineHeight:1.6,borderLeft:'2px solid var(--border)',paddingLeft:9}}, goal.desc),
+            h('div', null,
+              h('div', {style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}},
+                h('span', {className:'label',style:{margin:0}}, 'Aksiyon Plani'),
+                h('button', {className:'btn btn-ghost btn-sm',onClick:function(){
+                  var t=prompt('Adim adi?'); if(!t) return;
+                  var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:t,done:false}])}):g;});
+                  upd(Object.assign({},data,{goals:ng}),'Adim eklendi');
+                }}, h(Ic,{n:'plus',s:12}), 'Adim')
+              ),
+              goal.steps.length===0 && h('p',{style:{fontSize:12,color:'var(--text3)',fontStyle:'italic',textAlign:'center',padding:'8px 0'}},'Adim eklenmedi'),
+              goal.steps.map(function(s) {
+                return h('div', {key:s.id, className:'step-row'},
+                  h('input',{type:'checkbox',className:'cb',checked:s.done,onChange:function(){
+                    if (!s.done) gainXP(10,'Adim tamamlandi');
+                    var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.map(function(ss){return ss.id===s.id?Object.assign({},ss,{done:!ss.done}):ss;})}):g;});
+                    upd(Object.assign({},data,{goals:ng}),'Adim guncellendi');
+                  }}),
+                  h('span',{style:{fontSize:13,textDecoration:s.done?'line-through':'none',color:s.done?'var(--text3)':'var(--text)',flex:1}}, s.t),
+                  h('button',{className:'btn btn-ghost btn-icon',style:{width:22,height:22},onClick:function(){
+                    var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.filter(function(ss){return ss.id!==s.id;})}):g;});
+                    upd(Object.assign({},data,{goals:ng}),'Adim silindi');
+                  }}, h(Ic,{n:'x',s:11,c:'var(--text3)'}))
+                );
+              })
+            ),
+            goal.steps.length>0 && h('div', null,
+              h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:5}},
+                h('span',{style:{color:'var(--text2)',fontWeight:500}},'Ilerleme'),
+                h('span',{style:{color:'var(--blue)',fontWeight:600}},perc+'%')
+              ),
+              h('div',{className:'bar'},h('div',{className:'bar-fill',style:{width:perc+'%',background:'var(--blue)'}}))
+            )
+          );
+        }),
+        data.goals.length===0 && h(Empty,{icon:'target',msg:'Henuz hedef eklenmedi'})
+      )
     );
   }
 
+  // -- Todos --------------------------------------------------------------
   function TodosView() {
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name="check-square" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Yapilacaklar</h2>
-          <button className="btn btn-primary" onClick={function(){setModal({open:true,type:'todo'});}}><IK name="plus" size={15}/>Gorev Ekle</button>
-        </div>
-        <div className="card" style={{overflow:'hidden'}}>
-          <table className="tbl">
-            <thead><tr>
-              <th style={{paddingLeft:20}}>Gorev</th>
-              <th style={{textAlign:'center'}}>Onem</th>
-              <th style={{textAlign:'center'}}>Kategori</th>
-              <th style={{textAlign:'center'}}>Bitis</th>
-              <th style={{width:40}}></th>
-            </tr></thead>
-            <tbody>
-              {fil(data.todos,['text']).map(function(todo) {
-                var pCls = todo.priority === 'Acil & Onemli' ? 'tag-red' : todo.priority === 'Onemli' ? 'tag-amber' : 'tag-muted';
-                var overdue = todo.end && new Date(todo.end) < new Date() && !todo.completed;
-                return (
-                  <tr key={todo.id} style={{opacity:todo.completed?0.4:1}}>
-                    <td style={{paddingLeft:20}}>
-                      <div style={{display:'flex',alignItems:'center',gap:11}}>
-                        <input type="checkbox" className="cb" checked={todo.completed} onChange={function(){
-                          if (!todo.completed) gainXP(15,'Gorev tamamlandi');
-                          var nt = data.todos.map(function(t){return t.id===todo.id?Object.assign({},t,{completed:!t.completed}):t;});
-                          upd(Object.assign({},data,{todos:nt}),'Gorev guncellendi');
-                        }}/>
-                        <span style={{fontWeight:600,textDecoration:todo.completed?'line-through':'none'}}>{todo.text}</span>
-                      </div>
-                    </td>
-                    <td style={{textAlign:'center'}}><span className={"tag "+pCls}>{todo.priority||'Normal'}</span></td>
-                    <td style={{textAlign:'center',fontSize:12,color:'var(--muted)'}}>{todo.category}</td>
-                    <td style={{textAlign:'center',fontSize:12,color:overdue?'var(--red)':'var(--muted)'}}>{todo.end||'--'}</td>
-                    <td><button onClick={function(){del(todo,'todo');}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:'4px 8px'}}><IK name="trash-2" size={13}/></button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {data.todos.length === 0 && <div className="empty"><IK name="check-square" size={32} color="var(--muted)"/><span>Henuz gorev eklenmedi</span></div>}
-        </div>
-      </div>
+    var PCLS={urgent:'pill-red',high:'pill-orange',normal:'pill-gray'};
+    var PLBL={urgent:'Acil',high:'Onemli',normal:'Normal'};
+    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH,{title:'Yapilacaklar',action:{label:'Gorev Ekle',fn:function(){setModal({open:true,type:'todo'});}}}),
+      h('div', {className:'card',style:{overflow:'hidden'}},
+        h('table', {className:'tbl'},
+          h('thead',null,h('tr',null,
+            h('th',{style:{paddingLeft:18}},'Gorev'),
+            h('th',{style:{textAlign:'center'}},'Onem'),
+            h('th',{style:{textAlign:'center'}},'Kategori'),
+            h('th',{style:{textAlign:'center'}},'Bitis'),
+            h('th',{style:{width:36}})
+          )),
+          h('tbody',null,
+            fil(data.todos,['text']).map(function(todo){
+              var ov=todo.end&&new Date(todo.end)<new Date()&&!todo.done;
+              return h('tr',{key:todo.id,style:{opacity:todo.done?.45:1}},
+                h('td',{style:{paddingLeft:18}},
+                  h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+                    h('input',{type:'checkbox',className:'cb',checked:todo.done,onChange:function(){
+                      if (!todo.done) gainXP(15,'Gorev tamamlandi');
+                      var nt=data.todos.map(function(t){return t.id===todo.id?Object.assign({},t,{done:!t.done}):t;});
+                      upd(Object.assign({},data,{todos:nt}),'Gorev guncellendi');
+                    }}),
+                    h('span',{style:{fontWeight:500,textDecoration:todo.done?'line-through':'none',fontSize:13.5}},todo.text)
+                  )
+                ),
+                h('td',{style:{textAlign:'center'}},h('span',{className:'pill '+(PCLS[todo.priority]||'pill-gray'),style:{fontSize:10}},PLBL[todo.priority]||todo.priority)),
+                h('td',{style:{textAlign:'center',fontSize:12,color:'var(--text2)'}},todo.category),
+                h('td',{style:{textAlign:'center',fontSize:12,color:ov?'var(--red)':'var(--text2)'}},todo.end||'--'),
+                h('td',null,h('button',{className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(todo,'todo');}},h(Ic,{n:'trash',s:13,c:'var(--text3)'})))
+              );
+            }),
+            data.todos.length===0&&h('tr',null,h('td',{colSpan:5},h(Empty,{icon:'check_sq',msg:'Gorev yok'})))
+          )
+        )
+      )
     );
   }
 
+  // -- Books --------------------------------------------------------------
   function BooksView() {
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name="book-open" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Kitaplik</h2>
-          <button className="btn btn-primary" onClick={function(){setModal({open:true,type:'book'});}}><IK name="plus" size={15}/>Kitap Ekle</button>
-        </div>
-        <div className="card" style={{overflow:'hidden'}}>
-          <table className="tbl">
-            <thead><tr>
-              <th style={{paddingLeft:20}}>Kitap</th>
-              <th style={{textAlign:'center'}}>Bitis</th>
-              <th style={{textAlign:'center'}}>Durum</th>
-              <th style={{width:40}}></th>
-            </tr></thead>
-            <tbody>
-              {fil(data.books,['title','author']).map(function(book) {
-                var overdue = book.end && new Date(book.end) < new Date() && book.status !== 'Bitti';
-                return (
-                  <tr key={book.id}>
-                    <td style={{paddingLeft:20}}>
-                      <div style={{fontWeight:700}}>{book.title}</div>
-                      <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>{book.author}</div>
-                    </td>
-                    <td style={{textAlign:'center',fontSize:12,color:overdue?'var(--red)':'var(--muted)'}}>{book.end||'--'}</td>
-                    <td style={{textAlign:'center'}}>
-                      <select className="inp" value={book.status} onChange={function(e){
-                        if (e.target.value === 'Bitti' && book.status !== 'Bitti') gainXP(50,'Kitap bitirildi');
-                        var nb = data.books.map(function(b){return b.id===book.id?Object.assign({},b,{status:e.target.value}):b;});
-                        upd(Object.assign({},data,{books:nb}),'Kitap guncellendi');
-                      }} style={{width:'auto',padding:'4px 8px',fontSize:12}}>
-                        <option>Sirada</option><option>Okunuyor</option><option>Bitti</option>
-                      </select>
-                    </td>
-                    <td><button onClick={function(){del(book,'book');}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:'4px 8px'}}><IK name="trash-2" size={13}/></button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {data.books.length === 0 && <div className="empty"><IK name="book-open" size={32} color="var(--muted)"/><span>Henuz kitap eklenmedi</span></div>}
-        </div>
-      </div>
+    var SLBL={queue:'Sirada',reading:'Okunuyor',done:'Bitti'};
+    var SCLS={queue:'pill-gray',reading:'pill-blue',done:'pill-green'};
+    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH,{title:'Kitaplik',action:{label:'Kitap Ekle',fn:function(){setModal({open:true,type:'book'});}}}),
+      h('div',{className:'card',style:{overflow:'hidden'}},
+        h('table',{className:'tbl'},
+          h('thead',null,h('tr',null,
+            h('th',{style:{paddingLeft:18}},'Kitap'),
+            h('th',{style:{textAlign:'center'}},'Bitis'),
+            h('th',{style:{textAlign:'center'}},'Durum'),
+            h('th',{style:{width:36}})
+          )),
+          h('tbody',null,
+            fil(data.books,['title','author']).map(function(book){
+              var ov=book.end&&new Date(book.end)<new Date()&&book.status!=='done';
+              return h('tr',{key:book.id},
+                h('td',{style:{paddingLeft:18}},
+                  h('p',{style:{fontWeight:600,fontSize:13.5}},book.title),
+                  h('p',{style:{fontSize:11,color:'var(--text3)',marginTop:2}},book.author)
+                ),
+                h('td',{style:{textAlign:'center',fontSize:12,color:ov?'var(--red)':'var(--text2)'}},book.end||'--'),
+                h('td',{style:{textAlign:'center'}},
+                  h('select',{className:'inp',value:book.status,onChange:function(e){
+                    if(e.target.value==='done'&&book.status!=='done')gainXP(50,'Kitap bitirildi');
+                    var nb=data.books.map(function(b){return b.id===book.id?Object.assign({},b,{status:e.target.value}):b;});
+                    upd(Object.assign({},data,{books:nb}),'Kitap guncellendi');
+                  },style:{width:'auto',padding:'4px 8px',fontSize:12}},
+                    h('option',{value:'queue'},'Sirada'),h('option',{value:'reading'},'Okunuyor'),h('option',{value:'done'},'Bitti')
+                  )
+                ),
+                h('td',null,h('button',{className:'btn btn-ghost btn-icon',style:{width:28,height:28},onClick:function(){del(book,'book');}},h(Ic,{n:'trash',s:13,c:'var(--text3)'})))
+              );
+            }),
+            data.books.length===0&&h('tr',null,h('td',{colSpan:4},h(Empty,{icon:'book',msg:'Kitap yok'})))
+          )
+        )
+      )
     );
   }
 
-  function ToolsView() {
-    return (
-      <div className="slide-up">
-        <div className="sh"><h2 className="st"><IK name="headphones" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Odaklanma Araclari</h2></div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12}}>
-          {SOUNDS.map(function(s) { return (
-            <button key={s.name} className={"snd"+(data.sounds.active===s.url?' playing':'')} onClick={function(){
-              if (audioRef.current && data.sounds.active === s.url) {
-                audioRef.current.pause();
-                upd(Object.assign({},data,{sounds:Object.assign({},data.sounds,{active:null})}),'Ses durduruldu');
-              } else {
-                if (audioRef.current) audioRef.current.pause();
-                audioRef.current = new Audio(s.url);
-                audioRef.current.loop = true;
-                audioRef.current.volume = data.sounds.volume;
-                audioRef.current.play();
-                upd(Object.assign({},data,{sounds:Object.assign({},data.sounds,{active:s.url})}),'Ses basladi');
-              }
-            }}>
-              <div style={{width:42,height:42,borderRadius:11,background:data.sounds.active===s.url?'rgba(255,255,255,.2)':'var(--surface2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <IK name={s.icon} size={20} color={data.sounds.active===s.url?'white':'var(--brand)'}/>
-              </div>
-              <div style={{flex:1,textAlign:'left'}}>
-                <div style={{fontWeight:700,fontSize:13}}>{s.name}</div>
-                <div style={{fontSize:10,color:data.sounds.active===s.url?'rgba(255,255,255,.7)':'var(--muted)',marginTop:2,fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em'}}>{data.sounds.active===s.url?'Caliniyor':'Dinlemek icin tikla'}</div>
-              </div>
-            </button>
-          ); })}
-        </div>
-        <div className="card" style={{padding:'14px 20px',marginTop:16,display:'flex',alignItems:'center',gap:14}}>
-          <IK name="volume-2" size={17} color="var(--muted)"/>
-          <input type="range" min="0" max="1" step="0.05" value={data.sounds.volume} onChange={function(e){
-            var v = parseFloat(e.target.value);
-            if (audioRef.current) audioRef.current.volume = v;
-            upd(Object.assign({},data,{sounds:Object.assign({},data.sounds,{volume:v})}),'Ses seviyesi');
-          }} style={{flex:1}}/>
-          <span style={{fontSize:12,color:'var(--muted)',fontWeight:700,minWidth:30,textAlign:'right'}}>{Math.round(data.sounds.volume*100)}%</span>
-        </div>
-      </div>
-    );
-  }
-
-  function VaultView() {
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name="archive" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Bilgi Kasasi</h2>
-          <button className="btn btn-primary" onClick={function(){setModal({open:true,type:'vault'});}}><IK name="plus" size={15}/>Not Ekle</button>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:14}}>
-          {fil(data.vault,['title','content']).map(function(note) { return (
-            <div key={note.id} className="card" style={{padding:18,display:'flex',flexDirection:'column',gap:9}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-                <span className="tag tag-brand">{note.category||'Genel'}</span>
-                <div style={{display:'flex',gap:4}}>
-                  <button onClick={function(){setPrint({item:note});}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3}}><IK name="printer" size={13}/></button>
-                  <button onClick={function(){del(note,'vault');}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3}}><IK name="trash-2" size={13}/></button>
-                </div>
-              </div>
-              <h3 style={{fontFamily:'Syne',fontWeight:700,fontSize:14}}>{note.title}</h3>
-              <p style={{fontSize:12,color:'var(--muted)',lineHeight:1.6,flex:1}}>{note.content}</p>
-              <div style={{fontSize:10,color:'var(--muted)',fontWeight:600}}>{new Date(note.id).toLocaleDateString('tr-TR')}</div>
-            </div>
-          ); })}
-          {data.vault.length === 0 && <div className="empty" style={{gridColumn:'1/-1'}}><IK name="archive" size={36} color="var(--muted)"/><span>Bilgi kasasi bos</span></div>}
-        </div>
-      </div>
-    );
-  }
-
+  // -- Routines ------------------------------------------------------------
   function RoutinesView() {
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name="refresh-ccw" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Rutin Carki</h2>
-          <button className="btn btn-primary" onClick={function(){setModal({open:true,type:'routine'});}}><IK name="plus" size={15}/>Rutin Ekle</button>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(250px,1fr))',gap:14}}>
-          {Object.entries(data.routines).map(function(entry) {
-            var period = entry[0], items = entry[1];
-            return (
-              <div key={period} className="card" style={{padding:18}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-                  <IK name="clock" size={15} color="var(--brand)"/>
-                  <span style={{fontFamily:'Syne',fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',fontSize:12}}>{period}</span>
-                  <span className="tag tag-muted" style={{marginLeft:'auto'}}>{(items||[]).filter(function(r){return !U.isActive(period,r.lastDone);}).length}/{(items||[]).length}</span>
-                </div>
-                <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                  {(items||[]).map(function(item) {
-                    var active = U.isActive(period, item.lastDone);
-                    return (
-                      <div key={item.id} className={"rit"+(active?'':' done')} onClick={function(){
-                        if (active) {
-                          gainXP(10,'Rutin tamamlandi');
-                          var nr = data.routines[period].map(function(r){return r.id===item.id?Object.assign({},r,{lastDone:new Date().toISOString()}):r;});
-                          upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr})}),'Rutin tamamlandi');
-                        }
-                      }}>
-                        <div style={{display:'flex',alignItems:'center',gap:9,flex:1}}>
-                          <div style={{width:26,height:26,borderRadius:7,background:active?'var(--brand-dim)':'var(--surface2)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                            <IK name={active?'circle':'check-circle'} size={13} color={active?'var(--brand)':'var(--green)'}/>
-                          </div>
-                          <span style={{fontSize:13,fontWeight:500}}>{item.text}</span>
-                        </div>
-                        <button onClick={function(e){e.stopPropagation();var nr2=(data.routines[period]||[]).filter(function(i){return i.id!==item.id;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr2})}),'Rutin silindi');}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:'2px 4px',pointerEvents:'auto'}}><IK name="x" size={11}/></button>
-                      </div>
-                    );
-                  })}
-                  {(items||[]).length === 0 && <p style={{fontSize:11,color:'var(--muted)',fontStyle:'italic',textAlign:'center',padding:'6px 0'}}>Henuz rutin yok</p>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    return h('div', {className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH,{title:'Rutin Carki',action:{label:'Rutin Ekle',fn:function(){setModal({open:true,type:'routine'});}}}),
+      h(Grid,{min:220},
+        Object.entries(data.routines).map(function(entry){
+          var period=entry[0],items=entry[1];
+          var doneCount=(items||[]).filter(function(r){return !U.isActive(period,r.last);}).length;
+          return h('div',{key:period,className:'card card-p'},
+            h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}},
+              h('p',{style:{fontWeight:700,fontSize:13,textTransform:'capitalize'}},period),
+              h('span',{className:'pill '+(doneCount===(items||[]).length&&(items||[]).length>0?'pill-green':'pill-gray'),style:{fontSize:10}},doneCount+'/'+(items||[]).length)
+            ),
+            h('div',{style:{display:'flex',flexDirection:'column',gap:4}},
+              (items||[]).map(function(item){
+                var active=U.isActive(period,item.last);
+                return h('div',{key:item.id,className:'rit'+(active?'':' done'),onClick:function(){
+                  if(active){gainXP(10,'Rutin tamamlandi');var nr=data.routines[period].map(function(r){return r.id===item.id?Object.assign({},r,{last:new Date().toISOString()}):r;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr})}),'Rutin tamamlandi');}
+                }},
+                  h('div',{className:'icon-box',style:{background:active?'var(--blue-light)':'var(--bg3)',borderRadius:6,width:26,height:26,flexShrink:0}},
+                    h(Ic,{n:active?'circle':'check_c',s:13,c:active?'var(--blue)':'var(--green)'})
+                  ),
+                  h('span',{style:{fontSize:13,fontWeight:500,flex:1}},item.t),
+                  h('button',{className:'btn btn-ghost btn-icon',style:{width:22,height:22,pointerEvents:'auto'},onClick:function(e){e.stopPropagation();var nr2=(data.routines[period]||[]).filter(function(i){return i.id!==item.id;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr2})}),'Rutin silindi');}},
+                    h(Ic,{n:'x',s:11,c:'var(--text3)'})
+                  )
+                );
+              }),
+              (items||[]).length===0&&h('p',{style:{fontSize:12,color:'var(--text3)',fontStyle:'italic',textAlign:'center',padding:'8px 0'}},'Henuz rutin yok')
+            )
+          );
+        })
+      )
     );
   }
 
+  // -- Tools ---------------------------------------------------------------
+  function ToolsView() {
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH,{title:'Odaklanma Araclari'}),
+      h(Grid,{min:200},
+        SOUNDS.map(function(s){
+          var on=data.activeSound===s.url;
+          return h('button',{key:s.name,className:'sound-btn'+(on?' on':''),onClick:function(){playSound(s.url);}},
+            h('div',{className:'icon-box',style:{background:on?'rgba(255,255,255,.2)':'var(--blue-light)',borderRadius:9,width:38,height:38,flexShrink:0}},
+              h(Ic,{n:s.icon,s:18,c:on?'white':'var(--blue)'})
+            ),
+            h('div',{style:{flex:1,textAlign:'left'}},
+              h('p',{style:{fontWeight:600,fontSize:13}},s.name),
+              h('p',{style:{fontSize:11,marginTop:2,opacity:.7}},on?'Caliniyor...':'Dinlemek icin tikla')
+            ),
+            on&&h('div',{style:{width:6,height:6,borderRadius:99,background:'white',animation:'blink 1.5s infinite'}})
+          );
+        })
+      ),
+      h('div',{className:'card card-p',style:{display:'flex',alignItems:'center',gap:14}},
+        h(Ic,{n:'vol',s:16,c:'var(--text3)'}),
+        h('input',{type:'range',min:0,max:1,step:.05,value:data.vol,onChange:function(e){var v=parseFloat(e.target.value);if(audioRef.current)audioRef.current.volume=v;upd(Object.assign({},data,{vol:v}),'Ses seviyesi');},style:{flex:1}}),
+        h('span',{style:{fontSize:12,color:'var(--text2)',fontWeight:500,minWidth:32,textAlign:'right'}},Math.round(data.vol*100)+'%')
+      )
+    );
+  }
+
+  // -- Vault ---------------------------------------------------------------
+  function VaultView() {
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH,{title:'Bilgi Kasasi',action:{label:'Not Ekle',fn:function(){setModal({open:true,type:'vault'});}}}),
+      h(Grid,{min:240},
+        fil(data.vault,['title','text']).map(function(note){
+          return h('div',{key:note.id,className:'card card-p',style:{display:'flex',flexDirection:'column',gap:9}},
+            h('div',{style:{display:'flex',justifyContent:'space-between'}},
+              h('span',{className:'pill pill-blue',style:{fontSize:10}},note.cat||'Genel'),
+              h('div',{style:{display:'flex',gap:3}},
+                h('button',{className:'btn btn-ghost btn-icon',style:{width:26,height:26},onClick:function(){setPrint(note);}},h(Ic,{n:'printer',s:12,c:'var(--text3)'})),
+                h('button',{className:'btn btn-ghost btn-icon',style:{width:26,height:26},onClick:function(){del(note,'vault');}},h(Ic,{n:'trash',s:12,c:'var(--text3)'}))
+              )
+            ),
+            h('p',{style:{fontWeight:700,fontSize:14}},note.title),
+            h('p',{style:{fontSize:12,color:'var(--text2)',lineHeight:1.6,flex:1}},note.text),
+            h('p',{style:{fontSize:10,color:'var(--text3)'}},new Date(note.id).toLocaleDateString('tr-TR'))
+          );
+        }),
+        data.vault.length===0&&h(Empty,{icon:'archive',msg:'Bilgi kasasi bos'})
+      )
+    );
+  }
+
+  // -- History -------------------------------------------------------------
   function HistoryView() {
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name="activity" size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>Sistem Gecmisi</h2>
-          <span className="tag tag-muted">{data.logs ? data.logs.length : 0} kayit</span>
-        </div>
-        <div className="card" style={{padding:'6px 18px',maxHeight:'70vh',overflowY:'auto'}}>
-          {(data.logs||[]).map(function(log,i) { return (
-            <div key={i} className="log-item">
-              <div className={"ldot"+(log.action.indexOf('XP')>=0?' xp':'')}></div>
-              <div>
-                <div style={{fontSize:10,color:'var(--brand)',fontWeight:700,marginBottom:2}}>{log.time}</div>
-                <div style={{fontSize:13,fontWeight:500}}>{log.action}</div>
-              </div>
-            </div>
-          ); })}
-          {(!data.logs||data.logs.length===0) && <div className="empty"><IK name="activity" size={32} color="var(--muted)"/><span>Henuz aktivite yok</span></div>}
-        </div>
-      </div>
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h('div',{className:'sh'},
+        h('h1',{className:'sh-title'},'Aktivite'),
+        h('span',{className:'pill pill-gray'},(data.logs||[]).length+' kayit')
+      ),
+      h('div',{className:'card',style:{padding:'4px 18px',maxHeight:'70vh',overflowY:'auto'}},
+        (data.logs||[]).map(function(lg,i){
+          var isXP=lg.action.indexOf('XP')>=0;
+          return h('div',{key:i,style:{display:'flex',gap:12,padding:'11px 0',borderBottom:'1px solid var(--border)'}},
+            h('div',{style:{width:8,height:8,borderRadius:99,background:isXP?'var(--green)':'var(--blue)',flexShrink:0,marginTop:4,boxShadow:isXP?'0 0 6px var(--green)':''}}),
+            h('div',null,
+              h('p',{style:{fontSize:11,color:'var(--text3)',fontWeight:500,marginBottom:2}},lg.time),
+              h('p',{style:{fontSize:13,fontWeight:500}},lg.action)
+            )
+          );
+        }),
+        (!data.logs||data.logs.length===0)&&h(Empty,{icon:'activity',msg:'Henuz aktivite yok'})
+      )
     );
   }
 
+  // -- Generic list ---------------------------------------------------------
   function GenericList(props) {
-    var list = props.list, keys = props.keys, type = props.type;
-    var LABELS = {quotes:'Ozlu Sozler',journal:'Gunluk',principles:'Prensipler',coaching:'Kocluk',questions:'Sorular'};
-    var ICONS2 = {quotes:'quote',journal:'pen-line',principles:'shield-check',coaching:'users',questions:'help-circle'};
-    return (
-      <div className="slide-up">
-        <div className="sh">
-          <h2 className="st"><IK name={ICONS2[tab]||'list'} size={21} color="var(--brand)" extraStyle={{marginRight:8}}/>{LABELS[tab]||tab}</h2>
-          <button className="btn btn-primary" onClick={function(){setModal({open:true,type:type});}}><IK name="plus" size={15}/>Ekle</button>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))',gap:14}}>
-          {fil(list,keys).map(function(item) { return (
-            <div key={item.id} className="card" style={{padding:18,display:'flex',flexDirection:'column',gap:9}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
-                <span className="tag tag-brand">{item.category||item.type||''}</span>
-                <div style={{display:'flex',gap:3}}>
-                  <button onClick={function(){setPrint({item:item});}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3}}><IK name="printer" size={13}/></button>
-                  <button onClick={function(){del(item,type);}} style={{background:'none',border:'none',cursor:'pointer',color:'var(--muted)',padding:3}}><IK name="trash-2" size={13}/></button>
-                </div>
-              </div>
-              {item.title && <h3 style={{fontFamily:'Syne',fontWeight:700,fontSize:14}}>{item.title}</h3>}
-              <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,fontStyle:'italic',flex:1}}>"{item.text||item.content}"</p>
-              {item.author && <p style={{fontSize:11,color:'var(--muted)',fontWeight:600}}>&mdash; {item.author}</p>}
-              {item.date && <p style={{fontSize:10,color:'var(--muted)'}}>{item.date}</p>}
-            </div>
-          ); })}
-          {(!list||list.length===0) && <div className="empty" style={{gridColumn:'1/-1'}}><IK name={ICONS2[tab]||'list'} size={36} color="var(--muted)"/><span>Henuz icerik eklenmedi</span></div>}
-        </div>
-      </div>
+    var LIST_CFG={quotes:{list:data.quotes,keys:['text','author'],type:'quote',title:'Ozlu Sozler',icon:'quote'},journal:{list:data.journal,keys:['text','cat'],type:'journal',title:'Gunluk',icon:'pen'},principles:{list:data.principles,keys:['text','type'],type:'principle',title:'Prensipler',icon:'shield'},coaching:{list:data.coaching,keys:['title','text'],type:'coaching',title:'Kocluk',icon:'users'},questions:{list:data.questions,keys:['text'],type:'question',title:'Sorular',icon:'help'}};
+    var cfg=LIST_CFG[tab];
+    if (!cfg) return null;
+    var addType=cfg.type;
+    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
+      h(PH,{title:cfg.title,action:{label:'Ekle',fn:function(){setModal({open:true,type:addType});}}}),
+      h(Grid,{min:250},
+        fil(cfg.list,cfg.keys).map(function(item){
+          return h(ItemCard,{key:item.id,item:item,type:cfg.type,onDel:del,onPrint:setPrint});
+        }),
+        (!cfg.list||cfg.list.length===0)&&h(Empty,{icon:cfg.icon,msg:'Henuz icerik yok'})
+      )
     );
   }
 
-  function ModalComp() {
-    var vState = useState({}); var vals = vState[0], setVals = vState[1];
-    var fields = FORM_FIELDS[modal.type] || [];
-    return (
-      <div className="modal-bg" onClick={function(e){if(e.target===e.currentTarget)setModal({open:false});}}>
-        <div className="modal-box">
-          <div className="modal-head">
-            <h3 style={{fontFamily:'Syne',fontWeight:800,fontSize:15}}>{MODAL_TITLES[modal.type]||modal.type} Ekle</h3>
-            <button className="btn btn-ghost btn-icon" onClick={function(){setModal({open:false});}}><IK name="x" size={15}/></button>
-          </div>
-          <div className="modal-body">
-            {fields.map(function(f) {
-              if (f.type === 'checkbox') return (
-                <label key={f.name} style={{display:'flex',alignItems:'center',gap:9,cursor:'pointer',fontSize:13,color:'var(--text)'}}>
-                  <input type="checkbox" className="cb" checked={!!vals[f.name]} onChange={function(e){var v={};v[f.name]=e.target.checked;setVals(function(p){return Object.assign({},p,v);});}}/>
-                  {f.label}
-                </label>
-              );
-              if (f.type === 'select') return (
-                <select key={f.name} className="inp" value={vals[f.name]||f.options[0]} onChange={function(e){var v={};v[f.name]=e.target.value;setVals(function(p){return Object.assign({},p,v);});}}>
-                  {f.options.map(function(o){return <option key={o}>{o}</option>;})}
-                </select>
-              );
-              if (f.type === 'textarea') return (
-                <textarea key={f.name} className="inp" placeholder={f.placeholder} value={vals[f.name]||''} onChange={function(e){var v={};v[f.name]=e.target.value;setVals(function(p){return Object.assign({},p,v);});}} style={{height:90}}/>
-              );
-              return <input key={f.name} className="inp" type={f.type||'text'} placeholder={f.placeholder} value={vals[f.name]||''} onChange={function(e){var v={};v[f.name]=e.target.value;setVals(function(p){return Object.assign({},p,v);}); }}/>;
-            })}
-          </div>
-          <div className="modal-foot">
-            <button className="btn btn-ghost" style={{flex:1}} onClick={function(){setModal({open:false});}}>Iptal</button>
-            <button className="btn btn-primary" style={{flex:2}} onClick={function(){
-              var req = fields.filter(function(f){return f.required;});
-              if (!req.every(function(f){return vals[f.name]&&String(vals[f.name]).trim();})) { alert('Zorunlu alanlari doldurun.'); return; }
-              submitModal(vals);
-            }}>Kaydet</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function PrintModal() {
-    return (
-      <div className="modal-bg no-print" onClick={function(e){if(e.target===e.currentTarget)setPrint({item:null});}}>
-        <div className="modal-box" style={{maxWidth:560}}>
-          <div className="modal-head">
-            <h3 style={{fontFamily:'Syne',fontWeight:800,fontSize:15}}>Poster Baskisi</h3>
-            <div style={{display:'flex',gap:8}}>
-              <button className="btn btn-primary" style={{fontSize:12}} onClick={function(){window.print();}}><IK name="printer" size={13}/>Yazdir</button>
-              <button className="btn btn-ghost btn-icon" onClick={function(){setPrint({item:null});}}><IK name="x" size={15}/></button>
-            </div>
-          </div>
-          <div style={{padding:20}}>
-            <div style={{border:'2px solid var(--border)',borderRadius:14,aspectRatio:'1/1.414',display:'flex',alignItems:'center',justifyContent:'center',padding:36,textAlign:'center',background:'white',color:'#1a1c2e'}}>
-              <div>
-                <p style={{fontFamily:'Georgia,serif',fontStyle:'italic',fontSize:20,lineHeight:1.6,marginBottom:14}}>"{print.item && (print.item.text||print.item.content)}"</p>
-                {print.item && print.item.author && <p style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'#6366f1'}}>&mdash; {print.item.author}</p>}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // -- Render content -------------------------------------------------------
   function renderContent() {
-    if (tab === 'dashboard') return <DashView/>;
-    if (tab === 'challenges') return <ChallengesView/>;
-    if (tab === 'tools') return <ToolsView/>;
-    if (tab === 'vault') return <VaultView/>;
-    if (tab === 'goals') return <GoalsView/>;
-    if (tab === 'todos') return <TodosView/>;
-    if (tab === 'books') return <BooksView/>;
-    if (tab === 'routines') return <RoutinesView/>;
-    if (tab === 'history') return <HistoryView/>;
-    var gm = {
-      quotes:    {list:data.quotes,    keys:['text','author'],    type:'quote'},
-      journal:   {list:data.journal,   keys:['content','category'],type:'journal'},
-      principles:{list:data.principles,keys:['content','type'],   type:'principle'},
-      coaching:  {list:data.coaching,  keys:['title','content'],  type:'coaching'},
-      questions: {list:data.questions, keys:['text'],             type:'question'},
-    };
-    var cfg = gm[tab];
-    if (cfg) return <GenericList list={cfg.list} keys={cfg.keys} type={cfg.type}/>;
-    return null;
+    if (tab==='dashboard') return h(DashView,null);
+    if (tab==='challenges') return h(ChallengesView,null);
+    if (tab==='goals') return h(GoalsView,null);
+    if (tab==='todos') return h(TodosView,null);
+    if (tab==='books') return h(BooksView,null);
+    if (tab==='routines') return h(RoutinesView,null);
+    if (tab==='tools') return h(ToolsView,null);
+    if (tab==='vault') return h(VaultView,null);
+    if (tab==='history') return h(HistoryView,null);
+    return h(GenericList,null);
   }
 
-  return (
-    <div className="app">
-      <aside className="sidebar no-print">
-        <div className="logo">
-          <div className="logo-icon"><IK name="zap" size={16} color="white"/></div>
-          FocusUp
-        </div>
-        <nav style={{flex:1,display:'flex',flexDirection:'column',gap:1}}>
-          {NAV.map(function(n) { return (
-            <button key={n.id} className={"nav-item"+(tab===n.id?' active':'')} onClick={function(){setTab(n.id);}}>
-              <IK name={n.icon} size={15}/>
-              {n.label}
-              {n.badge && tab !== n.id && <span className="nav-dot"></span>}
-            </button>
-          ); })}
-        </nav>
-        <div className="nav-sep"/>
-        <div style={{display:'flex',flexDirection:'column',gap:1}}>
-          <button className={"nav-item"+(tab==='history'?' active':'')} onClick={function(){setTab('history');}}><IK name="activity" size={15}/>Gecmis &amp; XP</button>
-          <button className="nav-item" onClick={undo} disabled={hist.length===0} style={{opacity:hist.length===0?0.4:1}}><IK name="undo" size={15}/>Geri Al {hist.length > 0 ? '('+hist.length+')' : ''}</button>
-          <button className="nav-item" onClick={function(){U.downloadJSON(data,'FocusUp_Backup.json');}}><IK name="download" size={15}/>Yedekle</button>
-        </div>
-        <div style={{fontSize:9,color:'var(--muted)',textAlign:'center',paddingTop:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.07em'}}>{APP_VERSION}</div>
-      </aside>
-
-      <div className="main">
-        <header className="topbar no-print">
-          <div style={{display:'flex',flexDirection:'column',gap:2}}>
-            <div style={{display:'flex',gap:6}}>
-              <span className="tag tag-brand">{U.quarter(now)} Ceyrek</span>
-              <span className="tag tag-muted">Hafta {U.isoWeek(now)}</span>
-            </div>
-            <div style={{fontSize:11,color:'var(--muted)',fontWeight:500}}>
-              {now.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})} &bull; {now.toLocaleTimeString('tr-TR')}
-            </div>
-          </div>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{position:'relative'}}>
-              <IK name="search" size={13} color="var(--muted)" extraStyle={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)'}}/>
-              <input className="inp" type="text" placeholder="Ara..." value={q} onChange={function(e){setQ(e.target.value);}} style={{paddingLeft:32,width:180,height:34,fontSize:12}}/>
-            </div>
-            <button className="btn btn-ghost btn-icon" onClick={function(){setIsDark(function(p){return !p;});}}><IK name={isDark?'sun':'moon'} size={15}/></button>
-            <button className="btn btn-ghost" style={{position:'relative'}} onClick={function(){setTab('history');}}>
-              <IK name="activity" size={15}/>
-              {data.logs && data.logs.length > 0 && <span className="ndot"></span>}
-            </button>
-          </div>
-        </header>
-        <main className="content no-print">
-          <div className="content-inner">{renderContent()}</div>
-        </main>
-        <nav className="mobile-nav">
-          {['dashboard','challenges','goals','todos','routines'].map(function(id) {
-            var n = NAV.find(function(x){return x.id===id;});
-            if (!n) return null;
-            return (
-              <button key={id} onClick={function(){setTab(id);}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'5px 3px',background:'none',border:'none',cursor:'pointer',color:tab===id?'var(--brand)':'var(--muted)',borderRadius:10}}>
-                <IK name={n.icon} size={19} color={tab===id?'var(--brand)':'var(--muted)'}/>
-                <span style={{fontSize:8,fontWeight:700,textTransform:'uppercase'}}>{n.label.split(' ')[0]}</span>
-              </button>
+  // -- Layout ----------------------------------------------------------------
+  return h('div', {className:'shell'},
+    // Sidebar
+    h('aside', {className:'sidebar no-print'},
+      h('div', {className:'logo'},
+        h('div', {className:'logo-mark'},
+          h('svg',{viewBox:'0 0 24 24'},h('path',{d:'M13 2L3 14h9l-1 8 10-12h-9l1-8z'}))
+        ),
+        h('span', {className:'logo-name'}, 'FocusUp')
+      ),
+      NAV_GROUPS.map(function(g) {
+        return h('div', {key:g.label},
+          h('p', {className:'nav-section'}, g.label),
+          g.items.map(function(n) {
+            return h('button', {key:n.id,className:'nav-btn'+(tab===n.id?' active':''),onClick:function(){setTab(n.id);}},
+              h('span', {className:'nav-icon'}, h(Ic,{n:n.i,s:14})),
+              n.l,
+              n.badge&&tab!==n.id&&h('span',{className:'nav-badge'},'NEW')
             );
-          })}
-        </nav>
-      </div>
+          })
+        );
+      }),
+      h('div', {className:'div',style:{marginTop:'auto'}}),
+      h('div', {style:{display:'flex',flexDirection:'column',gap:1}},
+        h('button',{className:'nav-btn'+(tab==='history'?' active':''),onClick:function(){setTab('history');}},h('span',{className:'nav-icon'},h(Ic,{n:'activity',s:14})),'Aktivite'),
+        h('button',{className:'nav-btn',onClick:undo,disabled:hist.length===0,style:{opacity:hist.length?1:.35}},h('span',{className:'nav-icon'},h(Ic,{n:'undo',s:14})),'Geri Al '+(hist.length?'('+hist.length+')':'')),
+        h('button',{className:'nav-btn',onClick:function(){U.dl(data,'FocusUp_Backup.json');}},h('span',{className:'nav-icon'},h(Ic,{n:'download',s:14})),'Yedekle')
+      ),
+      h('p',{style:{fontSize:10,color:'var(--text3)',textAlign:'center',paddingTop:10,letterSpacing:'.04em'}},'V.3 / 2026')
+    ),
 
-      {modal.open && <ModalComp/>}
-      {print.item && <PrintModal/>}
+    // Main
+    h('div', {className:'body'},
+      h('header', {className:'topbar no-print'},
+        h('div', {style:{display:'flex',gap:8,alignItems:'center'}},
+          h('span', {className:'pill pill-blue',style:{fontSize:11}}, U.quarter(new Date()) + ' Ceyrek'),
+          h('span', {className:'pill pill-gray',style:{fontSize:11}}, 'Hafta ' + U.isoWeek(new Date())),
+          h(Clock, null)
+        ),
+        h('div', {style:{display:'flex',gap:8,alignItems:'center'}},
+          h('div', {style:{position:'relative'}},
+            h(Ic,{n:'search',s:13,c:'var(--text3)',st:{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)'}}),
+            h('input',{className:'inp',type:'text',placeholder:'Ara...',value:q,onChange:function(e){setQ(e.target.value);},style:{paddingLeft:30,width:160,height:32,fontSize:12}})
+          ),
+          h('button',{className:'btn btn-ghost btn-icon',onClick:function(){setDark(function(p){return !p;});}},h(Ic,{n:dark?'sun':'moon',s:15})),
+          h('button',{className:'btn btn-ghost btn-icon',style:{position:'relative'},onClick:function(){setTab('history');}},h(Ic,{n:'activity',s:15}))
+        )
+      ),
+      h('main', {className:'page no-print'},
+        h('div', {className:'page-inner'}, renderContent())
+      ),
+      // Mobile nav
+      h('nav', {className:'mob-nav'},
+        ['dashboard','challenges','goals','todos','routines'].map(function(id){
+          var g=NAV_GROUPS.find(function(g){return g.items.find(function(n){return n.id===id;});}); if(!g) return null;
+          var n=g.items.find(function(n){return n.id===id;});
+          return h('button',{key:id,onClick:function(){setTab(id);},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,padding:'4px 2px',background:'none',border:'none',cursor:'pointer',color:tab===id?'var(--blue)':'var(--text3)',borderRadius:8}},
+            h(Ic,{n:n.i,s:18,c:tab===id?'var(--blue)':'var(--text3)'}),
+            h('span',{style:{fontSize:8,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}},n.l.split(' ')[0])
+          );
+        })
+      )
+    ),
 
-      {print.item && (
-        <div className="print-area">
-          <div style={{fontFamily:'Georgia,serif',fontStyle:'italic',textAlign:'center',color:'#1a1c2e'}}>
-            <h1 style={{fontSize:'40pt',marginBottom:22,lineHeight:1.3}}>"{print.item.text||print.item.content}"</h1>
-            {print.item.author && <p style={{fontSize:'18pt',color:'#6366f1',letterSpacing:'.18em',textTransform:'uppercase',fontWeight:700}}>&mdash; {print.item.author}</p>}
-          </div>
-        </div>
-      )}
-    </div>
+    // Modals
+    modal.open && h(ModalForm,{type:modal.type,onSave:addItem,onClose:function(){setModal({open:false});}}),
+    printItem && h(PrintModal,{item:printItem,onClose:function(){setPrint(null);}}),
+    printItem && h('div',{className:'for-print'},
+      h('div',{style:{fontFamily:'Georgia,serif',fontStyle:'italic',textAlign:'center',color:'#1d1d1f'}},
+        h('h1',{style:{fontSize:'38pt',marginBottom:20,lineHeight:1.4}},'"'+(printItem.text||printItem.title||'')+'"'),
+        printItem.author&&h('p',{style:{fontSize:'16pt',color:'#0071e3',textTransform:'uppercase',letterSpacing:'.18em',fontWeight:700}},'- '+printItem.author)
+      )
+    )
   );
 }
 
 var root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
+root.render(h(App, null));
 </script>
 </body>
 </html>
