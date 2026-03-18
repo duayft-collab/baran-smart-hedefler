@@ -3,410 +3,403 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocusUp - Performans Sistemi</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<title>FocusUp Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#f5f5f7; --bg2:#ffffff; --bg3:#f0f0f2; --bg4:#e8e8ed;
-  --border:rgba(0,0,0,0.08); --border2:rgba(0,0,0,0.13);
-  --text:#1d1d1f; --t2:#6e6e73; --t3:#aeaeb2;
-  --blue:#0071e3; --bl:rgba(0,113,227,0.1);
-  --green:#34c759; --gl:rgba(52,199,89,0.1);
-  --orange:#ff9500; --ol:rgba(255,149,0,0.11);
-  --red:#ff3b30; --rl:rgba(255,59,48,0.1);
-  --purple:#af52de; --pl:rgba(175,82,222,0.1);
-  --yellow:#ffcc00; --yl:rgba(255,204,0,0.13);
-  --teal:#32ade6; --tl:rgba(50,173,230,0.1);
-  --sw:230px;
-  --sh:0 1px 3px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.05);
+:root{
+  --bg:#f5f5f7;--s:#fff;--s2:#f0f0f2;--s3:#e5e5ea;
+  --t:#1d1d1f;--t2:#6e6e73;--t3:#aeaeb2;
+  --blue:#0071e3;--bl:rgba(0,113,227,.1);
+  --green:#34c759;--gl:rgba(52,199,89,.1);
+  --orange:#ff9500;--ol:rgba(255,149,0,.11);
+  --red:#ff3b30;--rl:rgba(255,59,48,.1);
+  --purple:#af52de;--pl:rgba(175,82,222,.1);
+  --yellow:#ffcc00;--yl:rgba(255,204,0,.13);
+  --sw:218px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
 }
-.dark {
-  --bg:#000; --bg2:#1c1c1e; --bg3:#2c2c2e; --bg4:#3a3a3c;
-  --border:rgba(255,255,255,0.09); --border2:rgba(255,255,255,0.14);
-  --text:#f5f5f7; --t2:#98989d; --t3:#636366;
-  --blue:#0a84ff; --bl:rgba(10,132,255,0.14);
-  --green:#30d158; --gl:rgba(48,209,88,0.12);
-  --orange:#ff9f0a; --ol:rgba(255,159,10,0.13);
-  --red:#ff453a; --rl:rgba(255,69,58,0.12);
-  --purple:#bf5af2; --pl:rgba(191,90,242,0.12);
-  --yellow:#ffd60a; --yl:rgba(255,214,10,0.12);
-  --teal:#5ac8fa; --tl:rgba(90,200,250,0.12);
-  --sh:0 2px 8px rgba(0,0,0,0.4);
+.dark{
+  --bg:#000;--s:#1c1c1e;--s2:#2c2c2e;--s3:#3a3a3c;
+  --t:#f5f5f7;--t2:#98989d;--t3:#636366;
+  --blue:#0a84ff;--bl:rgba(10,132,255,.14);
+  --green:#30d158;--gl:rgba(48,209,88,.12);
+  --orange:#ff9f0a;--ol:rgba(255,159,10,.13);
+  --red:#ff453a;--rl:rgba(255,69,58,.12);
+  --purple:#bf5af2;--pl:rgba(191,90,242,.12);
+  --yellow:#ffd60a;--yl:rgba(255,214,10,.12);
+  --sh:0 2px 8px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden;}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden;}
 ::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:99px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
 
 /* Layout */
-.shell{display:flex;height:100vh;}
-.sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 10px;flex-shrink:0;overflow-y:auto;}
-.body{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.topbar{height:50px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
-.page{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg);}
-.pinner{max-width:1040px;margin:0 auto;}
+#shell{display:flex;height:100vh;}
+#sidebar{width:var(--sw);background:var(--s);border-right:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;padding:16px 10px 12px;flex-shrink:0;overflow-y:auto;}
+.dark #sidebar{border-right-color:rgba(255,255,255,.09);}
+#body{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+#topbar{height:50px;background:var(--s);border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.dark #topbar{border-bottom-color:rgba(255,255,255,.09);}
+#page{flex:1;overflow-y:auto;padding:24px 28px;background:var(--bg);}
+#pinner{max-width:1040px;margin:0 auto;}
 
 /* Logo */
 .logo{display:flex;align-items:center;gap:9px;padding:4px 6px 16px;}
-.logo-mark{width:26px;height:26px;border-radius:7px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-mark{width:26px;height:26px;border-radius:7px;background:var(--t);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .logo-name{font-weight:700;font-size:14px;letter-spacing:-.3px;}
-.logo-ver{font-size:10px;color:var(--t3);font-weight:500;margin-left:auto;}
 
 /* Nav */
-.nsec{font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;padding:4px 6px 5px;margin-top:6px;}
-.nb{display:flex;align-items:center;gap:7px;width:100%;padding:6px 7px;border-radius:7px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);text-align:left;transition:background .12s,color .12s;position:relative;font-family:inherit;}
-.nb:hover{background:var(--bg3);color:var(--text);}
+.nsec{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;padding:3px 6px 4px;margin-top:7px;}
+.nb{display:flex;align-items:center;gap:7px;width:100%;padding:6px 7px;border-radius:7px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:500;color:var(--t2);text-align:left;transition:background .12s,color .12s;font-family:inherit;}
+.nb:hover{background:var(--s2);color:var(--t);}
 .nb.active{background:var(--bl);color:var(--blue);font-weight:600;}
-.ni{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.nb-badge{background:var(--orange);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:auto;}
+.ni{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.8;}
+.nb.active .ni{opacity:1;}
+.nb-new{background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;margin-left:auto;}
 
 /* Cards */
-.card{background:var(--bg2);border-radius:14px;box-shadow:var(--sh);}
+.card{background:var(--s);border-radius:14px;box-shadow:var(--sh);}
 .cp{padding:16px 18px;}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .12s;white-space:nowrap;}
-.btn-p{background:var(--blue);color:white;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;transition:all .12s;white-space:nowrap;font-family:inherit;}
+.btn-p{background:var(--blue);color:#fff;}
 .btn-p:hover{filter:brightness(1.1);}
 .btn-p:active{transform:scale(.98);}
-.btn-s{background:var(--bg3);color:var(--text);border:1px solid var(--border);}
-.btn-s:hover{background:var(--bg4);}
+.btn-s{background:var(--s2);color:var(--t);border:1px solid rgba(0,0,0,.08);}
+.btn-s:hover{background:var(--s3);}
+.dark .btn-s{border-color:rgba(255,255,255,.09);}
 .btn-g{background:none;color:var(--t2);}
-.btn-g:hover{background:var(--bg3);color:var(--text);}
+.btn-g:hover{background:var(--s2);color:var(--t);}
 .btn-sm{padding:4px 9px;font-size:11.5px;border-radius:6px;}
 .btn-ic{width:30px;height:30px;padding:0;justify-content:center;border-radius:7px;}
-.btn-green{background:var(--green);color:white;}
-.btn-green:hover{filter:brightness(1.1);}
-.btn-orange{background:var(--orange);color:white;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-orange{background:var(--orange);color:#fff;}
 
-/* Input */
-.inp{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--text);font-family:inherit;width:100%;outline:none;transition:border .12s,box-shadow .12s;}
-.inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--bl);background:var(--bg2);}
+/* Inputs */
+.inp{background:var(--s2);border:1px solid rgba(0,0,0,.08);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--t);font-family:inherit;width:100%;outline:none;transition:border .12s,box-shadow .12s;}
+.inp:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--bl);background:var(--s);}
 .inp::placeholder{color:var(--t3);}
 textarea.inp{resize:none;}
 select.inp{cursor:pointer;}
+.dark .inp{border-color:rgba(255,255,255,.09);}
 
 /* Pills */
-.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
 .p-blue{background:var(--bl);color:var(--blue);}
 .p-green{background:var(--gl);color:var(--green);}
 .p-orange{background:var(--ol);color:var(--orange);}
 .p-red{background:var(--rl);color:var(--red);}
 .p-purple{background:var(--pl);color:var(--purple);}
-.p-gray{background:var(--bg3);color:var(--t2);}
+.p-gray{background:var(--s2);color:var(--t2);}
 .p-yellow{background:var(--yl);color:#7a6000;}
 .dark .p-yellow{color:var(--yellow);}
-.p-teal{background:var(--tl);color:var(--teal);}
+
+/* Progress */
+.bar{height:4px;background:var(--s2);border-radius:99px;overflow:hidden;}
+.barf{height:100%;border-radius:99px;transition:width .6s ease;}
 
 /* Checkbox */
-.cb{appearance:none;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border2);cursor:pointer;transition:all .12s;position:relative;flex-shrink:0;}
+.cb{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:5px;border:1.5px solid rgba(0,0,0,.2);cursor:pointer;transition:all .12s;position:relative;flex-shrink:0;background:transparent;vertical-align:middle;}
+.dark .cb{border-color:rgba(255,255,255,.25);}
 .cb:checked{background:var(--blue);border-color:var(--blue);}
-.cb:checked::after{content:'';position:absolute;left:4px;top:1.5px;width:5px;height:8px;border:2px solid white;border-top:none;border-left:none;transform:rotate(45deg);}
+.cb:checked::after{content:'';position:absolute;left:4px;top:1.5px;width:5px;height:8px;border:2px solid #fff;border-top:none;border-left:none;transform:rotate(45deg);}
 
 /* Modal */
-.ov{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fin .15s ease;}
-.mbox{background:var(--bg2);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:480px;overflow:hidden;animation:sup .2s cubic-bezier(.34,1.56,.64,1);}
-.mh{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between;}
-.mb{padding:14px 20px;display:flex;flex-direction:column;gap:9px;max-height:62vh;overflow-y:auto;}
-.mf{padding:12px 20px;display:flex;gap:8px;border-top:1px solid var(--border);}
+.ov{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px;}
+.mbox{background:var(--s);border-radius:18px;box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:480px;overflow:hidden;}
+.mh{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,.06);}
+.dark .mh{border-bottom-color:rgba(255,255,255,.08);}
+.mb{padding:14px 20px;display:flex;flex-direction:column;gap:9px;max-height:60vh;overflow-y:auto;}
+.mf{padding:12px 20px;display:flex;gap:8px;border-top:1px solid rgba(0,0,0,.06);}
+.dark .mf{border-top-color:rgba(255,255,255,.08);}
 
 /* Table */
 .tbl{width:100%;border-collapse:collapse;}
-.tbl th{padding:9px 14px;text-align:left;font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);}
-.tbl td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.tbl th{padding:9px 14px;text-align:left;font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid rgba(0,0,0,.06);}
+.dark .tbl th{border-bottom-color:rgba(255,255,255,.08);}
+.tbl td{padding:11px 14px;border-bottom:1px solid rgba(0,0,0,.05);font-size:13px;}
+.dark .tbl td{border-bottom-color:rgba(255,255,255,.06);}
 .tbl tr:last-child td{border-bottom:none;}
-.tbl tr:hover td{background:var(--bg3);}
-
-/* Progress */
-.bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;}
-.barf{height:100%;border-radius:99px;transition:width .6s ease;}
-
-/* Stars */
-.star{color:var(--yellow);font-size:13px;cursor:pointer;}
-.star.off{color:var(--bg4);}
+.tbl tr:hover td{background:var(--s2);}
 
 /* Section header */
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .sh-t{font-size:20px;font-weight:700;letter-spacing:-.3px;}
 .sh-sub{font-size:13px;color:var(--t2);margin-top:2px;}
 
-/* Grid */
-.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-.grid-auto-sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+/* Grid helpers */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.ga{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.gas{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
 
-/* Empty */
-.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 20px;color:var(--t3);font-size:13px;}
+/* Empty state */
+.empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:48px 20px;color:var(--t3);font-size:13px;text-align:center;}
 
 /* Step row */
-.step-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);}
-.step-row:last-child{border-bottom:none;}
+.srow{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.05);}
+.dark .srow{border-bottom-color:rgba(255,255,255,.06);}
+.srow:last-child{border-bottom:none;}
 
-/* Routine item */
-.rit{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .1s;}
-.rit:hover{background:var(--bg3);}
-.rit.done{opacity:.38;pointer-events:none;}
+/* Routine row */
+.rrow{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;transition:background .1s;}
+.rrow:hover{background:var(--s2);}
+.rrow.done{opacity:.35;pointer-events:none;}
 
-/* Animations */
-@keyframes fin{from{opacity:0}to{opacity:1}}
-@keyframes sup{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
-.fade{animation:fin .2s ease;}
-
-/* KPI card */
-.kpi{padding:16px 18px;display:flex;flex-direction:column;gap:5px;}
-.kpi-n{font-size:30px;font-weight:700;letter-spacing:-.5px;line-height:1;}
-.kpi-l{font-size:11.5px;color:var(--t2);font-weight:500;}
-.kpi-delta{font-size:11px;font-weight:600;margin-top:3px;}
-
-/* Book item */
-.book-row{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:flex-start;transition:background .1s;cursor:pointer;}
-.book-row:last-child{border-bottom:none;}
-.book-row:hover{background:var(--bg3);}
-.book-cover{width:36px;height:50px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;letter-spacing:-.3px;}
-
-/* Reading progress ring */
-.ring-sm{transform:rotate(-90deg);transform-origin:center;}
+/* Label */
+.lbl{font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;}
 
 /* Divider */
-.div{height:1px;background:var(--border);margin:6px 2px;}
+.div{height:1px;background:rgba(0,0,0,.07);margin:6px 2px;}
+.dark .div{background:rgba(255,255,255,.08);}
 
-/* Focus timer */
-.timer-big{font-size:54px;font-weight:700;letter-spacing:-3px;font-variant-numeric:tabular-nums;line-height:1;}
+/* Range */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:99px;background:var(--s2);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid var(--s);box-shadow:0 1px 3px rgba(0,0,0,.2);}
 
-/* System card */
-.sys-card{padding:16px 18px;border-left:3px solid var(--blue);}
+/* Sound btn */
+.snd{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:10px;border:1px solid rgba(0,0,0,.08);background:var(--s);cursor:pointer;text-align:left;transition:all .12s;width:100%;font-family:inherit;}
+.dark .snd{border-color:rgba(255,255,255,.09);}
+.snd:hover{border-color:var(--blue);}
+.snd.on{background:var(--blue);border-color:var(--blue);color:#fff;}
 
-/* Tag row */
-.tags{display:flex;flex-wrap:wrap;gap:5px;}
-
-/* Print */
-@media print{@page{size:A4;margin:0;}.no-print{display:none!important;}.for-print{display:flex!important;}}
-.for-print{display:none;position:fixed;inset:0;background:white;z-index:9999;align-items:center;justify-content:center;padding:50mm;text-align:center;}
+/* KPI */
+.kpi-n{font-size:28px;font-weight:700;letter-spacing:-.5px;line-height:1;margin-top:6px;}
+.kpi-l{font-size:11.5px;color:var(--t2);font-weight:500;margin-top:4px;}
 
 /* Scratch */
 .scratch{background:var(--yl);border:1.5px solid var(--yellow);border-radius:14px;padding:14px 16px;}
 
+/* Star */
+.star{cursor:pointer;font-size:14px;}
+
+/* Print */
+@media print{@page{size:A4;margin:0;}.no-print{display:none!important;}.for-print{display:flex!important;}}
+.for-print{display:none;position:fixed;inset:0;background:#fff;z-index:9999;align-items:center;justify-content:center;padding:50mm;text-align:center;}
+
 /* Mobile */
-@media(max-width:768px){.sidebar{display:none;}.mob-nav{display:flex!important;}.page{padding:14px;}}
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:7px 4px 14px;z-index:40;gap:0;}
+@media(max-width:768px){#sidebar{display:none;}#mob-nav{display:flex!important;}#page{padding:14px;}}
+#mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--s);border-top:1px solid rgba(0,0,0,.08);padding:7px 4px 14px;z-index:40;}
 
-/* Range */
-input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:99px;background:var(--bg3);outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid var(--bg2);box-shadow:0 1px 3px rgba(0,0,0,.2);}
+/* Timer ring SVG */
+#timer-ring{transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s linear;}
 
-/* Sound btn */
-.snd{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);cursor:pointer;text-align:left;transition:all .12s;width:100%;font-family:inherit;}
-.snd:hover{border-color:var(--blue);}
-.snd.on{background:var(--blue);border-color:var(--blue);color:white;}
+/* Fade */
+.fade{animation:fin .2s ease;}
+@keyframes fin{from{opacity:0}to{opacity:1}}
 
-/* Label */
-.lbl{font-size:10.5px;font-weight:600;color:var(--t3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
-
-/* Reading plan */
-.rp-week{border-left:2px solid var(--blue);padding:8px 0 8px 14px;margin-bottom:10px;}
-.rp-week-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue);margin-bottom:4px;}
-
-/* Kategori renkleri */
-.cat-0{background:#ff6b6b;}
-.cat-1{background:#4ecdc4;}
-.cat-2{background:#45b7d1;}
-.cat-3{background:#96ceb4;}
-.cat-4{background:#ffeaa7;color:#333 !important;}
-.cat-5{background:#dda0dd;}
-.cat-6{background:#98d8c8;}
-.cat-7{background:#f7dc6f;color:#333 !important;}
-.cat-8{background:#bb8fce;}
-.cat-9{background:#85c1e9;}
+/* Book cat colors */
+.bc0{background:#ff6b6b;}.bc1{background:#4ecdc4;}.bc2{background:#45b7d1;}.bc3{background:#96ceb4;}
+.bc4{background:#ffeaa7;color:#555!important;}.bc5{background:#dda0dd;}.bc6{background:#98d8c8;}
+.bc7{background:#f7dc6f;color:#555!important;}.bc8{background:#bb8fce;}.bc9{background:#85c1e9;}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-var R=React, useState=R.useState, useEffect=R.useEffect, useMemo=R.useMemo, useCallback=R.useCallback, useRef=R.useRef, memo=R.memo, h=R.createElement;
+<div id="shell">
+  <aside id="sidebar" class="no-print">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>
+      </div>
+      <span class="logo-name">FocusUp</span>
+    </div>
+    <div id="nav-root"></div>
+    <div class="div" style="margin-top:auto"></div>
+    <div id="nav-bottom"></div>
+    <p style="font-size:9.5px;color:var(--t3);text-align:center;padding-top:8px;letter-spacing:.04em">FocusUp V4 / 2026</p>
+  </aside>
+  <div id="body">
+    <header id="topbar" class="no-print">
+      <div style="display:flex;gap:7px;align-items:center">
+        <span id="top-quarter" class="pill p-blue" style="font-size:10.5px"></span>
+        <span id="top-week" class="pill p-gray" style="font-size:10.5px"></span>
+        <span id="top-clock" style="font-size:11.5px;color:var(--t2);font-weight:500"></span>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <div style="position:relative">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%)"><circle cx="11" cy="11" r="8"/><path d="M21 21l-6-6"/></svg>
+          <input id="search-inp" class="inp" type="text" placeholder="Ara..." style="padding-left:28px;width:150px;height:30px;font-size:12px">
+        </div>
+        <button id="dark-btn" class="btn btn-s btn-ic" title="Tema"></button>
+        <button class="btn btn-s btn-ic" onclick="setTab('history')" title="Aktivite">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </button>
+      </div>
+    </header>
+    <main id="page" class="no-print"><div id="pinner"></div></main>
+    <nav id="mob-nav"></nav>
+  </div>
+</div>
+<div id="modal-root"></div>
+<div class="for-print" id="print-area"></div>
 
-// ---- SVG icon system ----
-var IC={
-  zap:'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
-  dash:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
-  trophy:'M8 21h8M12 17v4M7 4H4a1 1 0 0 0-1 1v3c0 3.3 2.7 6 6 6h6c3.3 0 6-2.7 6-6V5a1 1 0 0 0-1-1h-3M7 4V2M17 4V2M7 4h10',
-  hp:'M3 18v-6a9 9 0 0 1 18 0v6 M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z',
-  arc:'M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z M3.3 7l8.7 5 8.7-5 M12 22V12',
-  tgt:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M12 18c3.31 0 6-2.69 6-6s-2.69-6-6-6-6 2.69-6 6 2.69 6 6 6z M12 14c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z',
-  csq:'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
-  bk:'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
-  qt:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
-  pen:'M12 20h9 M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z',
-  ref:'M23 4v6h-6 M1 20v-6h6 M3.51 9a9 9 0 0 1 14.85-3.36L23 10 M1 14l4.64 4.36A9 9 0 0 0 20.49 15',
-  sh:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-  us:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75 M9 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z',
-  hlp:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3 M12 17h.01',
-  act:'M22 12h-4l-3 9L9 3l-3 9H2',
-  dl:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3',
-  undo:'M9 14L4 9l5-5 M4 9h11a4 4 0 0 1 0 8h-1',
-  plus:'M12 5v14M5 12h14',
-  x:'M18 6L6 18M6 6l12 12',
-  trash:'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
-  play:'M5 3l14 9-14 9V3z',
-  pause:'M6 4h4v16H6zM14 4h4v16h-4z',
-  rst:'M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15',
-  sun:'M12 7a5 5 0 1 0 0 10A5 5 0 0 0 12 7zM12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
-  moon:'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
-  srch:'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
-  chk:'M20 6L9 17l-5-5',
-  prn:'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z',
-  vol:'M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07',
-  rain:'M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25M8 19v2M8 13v2M16 19v2M16 13v2M12 21v2M12 15v2',
-  tree:'M17 14v5M7 14v5M12 2L2 22h20z',
-  coffee:'M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3',
-  wind:'M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2',
-  bell:'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
-  star:'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
-  edit:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
-  bar:'M18 20V10M12 20V4M6 20v-6',
-  layers:'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
-  book_open:'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',
-  checklist:'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4',
-  brain:'M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04z',
-  flame:'M8.5 14.5A2.5 2.5 0 0 0 11 17c0-1.5 1-3 1-3s1 1.5 1 3a2.5 2.5 0 0 0 2.5-2.5c0-1.5-.8-3-3.5-5.5C9.3 11.5 8.5 13 8.5 14.5z M12 2C6.5 7 4 10.5 4 14a8 8 0 0 0 16 0c0-5.5-5-10-8-12z',
-  ar:'M5 12h14M12 5l7 7-7 7',
-  ci:'M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z',
-  cc:'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3',
-  oi:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 12m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0',
-  note:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6M16 13H8M16 17H8M10 9H8',
-  kpi:'M3 3v18h18 M18.7 8l-5.1 5.2-2.8-2.7L7 14.3',
-  skull:'M12 2a7 7 0 0 1 7 7v2c1.1 0 2 .9 2 2v2a2 2 0 0 1-2 2h-.5l-1 4H6.5l-1-4H5a2 2 0 0 1-2-2v-2c0-1.1.9-2 2-2V9a7 7 0 0 1 7-7zM9 17v-2M15 17v-2',
-  sys:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
+<script>
+// ============================================================
+// FocusUp Pro V4 — Pure Vanilla JS, Zero Dependencies
+// ============================================================
+
+// --- Utils ---
+var U = {
+  isoWeek: function(d) {
+    var dt = new Date(d.getTime()); dt.setHours(0,0,0,0);
+    dt.setDate(dt.getDate() + 3 - (dt.getDay() + 6) % 7);
+    var w1 = new Date(dt.getFullYear(), 0, 4);
+    return 1 + Math.round(((dt - w1) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
+  },
+  quarter: function(d) { return 'Q' + Math.floor((d.getMonth() + 3) / 3); },
+  fmt: function(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); },
+  today: function() { return new Date().toISOString().split('T')[0]; },
+  ts: function() { return new Date().toLocaleString('tr-TR'); },
+  isActive: function(p, last) {
+    if (!last) return true;
+    var l = new Date(last), n = new Date();
+    if (p === 'daily') return l.toDateString() !== n.toDateString();
+    if (p === 'weekly') return (n - l) > 7 * 864e5;
+    if (p === 'monthly') return l.getMonth() !== n.getMonth() || l.getFullYear() !== n.getFullYear();
+    return true;
+  },
+  escape: function(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+  dl: function(data, fn) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+    a.download = fn; a.click();
+  }
 };
-function Ic(p){
-  var d=IC[p.n]; if(!d) return null;
-  var paths=d.split('M').filter(Boolean).map(function(x){return 'M'+x;});
-  return h('svg',{width:p.s||16,height:p.s||16,viewBox:'0 0 24 24',fill:'none',stroke:p.c||'currentColor',strokeWidth:1.6,strokeLinecap:'round',strokeLinejoin:'round',style:Object.assign({display:'inline-block',flexShrink:0,verticalAlign:'middle'},p.st||{})},
-    paths.map(function(pt,i){return h('path',{key:i,d:pt});}));
+
+// --- SVG Icons ---
+var SV = {
+  dash: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4H4a1 1 0 0 0-1 1v3c0 3.3 2.7 6 6 6h6c3.3 0 6-2.7 6-6V5a1 1 0 0 0-1-1h-3M7 4V2M17 4V2M7 4h10"/>',
+  tgt: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  csq: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  bk: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  ref: '<path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  kpi: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  arc: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><line x1="3.3" y1="7" x2="12" y2="12"/><line x1="20.7" y1="7" x2="12" y2="12"/><line x1="12" y1="22" x2="12" y2="12"/>',
+  qt: '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  sh: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  us: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  hp: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
+  act: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a4 4 0 0 1 0 8h-1"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  play: '<polygon points="5 3 19 12 5 21 5 3"/>',
+  pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+  rst: '<path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>',
+  sun: '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  chk: '<polyline points="20 6 9 17 4 12"/>',
+  prn: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+  vol: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  rain: '<path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="16" y1="19" x2="16" y2="21"/><line x1="16" y1="13" x2="16" y2="15"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="12" y1="15" x2="12" y2="17"/>',
+  tree: '<path d="M17 14v5M7 14v5M12 2L2 22h20z"/>',
+  coffee: '<path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/>',
+  wind: '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  ci: '<circle cx="12" cy="12" r="10"/>',
+  brain: '<path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.04zM14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.04z"/>',
+  flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c0-1.5 1-3 1-3s1 1.5 1 3a2.5 2.5 0 0 0 2.5-2.5c0-1.5-.8-3-3.5-5.5C9.3 11.5 8.5 13 8.5 14.5z"/><path d="M12 2C6.5 7 4 10.5 4 14a8 8 0 0 0 16 0c0-5.5-5-10-8-12z"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  ar: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  checklist: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12l2 2 4-4"/>',
+};
+
+function ic(name, size, color) {
+  size = size || 16;
+  color = color || 'currentColor';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;flex-shrink:0;vertical-align:middle">' + (SV[name] || '') + '</svg>';
 }
 
-// ---- Utilities ----
-var U={
-  isoWeek:function(d){var dt=new Date(d.getTime());dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);var w1=new Date(dt.getFullYear(),0,4);return 1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7);},
-  quarter:function(d){return 'Q'+Math.floor((d.getMonth()+3)/3);},
-  isActive:function(p,l){if(!l)return true;var last=new Date(l),n=new Date();if(p==='daily')return last.toDateString()!==n.toDateString();if(p==='weekly')return(n-last)>7*864e5;if(p==='monthly')return last.getMonth()!==n.getMonth()||last.getFullYear()!==n.getFullYear();return true;},
-  fmt:function(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},
-  today:function(){return new Date().toISOString().split('T')[0];},
-  ts:function(){return new Date().toLocaleString('tr-TR');},
-  dl:function(d,fn){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download=fn;a.click();}
-};
-
-// ---- 100-book curated library ----
-var BOOK_CATS=['Temel Taslar','Hedef & Disiplin','Dis. & Zihin','Sistem & Is','Odak & Dikkat','Aliskanlik','Zaman Yonetimi','Ileri Performans','Modern Verimlilik','Tamamlama'];
-var LIBRARY=[
-  {id:'b1',t:'The ONE Thing',a:'Gary Keller',cat:0,pages:240,core:true,desc:'Tek en onemli seye odaklanma sanati. Diger her seyin gereksiz hale geldigi o bir seyi bulmak.'},
-  {id:'b2',t:'Atomic Habits',a:'James Clear',cat:5,pages:320,core:true,desc:'Kucuk degisikliklerin buyuk sonuclara donusumu. 1% iyilestirme sistemi.'},
-  {id:'b3',t:'Deep Work',a:'Cal Newport',cat:4,pages:304,core:true,desc:'Dikkat dagitmadan calismanin ekonomik degerini artirmak. Odakli calisma kurallari.'},
-  {id:'b4',t:'Getting Things Done',a:'David Allen',cat:6,pages:352,core:true,desc:'Zihinsel yukle basa cikmak icin GTD metodolojisi. Sistematik gorev yonetimi.'},
+// --- Book Library ---
+var BOOK_CATS = ['Temel Taslar','Hedef & Disiplin','Dis. & Zihin','Sistem & Is','Odak & Dikkat','Aliskanlik','Zaman Yonetimi','Ileri Performans','Modern Verimlilik','Tamamlama'];
+var LIB = [
+  {id:'b1',t:'The ONE Thing',a:'Gary Keller',cat:0,pages:240,core:true,desc:'Tek en onemli seye odaklanma sanati.'},
+  {id:'b2',t:'Atomic Habits',a:'James Clear',cat:5,pages:320,core:true,desc:'Kucuk degisikliklerin buyuk sonuclara donusumu. 1% iyilestirme.'},
+  {id:'b3',t:'Deep Work',a:'Cal Newport',cat:4,pages:304,core:true,desc:'Dikkat dagitmadan calismanin ekonomik degeri.'},
+  {id:'b4',t:'Getting Things Done',a:'David Allen',cat:6,pages:352,core:true,desc:'Zihinsel yukle basa cikmak icin GTD metodolojisi.'},
   {id:'b5',t:'The 7 Habits of Highly Effective People',a:'Stephen R. Covey',cat:0,pages:432,core:true,desc:'Karaktere dayali etkililik. Once onemli olanlari on siraya koy.'},
-  {id:'b6',t:'Eat That Frog!',a:'Brian Tracy',cat:1,pages:144,core:true,desc:'Ertelemezligin panzehiri. En zor gorevi once yap ve gunu kazan.'},
-  {id:'b7',t:'Essentialism',a:'Greg McKeown',cat:0,pages:260,core:false,desc:'Daha az ama daha iyi. Sadece onemli olan seylere evet demek.'},
-  {id:'b8',t:'The Power of Habit',a:'Charles Duhigg',cat:5,pages:371,core:false,desc:'Aliskanlik dongusu: ipucu, rutin, odulun bilimsel analizi.'},
-  {id:'b9',t:'The 4-Hour Workweek',a:'Tim Ferriss',cat:0,pages:308,core:false,desc:'Yeni zengin olmak ve sahiden yasamak icin tasarlanmis yeni bir hayat mimarisi.'},
-  {id:'b10',t:'Make Time',a:'Jake Knapp & John Zeratsky',cat:6,pages:288,core:false,desc:'Her gun bir "odak noktasi" secmek ve gunu ona gore sekillendirmek.'},
-  {id:'b11',t:'Smarter Faster Better',a:'Charles Duhigg',cat:3,pages:352,core:false,desc:'Verimlilik bilimi: motivasyon, hedef koyma, odak ve karar verme.'},
-  {id:'b12',t:'168 Hours',a:'Laura Vanderkam',cat:6,pages:256,core:false,desc:'Haftanin 168 saatini yonetmek. Zamanin gercekte nereye gittigini gormek.'},
-  {id:'b13',t:'Four Thousand Weeks',a:'Oliver Burkeman',cat:6,pages:288,core:false,desc:'80 yillik bir hayat = 4000 hafta. Zamana karsi savasan insanlik.'},
-  {id:'b14',t:'Time Management from the Inside Out',a:'Julie Morgenstern',cat:6,pages:272,core:false,desc:'Dis duzenleme yerine ic motivasyondan gelen zaman yonetimi.'},
-  {id:'b15',t:'The One Minute Manager',a:'Ken Blanchard',cat:3,pages:112,core:false,desc:'Uc basit teknikle verimli liderlik: hedef, ovgu, azarlama.'},
-  {id:'b16',t:'Goals!',a:'Brian Tracy',cat:1,pages:288,core:true,desc:'Istediginiz her seyi daha hizli elde etmek icin Brian Tracy sistemi.'},
-  {id:'b17',t:'No Excuses!',a:'Brian Tracy',cat:1,pages:320,core:false,desc:'Oz disiplin: her alanda basarinin sirri.'},
-  {id:'b18',t:'Maximum Achievement',a:'Brian Tracy',cat:1,pages:384,core:false,desc:'Potansiyelinizi tam olarak kullanmak icin sistem ve strateji.'},
-  {id:'b19',t:'Focal Point',a:'Brian Tracy',cat:1,pages:224,core:false,desc:'Yasaminizi basitlestirin, hizlanin ve en onemli seylere odaklanin.'},
-  {id:'b20',t:'Time Power',a:'Brian Tracy',cat:1,pages:272,core:false,desc:'Zamaninizi yonetmenin en gelismis sistemi.'},
-  {id:'b21',t:'Can\'t Hurt Me',a:'David Goggins',cat:2,pages:364,core:true,desc:'Zihinsel engelleri asmanin ham hikayesi. %40 kuralindan kurtulmak.'},
-  {id:'b22',t:'Discipline Equals Freedom',a:'Jocko Willink',cat:2,pages:212,core:true,desc:'Askeri disiplin felsefesi: rutin, odak ve mutlak sahiplenme.'},
-  {id:'b23',t:'The War of Art',a:'Steven Pressfield',cat:2,pages:192,core:false,desc:'Direncin nasil tanindigi ve nasil asilacagi. Sanatci zihninin savasi.'},
-  {id:'b24',t:'Do the Work',a:'Steven Pressfield',cat:2,pages:112,core:false,desc:'Her buyuk ise baslamaya ve bitirmeye engel olan direncin pratik analizi.'},
-  {id:'b25',t:'Relentless',a:'Tim Grover',cat:2,pages:240,core:false,desc:'Michael Jordan ve Kobe Bryant\'in antrenucu olan Grover\'in zihin haritasi.'},
-  {id:'b26',t:'Grit',a:'Angela Duckworth',cat:2,pages:352,core:false,desc:'Tutku ve azim: yetenegin degil, kararliligin ustunlugu.'},
-  {id:'b27',t:'Mindset',a:'Carol Dweck',cat:2,pages:320,core:false,desc:'Sabit vs buyume zihniyeti. Basarinin psikolojik temeli.'},
-  {id:'b28',t:'The Effective Executive',a:'Peter Drucker',cat:3,pages:208,core:true,desc:'Etkililik ogrenilir. Bilgi islerinin verimlilik rehberi.'},
-  {id:'b29',t:'High Output Management',a:'Andrew Grove',cat:3,pages:272,core:false,desc:'Intel CEO\'sundan yonetim mektubu. Cikti odakli liderlik.'},
-  {id:'b30',t:'Measure What Matters',a:'John Doerr',cat:3,pages:320,core:true,desc:'OKR sistemi: hedef koymanin Google ve Intel\'de nasil kullanildigi.'},
-  {id:'b31',t:'Execution',a:'Larry Bossidy & Ram Charan',cat:3,pages:288,core:false,desc:'Strateji degil uygulama kazanir. Sonuc alma disiplini.'},
-  {id:'b32',t:'Good to Great',a:'Jim Collins',cat:3,pages:320,core:false,desc:'Iyi olmak buyuklugun dusmanidir. Sirketlerin kalici buyuklige gecisi.'},
-  {id:'b33',t:'Built to Last',a:'Jim Collins',cat:3,pages:368,core:false,desc:'Vizyoner sirketlerin ilkeleri ve kahici basarinin sirri.'},
-  {id:'b34',t:'Indistractable',a:'Nir Eyal',cat:4,pages:288,core:true,desc:'Dikkat dagiticilarla basa cikma. Ic ve dis tetikleyicilerin kontrolu.'},
-  {id:'b35',t:'Digital Minimalism',a:'Cal Newport',cat:4,pages:302,core:false,desc:'Telefon ve sosyal medyayla saglikli iliski. Odakli teknoloji kullanimi.'},
-  {id:'b36',t:'Hyperfocus',a:'Chris Bailey',cat:4,pages:288,core:false,desc:'Hiperfokus modu: tam odak, tam verim. Dikkat yonetiminin bilimi.'},
-  {id:'b37',t:'The Myth of Multitasking',a:'Dave Crenshaw',cat:4,pages:144,core:false,desc:'Multitasking yalaninin aciga cikmasi ve tek odak sisteminin gucu.'},
-  {id:'b38',t:'Tiny Habits',a:'BJ Fogg',cat:5,pages:320,core:false,desc:'Kucuk adimlarla buyuk degisiklik. Stanford Persuasive Lab bulgulari.'},
-  {id:'b39',t:'Better Than Before',a:'Gretchen Rubin',cat:5,pages:304,core:false,desc:'Aliskanlik tipleri ve her kisi icin farkli stratejiler.'},
-  {id:'b40',t:'The Compound Effect',a:'Darren Hardy',cat:5,pages:176,core:false,desc:'Kucuk kararlar zamanla birikir. Bilesik etki prensibi.'},
-  {id:'b41',t:'15 Secrets Successful People Know About Time Management',a:'Kevin Kruse',cat:6,pages:240,core:false,desc:'Basarili insanlarin zaman sirlarinin ozeti.'},
-  {id:'b42',t:'18 Minutes',a:'Peter Bregman',cat:6,pages:272,core:false,desc:'Her gun 18 dakikayla odak ve verimlilik.'},
-  {id:'b43',t:'The Pomodoro Technique',a:'Francesco Cirillo',cat:6,pages:128,core:false,desc:'25 dakikalik calisma, 5 dakika mola. Zamanin kutuye alinmasi.'},
-  {id:'b44',t:'Thinking, Fast and Slow',a:'Daniel Kahneman',cat:7,pages:499,core:false,desc:'Iki dusunce sistemi: hizli sezgi vs yavas mantik. Karar psikolojisi.'},
-  {id:'b45',t:'Principles',a:'Ray Dalio',cat:7,pages:592,core:false,desc:'Hayat ve is prensipleri. Dunya\'nin en buyuk hedge fonu\'nun kurucu prensipleri.'},
-  {id:'b46',t:'The 80/20 Principle',a:'Richard Koch',cat:7,pages:288,core:true,desc:'Sonuclarin %80\'i caba\'nin %20\'sinden gelir. Pareto prensibinin uygulamasi.'},
-  {id:'b47',t:'Peak',a:'Anders Ericsson',cat:7,pages:352,core:false,desc:'Kasitli pratik: ustalarin sirri. 10000 saat yalaninin dogru versiyonu.'},
-  {id:'b48',t:'Building a Second Brain',a:'Tiago Forte',cat:8,pages:272,core:false,desc:'Dijital not alma ve bilgi yonetimi. Dis zihin sistemi kurma.'},
-  {id:'b49',t:'Slow Productivity',a:'Cal Newport',cat:8,pages:256,core:false,desc:'Yapay yogunluk yerine gercek uretkenlik. Yavasin gucu.'},
-  {id:'b50',t:'Feel-Good Productivity',a:'Ali Abdaal',cat:8,pages:304,core:false,desc:'Keyif veren verimlilik. Motivasyonun bilimsel temelleri.'},
-  {id:'b51',t:'The Checklist Manifesto',a:'Atul Gawande',cat:9,pages:224,core:false,desc:'Kontrol listelerinin hayat kurtaran gucu. Karmasiklikla basa cikma.'},
-  {id:'b52',t:'Scrum',a:'Jeff Sutherland',cat:9,pages:240,core:false,desc:'Yari zamanla iki kat is cikarmak. Ceviklik manifestosu.'},
-  {id:'b53',t:'The Goal',a:'Eliyahu Goldratt',cat:9,pages:384,core:false,desc:'Kisitlar teorisi. Bir fabrika hikayesi uzerinden sistem optimizasyonu.'},
-  {id:'b54',t:'Flow',a:'Mihaly Csikszentmihalyi',cat:9,pages:303,core:false,desc:'Optimal deneyimin psikolojisi. Tam absorption aninin bilimi.'},
-  {id:'b55',t:'The Art of Thinking Clearly',a:'Rolf Dobelli',cat:9,pages:384,core:false,desc:'99 bilissel yanilgi ve bunlardan kurtulmanin yollari.'},
-  {id:'b56',t:'Mastery',a:'Robert Greene',cat:9,pages:352,core:false,desc:'Ustalasmak icin gecilmesi gereken asama ve surecler.'},
-  {id:'b57',t:'The Almanack of Naval Ravikant',a:'Eric Jorgenson',cat:9,pages:240,core:false,desc:'Servet ve mutluluk uzerine Naval\'in bilgeligi. Zenginlik felsefi.'},
-  {id:'b58',t:'Tools of Titans',a:'Tim Ferriss',cat:9,pages:707,core:false,desc:'Dunya liderleri, sanatcilar ve arastirmacilardan taktikler.'},
-  {id:'b59',t:'Daily Rituals',a:'Mason Currey',cat:9,pages:304,core:false,desc:'Buyuk yaratici zihinlerin gunluk rutinleri. 161 kisinin sabah aliskanliglari.'},
-  {id:'b60',t:'Rest',a:'Alex Pang',cat:9,pages:320,core:false,desc:'Daha az calis, daha fazla uret. Dinlenmenin bilimi ve sanati.'},
-  {id:'b61',t:'Make Your Bed',a:'William McRaven',cat:9,pages:144,core:false,desc:'10 basit kural. Kucuk bir gorevle buyuk bir gunu kazanmak.'},
-  {id:'b62',t:'Start with Why',a:'Simon Sinek',cat:9,pages:256,core:false,desc:'Neden ile baslayan liderlik. Altin daire prensibi.'},
-  {id:'b63',t:'Drive',a:'Daniel Pink',cat:9,pages:272,core:false,desc:'Ic motivasyonun science. Ozerklik, ustalasma ve amac.'},
-  {id:'b64',t:'Extreme Ownership',a:'Jocko Willink',cat:2,pages:320,core:false,desc:'Her seyin sorumluluğunu almak. Navy SEAL\'dan liderlik dersleri.'},
-  {id:'b65',t:'The Slight Edge',a:'Jeff Olson',cat:5,pages:250,core:false,desc:'Her gun yapilan kucuk secimler. Basariyi veya baskariyi seceriz.'},
-  {id:'b66',t:'Outliers',a:'Malcolm Gladwell',cat:9,pages:309,core:false,desc:'Basaridaki gizli faktorler. 10000 saatin ardindan ne var?'},
-  {id:'b67',t:'Originals',a:'Adam Grant',cat:9,pages:320,core:false,desc:'Statukoya meydan okuyanlarin psikolojisi. Yaratici liderlik.'},
-  {id:'b68',t:'Give and Take',a:'Adam Grant',cat:9,pages:307,core:false,desc:'Vericiler neden kazanir. Is dnyasinda comitertligin gucu.'},
-  {id:'b69',t:'The Dip',a:'Seth Godin',cat:9,pages:96,core:false,desc:'Her basarinin ortasindaki cukur. Ne zaman devam et ne zaman birak.'},
-  {id:'b70',t:'So Good They Can\'t Ignore You',a:'Cal Newport',cat:9,pages:304,core:false,desc:'Tutku takip etme yerine ustalasmak. Nadir ve degerli beceriler.'},
-  {id:'b71',t:'Peak Performance',a:'Brad Stulberg & Steve Magness',cat:7,pages:256,core:false,desc:'Stres + Dinlenme = Gelisme. Performans biliminin formulu.'},
-  {id:'b72',t:'The Power of Full Engagement',a:'Jim Loehr & Tony Schwartz',cat:7,pages:256,core:false,desc:'Zaman degil enerji yonetin. Performansin gercek kaynaklari.'},
-  {id:'b73',t:'Focus',a:'Daniel Goleman',cat:4,pages:320,core:false,desc:'Dikkat aglarinin bilimi. Ic, dis ve oteki odak turleri.'},
-  {id:'b74',t:'Linchpin',a:'Seth Godin',cat:9,pages:244,core:false,desc:'Vazgecilmez olmak. Paha bicilmez sanat eseri olarak calisma.'},
-  {id:'b75',t:'Psychology of Achievement',a:'Brian Tracy',cat:1,pages:192,core:false,desc:'Brian Tracy\'nin kisisel basari psikolojisi kursu.'},
+  {id:'b6',t:'Eat That Frog!',a:'Brian Tracy',cat:1,pages:144,core:true,desc:'En zor gorevi once yap ve gunu kazan.'},
+  {id:'b7',t:'Essentialism',a:'Greg McKeown',cat:0,pages:260,core:false,desc:'Daha az ama daha iyi. Sadece onemli olan seylere evet de.'},
+  {id:'b8',t:'The Power of Habit',a:'Charles Duhigg',cat:5,pages:371,core:false,desc:'Aliskanlik dongusu: ipucu, rutin, odul.'},
+  {id:'b9',t:'The 4-Hour Workweek',a:'Tim Ferriss',cat:0,pages:308,core:false,desc:'Yeni zengin olmak ve sahiden yasamak.'},
+  {id:'b10',t:'Make Time',a:'Jake Knapp',cat:6,pages:288,core:false,desc:'Her gun bir odak noktasi sec ve ona gore sekillendirmek.'},
+  {id:'b11',t:'Smarter Faster Better',a:'Charles Duhigg',cat:3,pages:352,core:false,desc:'Verimlilik bilimi: motivasyon, hedef, odak, karar.'},
+  {id:'b12',t:'168 Hours',a:'Laura Vanderkam',cat:6,pages:256,core:false,desc:'Haftanin 168 saatini yonetmek.'},
+  {id:'b13',t:'Four Thousand Weeks',a:'Oliver Burkeman',cat:6,pages:288,core:false,desc:'80 yillik hayat = 4000 hafta. Zamana karsi savasan insanlik.'},
+  {id:'b14',t:'Goals!',a:'Brian Tracy',cat:1,pages:288,core:true,desc:'Her seyi daha hizli elde etmek icin Tracy sistemi.'},
+  {id:'b15',t:'No Excuses!',a:'Brian Tracy',cat:1,pages:320,core:false,desc:'Oz disiplin: her alanda basarinin sirri.'},
+  {id:'b16',t:'Maximum Achievement',a:'Brian Tracy',cat:1,pages:384,core:false,desc:'Potansiyelinizi tam kullanmak icin sistem.'},
+  {id:'b17',t:'Focal Point',a:'Brian Tracy',cat:1,pages:224,core:false,desc:'Yasaminizi basitlestirin, en onemli seylere odaklanin.'},
+  {id:'b18',t:"Can't Hurt Me",a:'David Goggins',cat:2,pages:364,core:true,desc:'Zihinsel engelleri asmanin ham hikayesi. %40 kurali.'},
+  {id:'b19',t:'Discipline Equals Freedom',a:'Jocko Willink',cat:2,pages:212,core:true,desc:'Askeri disiplin felsefesi: rutin, odak, sahiplenme.'},
+  {id:'b20',t:'The War of Art',a:'Steven Pressfield',cat:2,pages:192,core:false,desc:'Direncin nasil tanindigi ve nasil asilacagi.'},
+  {id:'b21',t:'Relentless',a:'Tim Grover',cat:2,pages:240,core:false,desc:'Jordan ve Kobe\'nin antrenucu Grover\'in zihin haritasi.'},
+  {id:'b22',t:'Grit',a:'Angela Duckworth',cat:2,pages:352,core:false,desc:'Tutku ve azim: yetenegin degil kararliligin ustunlugu.'},
+  {id:'b23',t:'Mindset',a:'Carol Dweck',cat:2,pages:320,core:false,desc:'Sabit vs buyume zihniyeti. Basarinin psikolojik temeli.'},
+  {id:'b24',t:'The Effective Executive',a:'Peter Drucker',cat:3,pages:208,core:true,desc:'Etkililik ogrenilir. Bilgi islerinin verimlilik rehberi.'},
+  {id:'b25',t:'High Output Management',a:'Andrew Grove',cat:3,pages:272,core:false,desc:'Intel CEO\'sundan cikti odakli liderlik.'},
+  {id:'b26',t:'Measure What Matters',a:'John Doerr',cat:3,pages:320,core:true,desc:'OKR sistemi: Google ve Intel\'de hedef koyma.'},
+  {id:'b27',t:'Execution',a:'Larry Bossidy',cat:3,pages:288,core:false,desc:'Strateji degil uygulama kazanir.'},
+  {id:'b28',t:'Good to Great',a:'Jim Collins',cat:3,pages:320,core:false,desc:'Iyi olmak buyuklugun dusmanidir.'},
+  {id:'b29',t:'Indistractable',a:'Nir Eyal',cat:4,pages:288,core:true,desc:'Dikkat dagiticilarla basa cikma. Tetikleyicilerin kontrolu.'},
+  {id:'b30',t:'Digital Minimalism',a:'Cal Newport',cat:4,pages:302,core:false,desc:'Telefon ve sosyal medyayla saglikli iliski.'},
+  {id:'b31',t:'Hyperfocus',a:'Chris Bailey',cat:4,pages:288,core:false,desc:'Hiperfokus modu: tam odak, tam verim.'},
+  {id:'b32',t:'Tiny Habits',a:'BJ Fogg',cat:5,pages:320,core:false,desc:'Kucuk adimlarla buyuk degisiklik. Stanford bulgulari.'},
+  {id:'b33',t:'Better Than Before',a:'Gretchen Rubin',cat:5,pages:304,core:false,desc:'Aliskanlik tipleri ve kisi bazi stratejiler.'},
+  {id:'b34',t:'The Compound Effect',a:'Darren Hardy',cat:5,pages:176,core:false,desc:'Kucuk kararlar birikir. Bilesik etki prensibi.'},
+  {id:'b35',t:'The Pomodoro Technique',a:'Francesco Cirillo',cat:6,pages:128,core:false,desc:'25 dakika calisma, 5 dakika mola.'},
+  {id:'b36',t:'Thinking, Fast and Slow',a:'Daniel Kahneman',cat:7,pages:499,core:false,desc:'Iki dusunce sistemi: hizli sezgi vs yavas mantik.'},
+  {id:'b37',t:'Principles',a:'Ray Dalio',cat:7,pages:592,core:false,desc:'Hayat ve is prensipleri. Bridgewater\'in kurucusundan.'},
+  {id:'b38',t:'The 80/20 Principle',a:'Richard Koch',cat:7,pages:288,core:true,desc:'Sonuclarin %80\'i cabanin %20\'sinden gelir.'},
+  {id:'b39',t:'Peak',a:'Anders Ericsson',cat:7,pages:352,core:false,desc:'Kasitli pratik: 10000 saat yalaninin dogru versiyonu.'},
+  {id:'b40',t:'Building a Second Brain',a:'Tiago Forte',cat:8,pages:272,core:false,desc:'Dijital not alma ve bilgi yonetimi.'},
+  {id:'b41',t:'Slow Productivity',a:'Cal Newport',cat:8,pages:256,core:false,desc:'Yapay yogunluk yerine gercek uretkenlik.'},
+  {id:'b42',t:'Feel-Good Productivity',a:'Ali Abdaal',cat:8,pages:304,core:false,desc:'Keyif veren verimlilik. Motivasyonun bilimsel temelleri.'},
+  {id:'b43',t:'The Checklist Manifesto',a:'Atul Gawande',cat:9,pages:224,core:false,desc:'Kontrol listelerinin hayat kurtaran gucu.'},
+  {id:'b44',t:'Flow',a:'Mihaly Csikszentmihalyi',cat:9,pages:303,core:false,desc:'Optimal deneyimin psikolojisi. Tam absorption.'},
+  {id:'b45',t:'Mastery',a:'Robert Greene',cat:9,pages:352,core:false,desc:'Ustalasmak icin gecilmesi gereken asama ve surecler.'},
+  {id:'b46',t:'The Almanack of Naval Ravikant',a:'Eric Jorgenson',cat:9,pages:240,core:false,desc:'Servet ve mutluluk uzerine Naval\'in bilgeligi.'},
+  {id:'b47',t:'Drive',a:'Daniel Pink',cat:9,pages:272,core:false,desc:'Ic motivasyonun bilimi. Ozerklik, ustalasma, amac.'},
+  {id:'b48',t:'Extreme Ownership',a:'Jocko Willink',cat:2,pages:320,core:false,desc:'Her seyin sorumluluğunu almak. Navy SEAL liderlik.'},
+  {id:'b49',t:'The Slight Edge',a:'Jeff Olson',cat:5,pages:250,core:false,desc:'Her gun yapilan kucuk secimler. Basari veya baskari.'},
+  {id:'b50',t:'So Good They Can\'t Ignore You',a:'Cal Newport',cat:9,pages:304,core:false,desc:'Tutku takip etme yerine ustalasmak.'},
 ];
 
-// ---- 90-day reading plans ----
-var READING_PLANS=[
-  {id:'core5',name:'Cekirdek 5 - Temel Sistem',desc:'Keller, Clear, Newport, Tracy, Allen. 5 kitap 90 gunde.',books:['b1','b2','b3','b6','b4'],weeks:13},
-  {id:'discipline',name:'Disiplin & Zihin Kontrolu',desc:'Goggins, Willink, Pressfield uclusu ile zihni sertlestir.',books:['b21','b22','b23','b24','b64'],weeks:13},
-  {id:'brian_tracy',name:'Brian Tracy Ekolu',desc:'Hedef koyma ve disiplin odakli 6 haftalik sprint.',books:['b16','b6','b17','b18','b20','b75'],weeks:9},
-  {id:'system',name:'Sistem Kurma & Is',desc:'Drucker, Doerr, Collins ile kurumsal sistem kurma.',books:['b28','b30','b32','b31','b33'],weeks:12},
-  {id:'habit',name:'Aliskanlik Mimarisi',desc:'Atomic Habits merkezinde tam aliskanlik sistemi.',books:['b2','b8','b38','b39','b40','b65'],weeks:12},
-  {id:'focus',name:'Derin Odak Ustasi',desc:'Newport ekolu ile dikkat ve odak yonetimi.',books:['b3','b34','b35','b36','b73'],weeks:10},
+var RPLANS = [
+  {id:'core5',name:'Cekirdek 5 - Temel Sistem',desc:'Keller, Clear, Newport, Tracy, Allen. 5 kitap 90 gunde.',books:['b1','b2','b3','b6','b4']},
+  {id:'discipline',name:'Disiplin & Zihin',desc:'Goggins, Willink, Pressfield ile zihni sertlestir.',books:['b18','b19','b20','b48']},
+  {id:'brian',name:'Brian Tracy Ekolu',desc:'Hedef koyma ve disiplin odakli sprint.',books:['b14','b6','b15','b16','b17']},
+  {id:'system',name:'Sistem Kurma',desc:'Drucker, Doerr, Collins ile kurumsal sistem.',books:['b24','b26','b28','b27']},
+  {id:'habit',name:'Aliskanlik Mimarisi',desc:'Atomic Habits merkezinde aliskanlik sistemi.',books:['b2','b8','b32','b33','b34','b49']},
+  {id:'focus',name:'Derin Odak',desc:'Newport ekolu ile dikkat yonetimi.',books:['b3','b29','b30','b31']},
 ];
 
-// ---- Challenges ----
-var CH_TPLS=[
+var CH_TPLS = [
   {id:'no-sugar',name:'Seker Yok',icon:'flame',cat:'Saglik',desc:'90 gun boyunca ilave seker tuketme.',diff:'hard',xp:300},
   {id:'cold',name:'Soguk Dus',icon:'rain',cat:'Saglik',desc:'Her sabah 60 saniye soguk dus al.',diff:'medium',xp:200},
   {id:'read',name:'Her Gun Oku',icon:'bk',cat:'Gelisim',desc:'Her gun en az 20 sayfa oku.',diff:'easy',xp:150},
   {id:'no-social',name:'Sosyal Medya Detoks',icon:'ci',cat:'Odak',desc:'90 gun boyunca sosyal medyayi sil.',diff:'extreme',xp:500},
-  {id:'workout',name:'Antrenman',icon:'flame',cat:'Saglik',desc:'Haftada 4 gun en az 30 dk egzersiz yap.',diff:'medium',xp:250},
-  {id:'meditate',name:'Meditasyon',icon:'brain',cat:'Zihin',desc:'Her gun 10 dakika meditasyon yap.',diff:'easy',xp:150},
+  {id:'workout',name:'Antrenman',icon:'flame',cat:'Saglik',desc:'Haftada 4 gun en az 30 dk egzersiz.',diff:'medium',xp:250},
+  {id:'meditate',name:'Meditasyon',icon:'brain',cat:'Zihin',desc:'Her gun 10 dakika meditasyon.',diff:'easy',xp:150},
   {id:'deep-work',name:'Derin Calisma',icon:'zap',cat:'Odak',desc:'Her gun kesintisiz 2 saat derin calisma.',diff:'hard',xp:300},
   {id:'journal',name:'Gunluk Yazimi',icon:'pen',cat:'Zihin',desc:'Her gun en az 200 kelime yaz.',diff:'medium',xp:200},
   {id:'custom',name:'Ozel Mucadele',icon:'star',cat:'Ozel',desc:'Kendi meydan okumani belirle!',diff:'medium',xp:250},
 ];
-var DIFF={easy:{l:'Kolay',cls:'p-green'},medium:{l:'Orta',cls:'p-orange'},hard:{l:'Zor',cls:'p-red'},extreme:{l:'Ekstrem',cls:'p-purple'}};
-
-// ---- Sounds ----
-var SOUNDS=[
+var DIFF = {easy:{l:'Kolay',cls:'p-green'},medium:{l:'Orta',cls:'p-orange'},hard:{l:'Zor',cls:'p-red'},extreme:{l:'Ekstrem',cls:'p-purple'}};
+var SOUNDS = [
   {name:'Yagmur',url:'https://actions.google.com/google_around_the_world/notifications/rain_stick.ogg',icon:'rain'},
   {name:'Sabah Kuslari',url:'https://actions.google.com/google_around_the_world/notifications/morning_birds.ogg',icon:'tree'},
   {name:'Kafe',url:'https://actions.google.com/google_around_the_world/notifications/busy_street.ogg',icon:'coffee'},
@@ -414,1040 +407,880 @@ var SOUNDS=[
   {name:'Meditasyon',url:'https://actions.google.com/google_around_the_world/notifications/meditation_bell.ogg',icon:'bell'},
 ];
 
-// ---- Forms ----
-var FORMS={
-  goal:[{n:'title',ph:'Hedef basligi',t:'text',req:true},{n:'desc',ph:'Tanim',t:'ta',req:true},{n:'quarter',t:'sel',opts:['Q1','Q2','Q3','Q4']},{n:'frog',lb:'Bu en kritik hedefiniz mi?',t:'cb'}],
-  todo:[{n:'text',ph:'Gorev nedir?',t:'text',req:true},{n:'priority',t:'sel',opts:['normal','high','urgent']},{n:'category',t:'sel',opts:['Is','Kisisel','Aile','Finans','Gelisim','Sosyal']},{n:'end',t:'date'}],
-  kpi:[{n:'name',ph:'KPI adi (orn: Haftalik Odak Saati)',t:'text',req:true},{n:'unit',ph:'Birim (saat, sayfa, %...)',t:'text'},{n:'target',ph:'Hedef deger',t:'text',req:true},{n:'current',ph:'Mevcut deger',t:'text'},{n:'cat',t:'sel',opts:['Is','Saglik','Gelisim','Finans','Iliski']}],
-  quote:[{n:'text',ph:'Soz',t:'ta',req:true},{n:'author',ph:'Kaynak',t:'text'},{n:'cat',ph:'Kategori',t:'text'}],
-  journal:[{n:'cat',ph:'Kategori (Sukran, Fikir...)',t:'text'},{n:'text',ph:'Bugün ne dusundun?',t:'ta',req:true}],
-  principle:[{n:'type',ph:'Tur (Vizyon, Kural...)',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
-  coaching:[{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
-  vault:[{n:'title',ph:'Baslik',t:'text',req:true},{n:'cat',ph:'Kategori',t:'text'},{n:'text',ph:'Icerik',t:'ta',req:true}],
-  question:[{n:'text',ph:'Soru',t:'ta',req:true}],
-  routine:[{n:'t',ph:'Rutin adi',t:'text',req:true},{n:'period',t:'sel',opts:['daily','weekly','monthly','quarterly','yearly']}],
-};
-var MTITLES={goal:'Hedef',todo:'Gorev',kpi:'KPI',quote:'Soz',journal:'Gunluk',principle:'Prensip',coaching:'Kocluk',vault:'Not',question:'Soru',routine:'Rutin'};
-
-// ---- Initial data ----
-var INIT={
+// --- State ---
+var INIT = {
   goals:[{id:1,title:'Ingilizce C1 Sertifikasyonu',desc:'Uluslararasi projelerde liderlik icin.',quarter:'Q1',frog:true,steps:[{id:101,t:'IELTS Kurs Kaydi',done:true},{id:102,t:'Haftalik Essay',done:false}]}],
-  todos:[{id:11,text:'Onemli Raporu Teslim Et',end:'2026-04-15',priority:'urgent',category:'Is',done:false},{id:12,text:'Haftalik planlama toplantisi',end:'',priority:'high',category:'Is',done:false}],
-  kpis:[{id:201,name:'Haftalik Odak Saati',unit:'saat',target:'40',current:'28',cat:'Is',history:[22,25,28,28]},{id:202,name:'Gunluk Sayfa',unit:'sayfa',target:'20',current:'14',cat:'Gelisim',history:[8,12,14,14]},{id:203,name:'Rutin Tamamlama',unit:'%',target:'90',current:'67',cat:'Saglik',history:[45,60,67,67]}],
-  books:[],
-  myBooks:[],
+  todos:[{id:11,text:'Raporu Teslim Et',end:'2026-04-15',priority:'urgent',category:'Is',done:false},{id:12,text:'Haftalik planlama',end:'',priority:'high',category:'Is',done:false}],
+  kpis:[{id:201,name:'Haftalik Odak Saati',unit:'saat',target:40,current:28,cat:'Is',hist:[22,25,28]},{id:202,name:'Gunluk Sayfa',unit:'sayfa',target:20,current:14,cat:'Gelisim',hist:[8,12,14]},{id:203,name:'Rutin Tamamlama',unit:'%',target:90,current:67,cat:'Saglik',hist:[45,60,67]}],
+  mybooks:[],
   quotes:[{id:41,text:'Olcemedin seyi gelistiremezsin.',author:'Peter Drucker',cat:'Yonetim'},{id:42,text:'Her seye hayir diyebildiginde, onemli seylere evet diyebilirsin.',author:'Steve Jobs',cat:'Odak'}],
   journal:[{id:501,date:'2026-03-18',cat:'Sukran',text:'Bugün odaklanmayi basardim ve planlarimi tamamladim.'}],
   routines:{daily:[{id:61,t:'Sabah Meditasyonu',last:null},{id:62,t:'500ml Su',last:null},{id:63,t:'Gunluk Planlama',last:null}],weekly:[{id:71,t:'Haftalik Gozden Gecirme',last:null}],monthly:[{id:81,t:'Aylik KPI Degerlendirmesi',last:null}],quarterly:[],yearly:[]},
   principles:[{id:91,type:'Vizyon',text:'Her gun %1 daha iyi olmak.'},{id:92,type:'Kural',text:'Ilk iki saatimi derin calisma icin koru.'}],
   coaching:[{id:101,title:'OKR Sistemi',text:'Objective + Key Results. Her ceyrek 1 buyuk hedef, 3 olcum.',cat:'Yontem'}],
-  questions:[{id:1,text:'Korkmasaydim bugün ne yapardim?'},{id:2,text:'Gelecekteki ben bugünkü kararimdan memnun kalacak mi?'}],
+  questions:[{id:1,text:'Korkmasaydim bugün ne yapardim?'}],
   vault:[],challenges:[],
-  activeReadingPlan:null,
-  trash:[],logs:[],
-  stats:{xp:120,focus:0,level:1,streak:0,lastActive:U.today()},
+  readingPlan:null,
+  logs:[],scratch:'',
+  stats:{xp:120,level:1},
   vol:0.6,activeSound:null,
-  scratch:'',
 };
 
-// ---- Clock ----
-var Clock=memo(function(){
-  var s=useState(new Date()); var t=s[0],setT=s[1];
-  useEffect(function(){var id=setInterval(function(){setT(new Date());},1000);return function(){clearInterval(id);},},[]);
-  return h('span',{style:{fontSize:11.5,color:'var(--t2)',fontWeight:500}},
-    t.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})+' \u00b7 '+t.toLocaleTimeString('tr-TR'));
-});
+function loadData() {
+  try { var s = localStorage.getItem('fu4'); if(s) return Object.assign({},INIT,JSON.parse(s)); } catch(e){}
+  return JSON.parse(JSON.stringify(INIT));
+}
+var D = loadData();
+var currentTab = 'dashboard';
+var dark = localStorage.getItem('fu4_t') === 'dark';
+var searchQ = '';
+var history = [];
+var audio = null;
 
-// ---- Timer ----
-var TimerWidget=memo(function(p){
-  var ms=useState('focus'); var mode=ms[0],setMode=ms[1];
-  var tls=useState(25*60); var tl=tls[0],setTl=tls[1];
-  var ons=useState(false); var on=ons[0],setOn=ons[1];
-  var TDUR={focus:25*60,short:5*60,long:15*60};
-  useEffect(function(){
-    var id;
-    if(on&&tl>0){id=setInterval(function(){setTl(function(x){return x-1;});},1000);}
-    else if(on&&tl===0){setOn(false);if(mode==='focus'){p.onXP(50,'Pomodoro tamamlandi');}try{new Audio(SOUNDS[4].url).play();}catch(e){}}
-    return function(){clearInterval(id);};
-  },[on,tl]);
-  var perc=tl/TDUR[mode]; var C=2*Math.PI*50;
-  return h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:14,padding:'18px 16px'}},
-    h('div',{style:{display:'flex',gap:4}},
-      [{id:'focus',l:'Odak'},{id:'short',l:'Kisa'},{id:'long',l:'Uzun'}].map(function(m){
-        return h('button',{key:m.id,className:'btn btn-sm',style:{background:mode===m.id?'var(--blue)':'var(--bg3)',color:mode===m.id?'white':'var(--t2)'},onClick:function(){setMode(m.id);setTl(TDUR[m.id]);setOn(false);}},m.l);
-      })
-    ),
-    h('div',{style:{position:'relative',width:116,height:116}},
-      h('svg',{viewBox:'0 0 108 108',style:{position:'absolute',inset:0,width:'100%',height:'100%'}},
-        h('circle',{cx:54,cy:54,r:50,fill:'none',stroke:'var(--bg3)',strokeWidth:5}),
-        h('circle',{cx:54,cy:54,r:50,fill:'none',stroke:mode==='focus'?'var(--blue)':'var(--green)',strokeWidth:5,strokeLinecap:'round',
-          strokeDasharray:C,strokeDashoffset:C*(1-perc),style:{transform:'rotate(-90deg)',transformOrigin:'center',transition:'stroke-dashoffset 1s linear'}})
-      ),
-      h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:1}},
-        h('span',{style:{fontFamily:"'Inter',sans-serif",fontSize:28,fontWeight:700,letterSpacing:'-1px',lineHeight:1}},U.fmt(tl)),
-        h('span',{style:{fontSize:9,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em'}},mode==='focus'?'Odak':'Mola')
-      )
-    ),
-    h('div',{style:{display:'flex',gap:7}},
-      h('button',{className:'btn btn-p',onClick:function(){setOn(function(x){return !x;});}},h(Ic,{n:on?'pause':'play',s:12}),on?'Durdur':'Baslat'),
-      h('button',{className:'btn btn-s btn-ic',onClick:function(){setOn(false);setTl(TDUR[mode]);}},h(Ic,{n:'rst',s:13}))
-    )
-  );
-});
+// Timer state
+var timerMode = 'focus', timerLeft = 25*60, timerOn = false, timerInterval = null;
+var TDUR = {focus:25*60,short:5*60,long:15*60};
 
-// ---- Modal ----
-function MForm(p){
-  var vs=useState({}); var v=vs[0],sv=vs[1];
-  var ff=FORMS[p.type]||[];
-  function setV(n,val){sv(function(x){var o={};o[n]=val;return Object.assign({},x,o);});}
-  return h('div',{className:'ov',onClick:function(e){if(e.target===e.currentTarget)p.onClose();}},
-    h('div',{className:'mbox'},
-      h('div',{className:'mh'},
-        h('span',{style:{fontWeight:700,fontSize:15}},(MTITLES[p.type]||p.type)+' Ekle'),
-        h('button',{className:'btn btn-g btn-ic',onClick:p.onClose},h(Ic,{n:'x',s:14}))
-      ),
-      h('div',{className:'mb'},
-        ff.map(function(f){
-          if(f.t==='cb') return h('label',{key:f.n,style:{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}},
-            h('input',{type:'checkbox',className:'cb',checked:!!v[f.n],onChange:function(e){setV(f.n,e.target.checked);}}),f.lb);
-          if(f.t==='sel') return h('select',{key:f.n,className:'inp',value:v[f.n]||f.opts[0],onChange:function(e){setV(f.n,e.target.value);}},
-            f.opts.map(function(o){return h('option',{key:o},o);}));
-          if(f.t==='ta') return h('textarea',{key:f.n,className:'inp',placeholder:f.ph||'',value:v[f.n]||'',rows:3,onChange:function(e){setV(f.n,e.target.value);}});
-          return h('input',{key:f.n,className:'inp',type:f.t==='date'?'date':'text',placeholder:f.ph||'',value:v[f.n]||'',onChange:function(e){setV(f.n,e.target.value);}});
-        })
-      ),
-      h('div',{className:'mf'},
-        h('button',{className:'btn btn-s',style:{flex:1},onClick:p.onClose},'Iptal'),
-        h('button',{className:'btn btn-p',style:{flex:2},onClick:function(){
-          var req=ff.filter(function(f){return f.req;});
-          if(!req.every(function(f){return v[f.n]&&String(v[f.n]).trim();})){alert('Zorunlu alanlari doldurun.');return;}
-          p.onSave(v);
-        }},'Kaydet')
-      )
-    )
-  );
+// --- Save / XP ---
+function save() { try { localStorage.setItem('fu4', JSON.stringify(D)); } catch(e){} }
+function addLog(msg) { D.logs = [{time:U.ts(),action:msg}].concat(D.logs||[]).slice(0,100); }
+function gainXP(amt,why) { D.stats.xp = (D.stats.xp||0)+amt; D.stats.level = Math.floor(D.stats.xp/500)+1; addLog('+'+amt+' XP: '+why); save(); }
+function snapshot() { history = [JSON.stringify(D)].concat(history).slice(0,50); }
+function undo() { if(!history.length) return; D = JSON.parse(history[0]); history = history.slice(1); save(); render(); }
+
+// --- DOM helpers ---
+function $(id) { return document.getElementById(id); }
+function el(tag, attrs, html) {
+  var e = document.createElement(tag);
+  for(var k in attrs||{}) { if(k==='cls') e.className=attrs[k]; else e.setAttribute(k,attrs[k]); }
+  if(html!==undefined) e.innerHTML = html;
+  return e;
+}
+function show(id,html) { var e=$(id); if(e) e.innerHTML=html; }
+
+// --- Clock ---
+function updateClock() {
+  var now = new Date();
+  var qe = $('top-quarter'), we = $('top-week'), ce = $('top-clock');
+  if(qe) qe.textContent = U.quarter(now)+' Ceyrek';
+  if(we) we.textContent = 'Hafta '+U.isoWeek(now);
+  if(ce) ce.textContent = now.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})+' \u00b7 '+now.toLocaleTimeString('tr-TR');
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// --- Theme ---
+function applyTheme() {
+  document.body.className = dark ? 'dark' : '';
+  var btn = $('dark-btn');
+  if(btn) btn.innerHTML = dark ? ic('sun',15) : ic('moon',15);
+}
+function toggleDark() { dark = !dark; localStorage.setItem('fu4_t',dark?'dark':''); applyTheme(); }
+
+// --- Navigation ---
+var NAV_GROUPS = [
+  {label:'Ana', items:[{id:'dashboard',l:'Dashboard',i:'dash'},{id:'kpi',l:'KPI & Metrikler',i:'kpi'},{id:'challenges',l:'90-Gun Mucadelesi',i:'trophy',badge:true}]},
+  {label:'Uretkenlik', items:[{id:'goals',l:'Hedefler',i:'tgt'},{id:'todos',l:'Yapilacaklar',i:'csq'},{id:'routines',l:'Rutinler',i:'ref'}]},
+  {label:'Kitap Sistemi', items:[{id:'library',l:'Kitap Kutuphanesi',i:'bk',badge:true},{id:'mybooks',l:'Okuma Listesi',i:'layers'},{id:'readingplan',l:'Okuma Planlari',i:'checklist'}]},
+  {label:'Bilgi', items:[{id:'vault',l:'Bilgi Kasasi',i:'arc'},{id:'quotes',l:'Ozlu Sozler',i:'qt'},{id:'journal',l:'Gunluk',i:'pen'},{id:'principles',l:'Prensipler',i:'sh'},{id:'coaching',l:'Kocluk',i:'us'}]},
+  {label:'Araclar', items:[{id:'tools',l:'Odak Araclari',i:'hp'}]},
+];
+
+function setTab(id) { currentTab = id; renderNav(); renderPage(); }
+
+function renderNav() {
+  var html = '';
+  for(var g=0;g<NAV_GROUPS.length;g++) {
+    var grp = NAV_GROUPS[g];
+    html += '<p class="nsec">'+grp.label+'</p>';
+    for(var n=0;n<grp.items.length;n++) {
+      var item = grp.items[n];
+      var act = currentTab===item.id?' active':'';
+      var badge = item.badge&&currentTab!==item.id?'<span class="nb-new">Yeni</span>':'';
+      html += '<button class="nb'+act+'" onclick="setTab(\''+item.id+'\')"><span class="ni">'+ic(item.i,13)+'</span>'+U.escape(item.l)+badge+'</button>';
+    }
+  }
+  show('nav-root', html);
+
+  var bhtml = '<div class="div"></div>';
+  bhtml += '<button class="nb'+(currentTab==='history'?' active':'')+'" onclick="setTab(\'history\')"><span class="ni">'+ic('act',13)+'</span>Aktivite</button>';
+  bhtml += '<button class="nb" onclick="undo()" '+(history.length?'':'disabled')+' style="opacity:'+(history.length?1:.3)+'"><span class="ni">'+ic('undo',13)+'</span>Geri Al'+(history.length?' ('+history.length+')':'')+'</button>';
+  bhtml += '<button class="nb" onclick="U.dl(D,\'FocusUp_Backup.json\')"><span class="ni">'+ic('dl',13)+'</span>Yedekle</button>';
+  show('nav-bottom', bhtml);
+
+  var mobItems = ['dashboard','kpi','goals','todos','library'];
+  var mhtml = '';
+  for(var mi=0;mi<mobItems.length;mi++) {
+    var mid = mobItems[mi]; var mn = null;
+    for(var mg=0;mg<NAV_GROUPS.length;mg++) { for(var mj=0;mj<NAV_GROUPS[mg].items.length;mj++) { if(NAV_GROUPS[mg].items[mj].id===mid){mn=NAV_GROUPS[mg].items[mj];break;} } if(mn)break; }
+    if(!mn)continue;
+    mhtml += '<button onclick="setTab(\''+mid+'\')" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;background:none;border:none;cursor:pointer;color:'+(currentTab===mid?'var(--blue)':'var(--t3)')+';border-radius:7px;font-family:inherit">'+ic(mn.i,19,currentTab===mid?'var(--blue)':'var(--t3)')+'<span style="font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">'+mn.l.split(' ')[0]+'</span></button>';
+  }
+  show('mob-nav', '<div style="display:flex;gap:0">'+mhtml+'</div>');
 }
 
-// ---- App ----
-function App(){
-  var ds=useState(function(){try{var s=localStorage.getItem('fu4');if(s){var p=JSON.parse(s);return Object.assign({},INIT,p,{routines:Object.assign({},INIT.routines,p.routines||{}),stats:Object.assign({},INIT.stats,p.stats||{}),challenges:p.challenges||[],kpis:p.kpis||INIT.kpis,myBooks:p.myBooks||[]});}}catch(e){}return INIT;});
-  var data=ds[0],setData=ds[1];
-  var dks=useState(function(){return localStorage.getItem('fu4_t')==='dark';}); var dark=dks[0],setDark=dks[1];
-  var hs=useState([]); var hist=hs[0],setHist=hs[1];
-  var ts=useState('dashboard'); var tab=ts[0],setTab=ts[1];
-  var qs=useState(''); var q=qs[0],setQ=qs[1];
-  var ms=useState({open:false,type:null}); var modal=ms[0],setModal=ms[1];
-  var ps=useState(null); var printItem=ps[0],setPrint=ps[1];
-  var audioRef=useRef(null);
+// --- Filter ---
+function fil(list, keys) {
+  if(!searchQ||!list) return list||[];
+  var lq = searchQ.toLowerCase();
+  return list.filter(function(i){ return keys.some(function(k){ return i[k]&&String(i[k]).toLowerCase().indexOf(lq)>=0; }); });
+}
 
-  useEffect(function(){document.body.className=dark?'dark':'';localStorage.setItem('fu4_t',dark?'dark':'');},[dark]);
-  useEffect(function(){var t=setTimeout(function(){localStorage.setItem('fu4',JSON.stringify(data));},800);return function(){clearTimeout(t);};},[data]);
+// --- Delete ---
+function del(id, type) {
+  if(!confirm('Silinsin mi?')) return;
+  var km = {goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges',mybook:'mybooks'};
+  var key = km[type];
+  if(!key||!D[key]) return;
+  snapshot();
+  D[key] = D[key].filter(function(i){return i.id!==id;});
+  addLog(type+' silindi'); save(); renderPage();
+}
+window.del = del;
 
-  function lg(msg){return {time:U.ts(),action:msg||'Degisiklik'};}
-  var upd=useCallback(function(next,msg){
-    setHist(function(h){return [JSON.stringify(data)].concat(h).slice(0,50);});
-    setData(Object.assign({},next,{logs:[lg(msg)].concat((next.logs||[])).slice(0,100)}));
-  },[data]);
+// --- Modal system ---
+var modalCb = null;
+function showModal(html, cb) {
+  modalCb = cb;
+  var root = $('modal-root');
+  root.innerHTML = '<div class="ov" id="ov"><div class="mbox fade">'+html+'</div></div>';
+  $('ov').addEventListener('click',function(e){if(e.target.id==='ov')closeModal();});
+}
+function closeModal() { $('modal-root').innerHTML=''; modalCb=null; }
+window.closeModal = closeModal;
 
-  function undo(){if(!hist.length)return;setData(JSON.parse(hist[0]));setHist(function(h){return h.slice(1);});}
+// --- Generic add form ---
+var FORM_DEFS = {
+  goal:['title:Hedef basligi:text:1','desc:Tanim:ta:1','quarter:Ceyrek:sel:0:Q1|Q2|Q3|Q4','frog:Kurbaga (en kritik hedef mi?):cb:0'],
+  todo:['text:Gorev nedir?:text:1','priority:Onem:sel:0:normal|high|urgent','category:Kategori:sel:0:Is|Kisisel|Aile|Finans|Gelisim|Sosyal','end:Bitis:date:0'],
+  kpi:['name:KPI adi:text:1','unit:Birim (saat,sayfa,%):text:0','target:Hedef deger:text:1','current:Mevcut deger:text:0','cat:Kategori:sel:0:Is|Saglik|Gelisim|Finans'],
+  quote:['text:Soz:ta:1','author:Kaynak:text:0','cat:Kategori:text:0'],
+  journal:['cat:Kategori:text:0','text:Bugün ne dusundun?:ta:1'],
+  principle:['type:Tur:text:0','text:Icerik:ta:1'],
+  coaching:['title:Baslik:text:1','cat:Kategori:text:0','text:Icerik:ta:1'],
+  vault:['title:Baslik:text:1','cat:Kategori:text:0','text:Icerik:ta:1'],
+  question:['text:Soru:ta:1'],
+  routine:['t:Rutin adi:text:1','period:Peryod:sel:0:daily|weekly|monthly|quarterly|yearly'],
+};
+var FORM_TITLES = {goal:'Hedef',todo:'Gorev',kpi:'KPI',quote:'Soz',journal:'Gunluk',principle:'Prensip',coaching:'Kocluk',vault:'Not',question:'Soru',routine:'Rutin'};
 
-  function gainXP(amt,why){
-    setData(function(p){
-      var xp=(p.stats.xp||0)+amt,level=Math.floor(xp/500)+1;
-      return Object.assign({},p,{stats:Object.assign({},p.stats,{xp:xp,level:level}),logs:[lg('+'+amt+' XP: '+why)].concat((p.logs||[])).slice(0,100)});
-    });
+function buildForm(type) {
+  var defs = FORM_DEFS[type]||[];
+  var html = '<div class="mh"><span style="font-weight:700;font-size:15px">'+(FORM_TITLES[type]||type)+' Ekle</span><button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>';
+  html += '<div class="mb">';
+  for(var i=0;i<defs.length;i++) {
+    var parts = defs[i].split(':');
+    var n=parts[0],ph=parts[1],tp=parts[2],req=parts[3]==='1',opts=(parts[4]||'').split('|');
+    if(tp==='cb') { html+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" class="cb" id="f_'+n+'"> '+ph+'</label>'; }
+    else if(tp==='sel') { html+='<select class="inp" id="f_'+n+'">'; for(var o=0;o<opts.length;o++) html+='<option value="'+opts[o]+'">'+opts[o]+'</option>'; html+='</select>'; }
+    else if(tp==='ta') { html+='<textarea class="inp" id="f_'+n+'" placeholder="'+ph+'" rows="3"'+(req?' required':'')+'></textarea>'; }
+    else if(tp==='date') { html+='<input type="date" class="inp" id="f_'+n+'">'; }
+    else { html+='<input type="text" class="inp" id="f_'+n+'" placeholder="'+ph+'"'+(req?' required':'')+'>';}
   }
+  html += '</div>';
+  html += '<div class="mf"><button class="btn btn-s" style="flex:1" onclick="closeModal()">Iptal</button>';
+  html += '<button class="btn btn-p" style="flex:2" onclick="submitForm(\''+type+'\')">Kaydet</button></div>';
+  return html;
+}
 
-  function fil(list,keys){
-    if(!q||!list)return list||[];
-    var lq=q.toLowerCase();
-    return list.filter(function(i){return keys.some(function(k){return i[k]&&String(i[k]).toLowerCase().indexOf(lq)>=0;});});
+function openForm(type) { showModal(buildForm(type), null); }
+window.openForm = openForm;
+
+function submitForm(type) {
+  var defs = FORM_DEFS[type]||[], vals = {};
+  var ok = true;
+  for(var i=0;i<defs.length;i++) {
+    var parts=defs[i].split(':'),n=parts[0],tp=parts[2],req=parts[3]==='1';
+    var el2=$('f_'+n); if(!el2)continue;
+    vals[n] = tp==='cb'?el2.checked:el2.value;
+    if(req&&!vals[n]){ok=false;}
   }
-
-  function del(item,type){
-    if(!confirm('Silinsin mi?'))return;
-    var KM={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges'};
-    var k=KM[type],n=Object.assign({},data);
-    n[k]=(data[k]||[]).filter(function(i){return i.id!==item.id;});
-    n.trash=[{item:item,type:type,at:U.ts()}].concat(data.trash||[]);
-    upd(n,'Silindi');
+  if(!ok){alert('Zorunlu alanlari doldurun.');return;}
+  snapshot();
+  var id = Date.now();
+  if(type==='routine') {
+    var per=vals.period||'daily';
+    D.routines[per] = (D.routines[per]||[]).concat([{id:id,t:vals.t,last:null}]);
+    addLog('Rutin eklendi'); gainXP(10,'Rutin eklendi'); closeModal(); renderPage(); return;
   }
+  var KM2={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault'};
+  var item = Object.assign({id:id},vals);
+  if(type==='goal'){item.frog=!!vals.frog;item.steps=[];}
+  if(type==='todo')item.done=false;
+  if(type==='kpi'){item.target=parseFloat(vals.target)||0;item.current=parseFloat(vals.current)||0;item.hist=[parseFloat(vals.current)||0];}
+  if(type==='journal')item.date=U.today();
+  D[KM2[type]] = [item].concat(D[KM2[type]]||[]);
+  addLog(type+' eklendi'); gainXP(20,'Yeni '+type); closeModal(); renderPage();
+}
+window.submitForm = submitForm;
 
-  function addItem(vals){
-    var type=modal.type;
-    if(type==='routine'){
-      var per=vals.period||'daily',nr=Object.assign({},vals,{id:Date.now(),last:null}),ro=Object.assign({},data.routines);
-      ro[per]=(ro[per]||[]).concat([nr]);
-      upd(Object.assign({},data,{routines:ro}),'Rutin eklendi');gainXP(10,'Rutin eklendi');setModal({open:false});return;
+// --- Helpers for rendering ---
+function statCard(label, val, iname, color) {
+  return '<div class="card" style="padding:16px 18px">'+ic(iname,15,color)+'<div class="kpi-n" style="color:'+color+'">'+val+'</div><div class="kpi-l">'+label+'</div></div>';
+}
+function progressPill(pct) {
+  var c = pct>=100?'var(--green)':pct>=70?'var(--orange)':'var(--red)';
+  return '<div class="bar"><div class="barf" style="width:'+Math.min(100,pct)+'%;background:'+c+'"></div></div>';
+}
+function pct(cur,tgt) { return Math.min(100,Math.round((parseFloat(cur)||0)/(parseFloat(tgt)||1)*100)); }
+
+// --- Timer ---
+function startTimer() {
+  if(timerInterval) clearInterval(timerInterval);
+  timerOn = true;
+  timerInterval = setInterval(function(){
+    timerLeft--;
+    if(timerLeft<=0){
+      timerLeft=0;timerOn=false;clearInterval(timerInterval);timerInterval=null;
+      if(timerMode==='focus'){gainXP(50,'Pomodoro tamamlandi');D.stats.focus=(D.stats.focus||0)+25;save();}
+      try{new Audio(SOUNDS[4].url).play();}catch(e){}
     }
-    var KM2={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault'};
-    var item=Object.assign({id:Date.now()},vals);
-    if(type==='goal'){item.frog=!!vals.frog;item.steps=[];}
-    if(type==='todo')item.done=false;
-    if(type==='kpi'){item.history=[parseFloat(item.current)||0];}
-    if(type==='journal')item.date=U.today();
-    var n2=Object.assign({},data);
-    n2[KM2[type]]=[item].concat(data[KM2[type]]||[]);
-    upd(n2,'Yeni '+type+' eklendi');gainXP(20,'Yeni '+type);setModal({open:false});
-  }
+    renderTimer();
+  },1000);
+}
+function stopTimer(){timerOn=false;if(timerInterval){clearInterval(timerInterval);timerInterval=null;}renderTimer();}
+function resetTimer(){stopTimer();timerLeft=TDUR[timerMode];renderTimer();}
+function setTimerMode(m){timerMode=m;timerLeft=TDUR[m];stopTimer();}
 
-  function addToMyBooks(libBook,status){
-    var exists=(data.myBooks||[]).find(function(b){return b.libId===libBook.id;});
-    if(exists)return;
-    var nb={id:Date.now(),libId:libBook.id,title:libBook.t,author:libBook.a,status:status||'queue',pages:libBook.pages,pagesRead:0,rating:0,notes:'',addedAt:U.today()};
-    upd(Object.assign({},data,{myBooks:[nb].concat(data.myBooks||[])}),'Kitap eklendi');
-    gainXP(10,'Kitap eklendi: '+libBook.t);
-  }
+function renderTimer() {
+  var el2 = $('timer-block'); if(!el2) return;
+  var perc = timerLeft/TDUR[timerMode];
+  var C = 2*Math.PI*50; var off = C*(1-perc);
+  var strokeColor = timerMode==='focus'?'var(--blue)':'var(--green)';
+  el2.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 16px">'
+    +'<div style="display:flex;gap:4px">'
+    +['focus','short','long'].map(function(m){return '<button class="btn btn-sm" style="background:'+(timerMode===m?'var(--blue)':'var(--s2)')+';color:'+(timerMode===m?'#fff':'var(--t2)')+'" onclick="setTimerMode(\''+m+'\');renderTimer()">'+(m==='focus'?'Odak':(m==='short'?'Kisa':'Uzun'))+'</button>';}).join('')
+    +'</div>'
+    +'<div style="position:relative;width:116px;height:116px">'
+    +'<svg viewBox="0 0 108 108" style="position:absolute;inset:0;width:100%;height:100%">'
+    +'<circle cx="54" cy="54" r="50" fill="none" stroke="var(--s2)" stroke-width="5"/>'
+    +'<circle cx="54" cy="54" r="50" fill="none" stroke="'+strokeColor+'" stroke-width="5" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+off+'" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s linear"/>'
+    +'</svg>'
+    +'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">'
+    +'<span style="font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1">'+U.fmt(timerLeft)+'</span>'
+    +'<span style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.06em">'+(timerMode==='focus'?'Odak':'Mola')+'</span>'
+    +'</div></div>'
+    +'<div style="display:flex;gap:7px">'
+    +(timerOn
+      ? '<button class="btn btn-p" onclick="stopTimer()">'+ic('pause',12)+' Durdur</button>'
+      : '<button class="btn btn-p" onclick="startTimer()">'+ic('play',12)+' Baslat</button>'
+    )
+    +'<button class="btn btn-s btn-ic" onclick="resetTimer()">'+ic('rst',13)+'</button>'
+    +'</div></div>';
+}
 
-  function updateMyBook(id,changes){
-    var prev=(data.myBooks||[]).find(function(b){return b.id===id;});
-    var nb=(data.myBooks||[]).map(function(b){return b.id===id?Object.assign({},b,changes):b;});
-    if(changes.status==='done'&&prev&&prev.status!=='done')gainXP(50,'Kitap tamamlandi');
-    upd(Object.assign({},data,{myBooks:nb}),'Kitap guncellendi');
-  }
+// ============================================================
+// PAGE RENDERERS
+// ============================================================
 
-  function startChallenge(tpl,cname,cdesc){
-    var s=new Date(),e=new Date(s);e.setDate(e.getDate()+90);
-    var ch={id:Date.now(),tplId:tpl.id,name:cname||tpl.name,desc:cdesc||tpl.desc,icon:tpl.icon,cat:tpl.cat,diff:tpl.diff,xp:tpl.xp,start:U.today(),end:e.toISOString().split('T')[0],checkins:[],status:'active'};
-    upd(Object.assign({},data,{challenges:[ch].concat(data.challenges||[])}),'Mucadele basladi');gainXP(50,'Mucadele basladi');
-  }
+function renderDashboard() {
+  var xp = D.stats.xp||0, lvl=D.stats.level||1;
+  var xpInLvl = xp%500;
+  var frog = D.todos.find(function(t){return !t.done&&t.priority==='urgent';})||D.todos.find(function(t){return !t.done;});
+  var booksRead = (D.mybooks||[]).filter(function(b){return b.status==='done';}).length;
+  var activeCh = (D.challenges||[]).filter(function(c){return c.status==='active';}).length;
+  var rq = D.quotes.length?D.quotes[Math.floor(Math.random()*D.quotes.length)]:null;
+  var plan = D.readingPlan;
+  var todayBook = null;
+  if(plan&&plan.books) { var nd=new Date(); for(var i=0;i<plan.books.length;i++){var pb=plan.books[i];if(nd>=new Date(pb.start)&&nd<=new Date(pb.end)){todayBook=pb;break;}} }
 
-  function checkin(id){
-    var today=U.today();
-    var chs=(data.challenges||[]).map(function(c){
-      if(c.id!==id||(c.checkins&&c.checkins.indexOf(today)>=0))return c;
-      return Object.assign({},c,{checkins:(c.checkins||[]).concat([today])});
+  var html = '<div class="fade">';
+  // Stats
+  html += '<div class="g4" style="margin-bottom:16px">';
+  html += statCard('Seviye',lvl,'zap','var(--blue)');
+  html += statCard('XP Puani',xp,'star','var(--purple)');
+  html += statCard('Kitap Tamamlandi',booksRead,'bk','var(--green)');
+  html += statCard('Aktif Mucadele',activeCh,'trophy','var(--orange)');
+  html += '</div>';
+  // XP bar
+  html += '<div class="card cp" style="margin-bottom:16px;padding-top:12px;padding-bottom:12px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
+    +'<span style="font-weight:600;font-size:13px">Seviye '+lvl+'</span>'
+    +'<span style="font-size:12px;color:var(--t2)">'+xpInLvl+' / 500 XP &mdash; '+(500-xpInLvl)+' kaldi</span></div>'
+    +progressPill(xpInLvl/5)+'</div>';
+  // Timer + Frog + Today book
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">';
+  html += '<div class="card" id="timer-block"></div>';
+  html += '<div class="card cp" style="display:flex;flex-direction:column;gap:11px;background:linear-gradient(135deg,#1a3a2e,#0d2d1e)">'
+    +'<span style="font-size:22px">&#x1F438;</span>'
+    +'<p style="font-weight:700;font-size:15px;color:#a7f3d0">Kurbagayi Ye!</p>'
+    +'<p style="font-size:12.5px;color:#6ee7b7;line-height:1.6;flex:1">'+(frog?U.escape(frog.text):'Tum oncelikler tamam!')+'</p>'
+    +'<button class="btn" style="background:rgba(255,255,255,.15);color:#fff;align-self:flex-start;font-size:12px" onclick="setTab(\'todos\')">Gorevlere Git '+ic('ar',12)+'</button></div>';
+  if(todayBook) {
+    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:9px">'
+      +'<p class="lbl">Bugunun Kitabi</p>'
+      +'<div style="width:36px;height:50px;border-radius:5px;background:var(--blue);display:flex;align-items:center;justify-content:center">'+ic('bk',16,'#fff')+'</div>'
+      +'<p style="font-weight:700;font-size:13px;line-height:1.3">'+U.escape(todayBook.title)+'</p>'
+      +'<p style="font-size:11px;color:var(--t2)">'+U.escape(todayBook.author)+'</p>'
+      +'<p style="font-size:11px;color:var(--blue);font-weight:500">'+todayBook.start+' &mdash; '+todayBook.end+'</p></div>';
+  } else {
+    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:9px">'
+      +'<p class="lbl">Okuma Plani</p>'+ic('bk',28,'var(--t3)')
+      +'<p style="font-size:12px;color:var(--t2);line-height:1.5">Bir okuma plani baslat.</p>'
+      +'<button class="btn btn-s btn-sm" onclick="setTab(\'readingplan\')">'+ic('ar',12)+' Planlara Git</button></div>';
+  }
+  html += '</div>';
+  // KPI snapshot
+  if(D.kpis&&D.kpis.length) {
+    html += '<div style="margin-bottom:16px"><p class="lbl" style="margin-bottom:8px">KPI Ozeti</p>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">';
+    D.kpis.slice(0,4).forEach(function(k){
+      var p = pct(k.current,k.target);
+      var c = p>=100?'var(--green)':p>=70?'var(--orange)':'var(--red)';
+      html += '<div class="card" style="padding:12px 14px;cursor:pointer" onclick="setTab(\'kpi\')">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+        +'<span style="font-size:12px;font-weight:600">'+U.escape((k.name||'').slice(0,18))+'</span>'
+        +'<span style="font-size:13px;font-weight:700;color:'+c+'">'+p+'%</span></div>'
+        +progressPill(p)
+        +'<div style="font-size:11px;color:var(--t2);margin-top:5px">'+k.current+' / '+k.target+' '+U.escape(k.unit||'')+'</div></div>';
     });
-    upd(Object.assign({},data,{challenges:chs}),'Check-in');gainXP(15,'Check-in');
+    html += '</div></div>';
   }
-
-  function activateReadingPlan(planId){
-    var plan=READING_PLANS.find(function(p){return p.id===planId;});
-    if(!plan)return;
-    var today=new Date();
-    var books=plan.books.map(function(bid,i){
-      var lb=LIBRARY.find(function(b){return b.id===bid;});
-      if(!lb)return null;
-      var start=new Date(today);start.setDate(start.getDate()+i*Math.floor(plan.weeks*7/plan.books.length));
-      var end=new Date(start);end.setDate(end.getDate()+Math.floor(plan.weeks*7/plan.books.length)-2);
-      return {libId:bid,title:lb.t,author:lb.a,start:start.toISOString().split('T')[0],end:end.toISOString().split('T')[0]};
-    }).filter(Boolean);
-    var ap={planId:planId,name:plan.name,books:books,startedAt:U.today()};
-    upd(Object.assign({},data,{activeReadingPlan:ap}),'Okuma plani aktif edildi');gainXP(30,'Okuma plani basladi');
+  // Scratch + Quote
+  html += '<div class="g2">';
+  html += '<div class="scratch"><p class="lbl" style="color:#7a6000;margin-bottom:7px">&#9999; Karalama Defteri</p>'
+    +'<textarea class="inp" id="scratch-area" placeholder="Aklina geleni buraya yaz..." style="height:80px;background:transparent;border:none;padding:0;font-size:13px;box-shadow:none">'+U.escape(D.scratch||'')+'</textarea>'
+    +'<p style="font-size:9px;color:#a08010;text-align:right;margin-top:3px;font-weight:500">Otomatik kaydedilir</p></div>';
+  if(rq) {
+    html += '<div class="card cp" style="text-align:center;display:flex;flex-direction:column;justify-content:center">'
+      +'<p style="font-size:14px;font-style:italic;font-weight:400;line-height:1.7">&ldquo;'+U.escape(rq.text)+'&rdquo;</p>'
+      +(rq.author?'<p style="margin-top:8px;font-size:10.5px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.1em">&mdash; '+U.escape(rq.author)+'</p>':'')
+      +'</div>';
   }
+  html += '</div></div>';
+  show('pinner', html);
+  renderTimer();
+  // Scratch autosave
+  var sa = $('scratch-area');
+  if(sa) sa.addEventListener('input',function(){D.scratch=sa.value;save();});
+}
 
-  function playSound(url){
-    if(audioRef.current&&data.activeSound===url){audioRef.current.pause();upd(Object.assign({},data,{activeSound:null}),'Ses durdu');}
-    else{if(audioRef.current)audioRef.current.pause();audioRef.current=new Audio(url);audioRef.current.loop=true;audioRef.current.volume=data.vol;audioRef.current.play();upd(Object.assign({},data,{activeSound:url}),'Ses basladi');}
-  }
+function renderKPI() {
+  var kpis = D.kpis||[];
+  var reached = kpis.filter(function(k){return pct(k.current,k.target)>=100;}).length;
+  var critical = kpis.filter(function(k){return pct(k.current,k.target)<50;}).length;
+  var avg = kpis.length?Math.round(kpis.reduce(function(a,k){return a+pct(k.current,k.target);},0)/kpis.length):0;
+  var html = '<div class="fade">'
+    +'<div class="sh"><div><h1 class="sh-t">KPI &amp; Metrikler</h1><p class="sh-sub">&ldquo;Olcemedin seyi gelistiremezsin.&rdquo; &mdash; Peter Drucker</p></div>'
+    +'<button class="btn btn-p" onclick="openForm(\'kpi\')">'+ic('plus',13)+' KPI Ekle</button></div>';
+  html += '<div class="g4" style="margin-bottom:14px">';
+  html += statCard('Toplam KPI',kpis.length,'kpi','var(--blue)');
+  html += statCard('Hedefe Ulasan',reached,'chk','var(--green)');
+  html += statCard('Kritik (<50%)',critical,'flame','var(--red)');
+  html += statCard('Ort. Basari',avg+'%','star','var(--orange)');
+  html += '</div>';
+  html += '<div class="card" style="margin-bottom:14px;padding:14px 18px;border-left:3px solid var(--blue);background:var(--bl)">'
+    +'<p style="font-weight:700;font-size:13px;margin-bottom:4px">KPI Sistemi Neden Kritik?</p>'
+    +'<p style="font-size:12.5px;color:var(--t2);line-height:1.7">Measure What Matters (Doerr) ve The Effective Executive (Drucker) kitaplari birlesiyor: "Sadece olculen seyi yonetebilirsin." OKR: Her KPI bir Objective + Key Result ciftine baglanmali. Haftalik gozden gecirme + aylik kalibrasyon = sistem.</p></div>';
+  html += '<div class="card" style="overflow:hidden"><table class="tbl"><thead><tr>'
+    +'<th style="padding-left:16px">Metrik</th><th>Kategori</th><th style="text-align:center">Mevcut</th><th style="text-align:center">Hedef</th><th>Ilerleme</th><th style="width:70px"></th>'
+    +'</tr></thead><tbody>';
+  kpis.forEach(function(k){
+    var p = pct(k.current,k.target);
+    var c = p>=100?'var(--green)':p>=70?'var(--orange)':'var(--red)';
+    html += '<tr><td style="padding-left:16px"><p style="font-weight:600;font-size:13px">'+U.escape(k.name)+'</p>'+(k.unit?'<p style="font-size:11px;color:var(--t3);margin-top:1px">'+U.escape(k.unit)+'</p>':'')+'</td>'
+      +'<td><span class="pill p-blue" style="font-size:10px">'+U.escape(k.cat||'Is')+'</span></td>'
+      +'<td style="text-align:center;font-weight:700;font-size:14px;color:'+c+'">'+k.current+(k.unit&&k.unit.length<=3?' '+k.unit:'')+'</td>'
+      +'<td style="text-align:center;font-size:12px;color:var(--t2)">'+k.target+(k.unit&&k.unit.length<=3?' '+k.unit:'')+'</td>'
+      +'<td style="min-width:120px"><div style="display:flex;align-items:center;gap:7px">'+progressPill(p)+'<span style="font-size:11px;font-weight:700;color:'+c+';min-width:28px;text-align:right">'+p+'%</span></div></td>'
+      +'<td><div style="display:flex;gap:4px">'
+      +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="updateKPI('+k.id+')" title="Guncelle">'+ic('edit',12,'var(--t3)')+'</button>'
+      +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+k.id+',\'kpi\')" title="Sil">'+ic('trash',12,'var(--t3)')+'</button>'
+      +'</div></td></tr>';
+  });
+  if(!kpis.length) html += '<tr><td colspan="6"><div class="empty">'+ic('kpi',28,'var(--t3)')+'<p>Henuz KPI eklenmedi</p></div></td></tr>';
+  html += '</tbody></table></div>';
+  html += '<div class="g3" style="margin-top:14px">';
+  [{icon:'kpi',title:'Olcum',desc:'Ne olcuyorsun? Her hafta KPI guncelle.',c:'var(--blue)'},{icon:'ref',title:'Sistem',desc:'Hangi aliskanlik bu metrige hizmet ediyor?',c:'var(--green)'},{icon:'tgt',title:'Odak',desc:'En kritik 3 KPI\'a odaklan.',c:'var(--orange)'}].forEach(function(x){
+    html += '<div class="card cp" style="border-top:3px solid '+x.c+'">'+ic(x.icon,18,x.c)+'<p style="font-weight:700;font-size:13px;margin-top:8px;margin-bottom:4px">'+x.title+'</p><p style="font-size:12px;color:var(--t2);line-height:1.6">'+x.desc+'</p></div>';
+  });
+  html += '</div></div>';
+  show('pinner',html);
+}
+function updateKPI(id) {
+  var k = D.kpis.find(function(x){return x.id===id;}); if(!k)return;
+  var v = prompt('Yeni deger gir ('+k.unit+'):', k.current);
+  if(v===null)return;
+  snapshot();
+  D.kpis = D.kpis.map(function(x){return x.id===id?Object.assign({},x,{current:parseFloat(v)||0,hist:(x.hist||[]).concat([parseFloat(v)||0])}):x;});
+  addLog('KPI guncellendi: '+k.name); gainXP(5,'KPI guncellendi'); save(); renderPage();
+}
+window.updateKPI = updateKPI;
 
-  var NAV_GROUPS=[
-    {label:'Ana',items:[
-      {id:'dashboard',l:'Dashboard',i:'dash'},
-      {id:'kpi',l:'KPI & Metrikler',i:'kpi'},
-      {id:'challenges',l:'90-Gun Mucadelesi',i:'trophy',badge:true},
-    ]},
-    {label:'Uretkenlik',items:[
-      {id:'goals',l:'Hedefler',i:'tgt'},
-      {id:'todos',l:'Yapilacaklar',i:'csq'},
-      {id:'routines',l:'Rutinler',i:'ref'},
-    ]},
-    {label:'Kitap Sistemi',items:[
-      {id:'library',l:'Kitap Kutuphanesi',i:'bk',badge:true},
-      {id:'mybooks',l:'Okuma Listesi',i:'book_open'},
-      {id:'readingplan',l:'Okuma Planlari',i:'checklist'},
-    ]},
-    {label:'Bilgi',items:[
-      {id:'vault',l:'Bilgi Kasasi',i:'arc'},
-      {id:'quotes',l:'Ozlu Sozler',i:'qt'},
-      {id:'journal',l:'Gunluk',i:'pen'},
-      {id:'principles',l:'Prensipler',i:'sh'},
-      {id:'coaching',l:'Kocluk',i:'us'},
-    ]},
-    {label:'Araclar',items:[
-      {id:'tools',l:'Odak Araclari',i:'hp'},
-    ]},
-  ];
+function renderLibrary() {
+  var catFilter = window._libCat||'all';
+  var coreOnly = window._libCore||false;
+  var myIds = (D.mybooks||[]).map(function(b){return b.libId;});
+  var CAT_PILL = ['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
+  var filtered = LIB.filter(function(b){
+    if(coreOnly&&!b.core)return false;
+    if(catFilter!=='all'&&b.cat!==parseInt(catFilter))return false;
+    if(searchQ){var lq=searchQ.toLowerCase();return b.t.toLowerCase().indexOf(lq)>=0||b.a.toLowerCase().indexOf(lq)>=0;}
+    return true;
+  });
+  var html = '<div class="fade">'
+    +'<div class="sh"><div><h1 class="sh-t">Kitap Kutuphanesi</h1><p class="sh-sub">'+LIB.length+' kitap &mdash; 10 kategori &mdash; 1 sistem</p></div>'
+    +'<button class="btn btn-s btn-sm" style="background:'+(coreOnly?'var(--orange)':'');html+='color:'+(coreOnly?'#fff':'')+';" onclick="window._libCore='+(!coreOnly)+';renderPage()">'+ic('flame',12)+' Cekirdek</button></div>';
+  // Category filter
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
+  html += '<button class="btn btn-sm" style="background:'+(catFilter==='all'?'var(--blue)':'var(--s2)')+';color:'+(catFilter==='all'?'#fff':'var(--t2)')+';" onclick="window._libCat=\'all\';renderPage()">Tumu ('+LIB.length+')</button>';
+  BOOK_CATS.forEach(function(cat,i){
+    var cnt = LIB.filter(function(b){return b.cat===i;}).length;
+    html += '<button class="btn btn-sm" style="background:'+(catFilter===String(i)?'var(--blue)':'var(--s2)')+';color:'+(catFilter===String(i)?'#fff':'var(--t2)')+';" onclick="window._libCat=\''+i+'\';renderPage()">'+cat+' ('+cnt+')</button>';
+  });
+  html += '</div>';
+  html += '<p style="font-size:12px;color:var(--t2);margin-bottom:12px">'+filtered.length+' kitap</p>';
+  html += '<div class="ga">';
+  filtered.forEach(function(lb){
+    var inList = myIds.indexOf(lb.id)>=0;
+    var mb = inList?(D.mybooks||[]).find(function(b){return b.libId===lb.id;}):null;
+    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:9px">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+      +'<div style="display:flex;align-items:center;gap:9px;flex:1">'
+      +'<div class="bc'+lb.cat+'" style="width:38px;height:52px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+lb.cat+'</div>'
+      +'<div><p style="font-weight:700;font-size:13px;line-height:1.3">'+U.escape(lb.t)+'</p><p style="font-size:11px;color:var(--t2);margin-top:2px">'+U.escape(lb.a)+'</p></div></div>'
+      +(lb.core?'<span class="pill p-orange" style="font-size:9px;flex-shrink:0">Cekirdek</span>':'')
+      +'</div>'
+      +'<span class="pill '+CAT_PILL[lb.cat]+'" style="font-size:10px;align-self:flex-start">'+BOOK_CATS[lb.cat]+'</span>'
+      +'<p style="font-size:12px;color:var(--t2);line-height:1.5">'+U.escape(lb.desc)+'</p>'
+      +'<p style="font-size:11px;color:var(--t3)">'+lb.pages+' sayfa</p>';
+    if(inList) {
+      html += '<div style="display:flex;gap:6px;align-items:center">'
+        +'<span class="pill p-green" style="font-size:10px">Listede</span>';
+      if(mb) {
+        html += '<select class="inp" style="flex:1;padding:3px 8px;font-size:11px" onchange="updateBookStatus('+mb.id+',this.value)">'
+          +'<option value="queue"'+(mb.status==='queue'?' selected':'')+'>Sirada</option>'
+          +'<option value="reading"'+(mb.status==='reading'?' selected':'')+'>Okunuyor</option>'
+          +'<option value="done"'+(mb.status==='done'?' selected':'')+'>Bitti</option>'
+          +'</select>';
+      }
+      html += '</div>';
+    } else {
+      html += '<button class="btn btn-p" style="font-size:11px;align-self:flex-start" onclick="addToList(\''+lb.id+'\')">'+ic('plus',12)+' Listeye Ekle</button>';
+    }
+    html += '</div>';
+  });
+  html += '</div></div>';
+  show('pinner',html);
+}
+function addToList(libId) {
+  if((D.mybooks||[]).find(function(b){return b.libId===libId;})) return;
+  var lb = LIB.find(function(b){return b.id===libId;}); if(!lb)return;
+  snapshot();
+  D.mybooks = [{id:Date.now(),libId:libId,title:lb.t,author:lb.a,pages:lb.pages,status:'queue',rating:0,pagesRead:0}].concat(D.mybooks||[]);
+  addLog('Kitap eklendi: '+lb.t); gainXP(10,'Kitap eklendi'); save(); renderPage();
+}
+window.addToList = addToList;
+function updateBookStatus(id,status) {
+  var prev = (D.mybooks||[]).find(function(b){return b.id===id;});
+  snapshot();
+  D.mybooks = (D.mybooks||[]).map(function(b){return b.id===id?Object.assign({},b,{status:status}):b;});
+  if(status==='done'&&prev&&prev.status!=='done') gainXP(50,'Kitap tamamlandi');
+  addLog('Kitap guncellendi'); save(); renderPage();
+}
+window.updateBookStatus = updateBookStatus;
 
-  // ======================== VIEWS ========================
-
-  // ---- Dashboard ----
-  function DashView(){
-    var frog=data.todos.find(function(t){return !t.done&&t.priority==='urgent';})||data.todos.find(function(t){return !t.done;});
-    var xpInLvl=(data.stats.xp||0)%500;
-    var activeCh=(data.challenges||[]).filter(function(c){return c.status==='active';}).length;
-    var booksRead=(data.myBooks||[]).filter(function(b){return b.status==='done';}).length;
-    var rq=useMemo(function(){return data.quotes.length?data.quotes[Math.floor(Math.random()*data.quotes.length)]:null;},[]);
-    var plan=data.activeReadingPlan;
-    var todayBook=plan&&plan.books?plan.books.find(function(b){var s=new Date(b.start),e=new Date(b.end),n=new Date();return n>=s&&n<=e;}):null;
-
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      // Stats
-      h('div',{className:'grid4'},
-        [{l:'Seviye',v:data.stats.level,i:'zap',c:'var(--blue)'},{l:'XP Puani',v:data.stats.xp,i:'star',c:'var(--purple)'},{l:'Kitap Tamamlandi',v:booksRead,i:'bk',c:'var(--green)'},{l:'Aktif Mucadele',v:activeCh,i:'trophy',c:'var(--orange)'}].map(function(s){
-          return h('div',{key:s.l,className:'card kpi'},
-            h(Ic,{n:s.i,s:15,c:s.c}),
-            h('div',{className:'kpi-n',style:{color:s.c}},s.v),
-            h('div',{className:'kpi-l'},s.l)
-          );
-        })
-      ),
-      // XP bar
-      h('div',{className:'card cp',style:{paddingTop:12,paddingBottom:12}},
-        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}},
-          h('span',{style:{fontWeight:600,fontSize:13}},'Seviye '+data.stats.level),
-          h('span',{style:{fontSize:12,color:'var(--t2)'}},xpInLvl+' / 500 XP')
-        ),
-        h('div',{className:'bar'},h('div',{className:'barf',style:{width:(xpInLvl/5)+'%',background:'linear-gradient(90deg,var(--blue),var(--purple))'}}))
-      ),
-      // Pomodoro + Frog + Today's book
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14}},
-        h('div',{className:'card'},h(TimerWidget,{onXP:gainXP})),
-        h('div',{className:'card cp',style:{display:'flex',flexDirection:'column',gap:11,background:'linear-gradient(135deg,#1a3a2e,#0d2d1e)'}},
-          h('span',{style:{fontSize:22}},'\uD83D\uDC38'),
-          h('p',{style:{fontWeight:700,fontSize:15,color:'#a7f3d0'}},'Kurbagayi Ye!'),
-          h('p',{style:{fontSize:12.5,color:'#6ee7b7',lineHeight:1.6,flex:1}},frog?frog.text:'Tum oncelikler tamam!'),
-          h('button',{className:'btn',style:{background:'rgba(255,255,255,.15)',color:'white',alignSelf:'flex-start',fontSize:12},onClick:function(){setTab('todos');}},
-            'Gorevlere Git',h(Ic,{n:'ar',s:12}))
-        ),
-        todayBook
-          ? h('div',{className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
-              h('div',{className:'lbl'},'Bugunun Kitabi'),
-              h('div',{style:{width:36,height:50,borderRadius:5,background:'var(--blue)',display:'flex',alignItems:'center',justifyContent:'center'}},h(Ic,{n:'bk',s:16,c:'white'})),
-              h('p',{style:{fontWeight:700,fontSize:13,lineHeight:1.3}},todayBook.title),
-              h('p',{style:{fontSize:11,color:'var(--t2)'}},todayBook.author),
-              h('p',{style:{fontSize:11,color:'var(--blue)',fontWeight:500}},todayBook.start+' \u2014 '+todayBook.end)
-            )
-          : h('div',{className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
-              h('div',{className:'lbl'},'Okuma Plani'),
-              h(Ic,{n:'bk',s:28,c:'var(--t3)'}),
-              h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.5}},'Bir okuma plani baslat ve bugunun kitabini gör.'),
-              h('button',{className:'btn btn-s btn-sm',onClick:function(){setTab('readingplan');}},h(Ic,{n:'ar',s:12}),'Planlara Git')
-            )
-      ),
-      // KPI snapshot
-      data.kpis&&data.kpis.length>0&&h('div',null,
-        h('div',{className:'lbl',style:{marginBottom:8}},'KPI Ozeti'),
-        h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:10}},
-          data.kpis.slice(0,4).map(function(kpi){
-            var perc=Math.min(100,Math.round((parseFloat(kpi.current)||0)/(parseFloat(kpi.target)||1)*100));
-            var c=perc>=100?'var(--green)':perc>=70?'var(--orange)':'var(--red)';
-            return h('div',{key:kpi.id,className:'card',style:{padding:'12px 14px',cursor:'pointer'},onClick:function(){setTab('kpi');}},
-              h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}},
-                h('span',{style:{fontSize:12,fontWeight:600,color:'var(--text)'}},(kpi.name||'').length>18?(kpi.name||'').slice(0,18)+'...':kpi.name),
-                h('span',{style:{fontSize:13,fontWeight:700,color:c}},perc+'%')
-              ),
-              h('div',{className:'bar'},h('div',{className:'barf',style:{width:perc+'%',background:c}})),
-              h('div',{style:{fontSize:11,color:'var(--t2)',marginTop:5}},(kpi.current||0)+' / '+(kpi.target||0)+' '+( kpi.unit||''))
-            );
-          })
-        )
-      ),
-      // Scratch + Quote
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}},
-        h('div',{className:'scratch'},
-          h('p',{className:'lbl',style:{color:'#7a6000',marginBottom:7}},'\u270F Karalama Defteri'),
-          h('textarea',{className:'inp',value:data.scratch||'',onChange:function(e){setData(function(p){return Object.assign({},p,{scratch:e.target.value});});},placeholder:'Aklina geleni buraya yaz...',style:{height:80,background:'transparent',border:'none',padding:0,fontSize:13,boxShadow:'none'}}),
-          h('p',{style:{fontSize:9,color:'#a08010',textAlign:'right',marginTop:3,fontWeight:500}},'Otomatik kaydedilir')
-        ),
-        rq&&h('div',{className:'card cp',style:{textAlign:'center',display:'flex',flexDirection:'column',justifyContent:'center'}},
-          h('p',{style:{fontSize:14,fontStyle:'italic',fontWeight:400,lineHeight:1.7}},'"'+rq.text+'"'),
-          rq.author&&h('p',{style:{marginTop:8,fontSize:10.5,fontWeight:600,color:'var(--blue)',textTransform:'uppercase',letterSpacing:'.1em'}},'-- '+rq.author)
-        )
-      )
-    );
-  }
-
-  // ---- KPI Dashboard ----
-  function KPIView(){
-    var CATS=['Is','Saglik','Gelisim','Finans','Iliski'];
-    var CAT_COLORS={Is:'var(--blue)',Saglik:'var(--green)',Gelisim:'var(--purple)',Finans:'var(--orange)',Iliski:'var(--teal)'};
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},
-        h('div',null,
-          h('h1',{className:'sh-t'},'KPI & Metrikler'),
-          h('p',{className:'sh-sub'},'Olcemedin seyi gelistiremezsin. -- Peter Drucker')
-        ),
-        h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'kpi'});}},h(Ic,{n:'plus',s:13}),'KPI Ekle')
-      ),
-      // Ozet
-      h('div',{className:'grid4'},
-        [{l:'Toplam KPI',v:(data.kpis||[]).length,i:'bar',c:'var(--blue)'},
-         {l:'Hedefe Ulasan',v:(data.kpis||[]).filter(function(k){return (parseFloat(k.current)||0)>=(parseFloat(k.target)||1);}).length,i:'cc',c:'var(--green)'},
-         {l:'Kritik (<50%)',v:(data.kpis||[]).filter(function(k){var p=(parseFloat(k.current)||0)/(parseFloat(k.target)||1)*100;return p<50;}).length,i:'flame',c:'var(--red)'},
-         {l:'Ort. Basari',v:Math.round((data.kpis||[]).reduce(function(a,k){return a+(Math.min(100,(parseFloat(k.current)||0)/(parseFloat(k.target)||1)*100));},0)/Math.max(1,(data.kpis||[]).length))+'%',i:'kpi',c:'var(--orange)'},
-        ].map(function(s){return h('div',{key:s.l,className:'card kpi'},h(Ic,{n:s.i,s:15,c:s.c}),h('div',{className:'kpi-n',style:{color:s.c}},s.v),h('div',{className:'kpi-l'},s.l));})
-      ),
-      // Sistem bilgi karti
-      h('div',{className:'card',style:{padding:'14px 18px',borderLeft:'3px solid var(--blue)',background:'var(--bl)'}},
-        h('p',{style:{fontWeight:700,fontSize:13,marginBottom:4}},'KPI Sistemi Neden Kritik?'),
-        h('p',{style:{fontSize:12.5,color:'var(--t2)',lineHeight:1.7}},'Measure What Matters (John Doerr) ve The Effective Executive (Peter Drucker) kitaplari bir noktada birlesiyor: "Sadece olculen seyi yonetebilirsin." OKR sistemi: Her KPI bir Objective + Key Result ciftine baglanmali. Haftalik gozden gecirme + aylik kalibrasyon = sistem.')
-      ),
-      // KPI listesi
-      h('div',{className:'card',style:{overflow:'hidden'}},
-        h('table',{className:'tbl'},
-          h('thead',null,h('tr',null,
-            h('th',{style:{paddingLeft:16}},'Metrik'),h('th',null,'Kategori'),h('th',{style:{textAlign:'center'}},'Mevcut'),h('th',{style:{textAlign:'center'}},'Hedef'),h('th',{style:{width:120}},'Ilerleme'),h('th',{style:{width:36}})
-          )),
-          h('tbody',null,
-            (data.kpis||[]).map(function(kpi){
-              var perc=Math.min(100,Math.round((parseFloat(kpi.current)||0)/(parseFloat(kpi.target)||1)*100));
-              var c=perc>=100?'var(--green)':perc>=70?'var(--orange)':'var(--red)';
-              return h('tr',{key:kpi.id},
-                h('td',{style:{paddingLeft:16}},
-                  h('p',{style:{fontWeight:600,fontSize:13}},kpi.name),
-                  kpi.unit&&h('p',{style:{fontSize:11,color:'var(--t3)',marginTop:1}},kpi.unit)
-                ),
-                h('td',null,h('span',{className:'pill p-blue',style:{fontSize:10}},kpi.cat||'Is')),
-                h('td',{style:{textAlign:'center',fontWeight:700,fontSize:14,color:c}},(kpi.current||0)+''+(kpi.unit&&kpi.unit.length<=3?' '+kpi.unit:'')),
-                h('td',{style:{textAlign:'center',fontSize:12,color:'var(--t2)'}},(kpi.target||0)+''+(kpi.unit&&kpi.unit.length<=3?' '+kpi.unit:'')),
-                h('td',null,
-                  h('div',{style:{display:'flex',alignItems:'center',gap:7}},
-                    h('div',{className:'bar',style:{flex:1}},h('div',{className:'barf',style:{width:perc+'%',background:c}})),
-                    h('span',{style:{fontSize:11,fontWeight:700,color:c,minWidth:28,textAlign:'right'}},perc+'%')
-                  )
-                ),
-                h('td',null,
-                  h('div',{style:{display:'flex',gap:4}},
-                    h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){
-                      var newVal=prompt('Yeni deger gir ('+kpi.unit+'):', kpi.current||'');
-                      if(newVal===null)return;
-                      var hist=(kpi.history||[]).concat([parseFloat(newVal)||0]);
-                      var nk=(data.kpis||[]).map(function(k){return k.id===kpi.id?Object.assign({},k,{current:newVal,history:hist}):k;});
-                      upd(Object.assign({},data,{kpis:nk}),'KPI guncellendi: '+kpi.name);gainXP(5,'KPI guncellendi');
-                    }},h(Ic,{n:'edit',s:12,c:'var(--t3)'})),
-                    h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(kpi,'kpi');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
-                  )
-                )
-              );
-            }),
-            (!data.kpis||data.kpis.length===0)&&h('tr',null,h('td',{colSpan:6},h('div',{className:'empty'},h(Ic,{n:'kpi',s:28,c:'var(--t3)'}),h('p',null,'Henuz KPI eklenmedi'))))
-          )
-        )
-      ),
-      // Sistem prensibi
-      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}},
-        [{icon:'kpi',title:'Olcum',desc:'Ne olcuyorsun? Her hafta KPI\'larini guncelle.',color:'var(--blue)'},
-         {icon:'ref',title:'Sistem',desc:'Hangi aliskanlik bu metrige hizmet ediyor?',color:'var(--green)'},
-         {icon:'tgt',title:'Odak',desc:'En kritik 3 KPI nedir? Hepsine degil, bunlara odaklan.',color:'var(--orange)'},
-        ].map(function(c){
-          return h('div',{key:c.title,className:'card cp',style:{borderTop:'3px solid '+c.color}},
-            h(Ic,{n:c.icon,s:18,c:c.color}),
-            h('p',{style:{fontWeight:700,fontSize:13,marginTop:8,marginBottom:4}},c.title),
-            h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.6}},c.desc)
-          );
-        })
-      )
-    );
-  }
-
-  // ---- Library ----
-  function LibraryView(){
-    var cats_s=useState('all'); var selCat=cats_s[0],setSelCat=cats_s[1];
-    var view_s=useState('grid'); var view=view_s[0],setView=view_s[1];
-    var core_s=useState(false); var coreOnly=core_s[0],setCoreOnly=core_s[1];
-    var myIds=(data.myBooks||[]).map(function(b){return b.libId;});
-    var filtered=LIBRARY.filter(function(b){
-      if(coreOnly&&!b.core)return false;
-      if(selCat!=='all'&&b.cat!==parseInt(selCat))return false;
-      if(q){var lq=q.toLowerCase();return b.t.toLowerCase().indexOf(lq)>=0||b.a.toLowerCase().indexOf(lq)>=0||( BOOK_CATS[b.cat]||'').toLowerCase().indexOf(lq)>=0;}
-      return true;
+function renderMyBooks() {
+  var mb = D.mybooks||[];
+  var stats = {q:mb.filter(function(b){return b.status==='queue';}).length, r:mb.filter(function(b){return b.status==='reading';}).length, d:mb.filter(function(b){return b.status==='done';}).length};
+  var pages = mb.filter(function(b){return b.status==='done';}).reduce(function(a,b){return a+(b.pages||0);},0);
+  var html = '<div class="fade">'
+    +'<div class="sh"><h1 class="sh-t">Okuma Listesi</h1>'
+    +'<button class="btn btn-s" onclick="setTab(\'library\')">'+ic('bk',13)+' Kutuphaneye Git</button></div>';
+  html += '<div class="g4" style="margin-bottom:16px">';
+  [{l:'Sirada',v:stats.q,c:'var(--t2)'},{l:'Okunuyor',v:stats.r,c:'var(--blue)'},{l:'Tamamlandi',v:stats.d,c:'var(--green)'},{l:'Toplam Sayfa',v:pages,c:'var(--purple)'}].forEach(function(s){
+    html += '<div class="card" style="padding:16px 18px"><div class="kpi-n" style="font-size:24px;color:'+s.c+'">'+s.v+'</div><div class="kpi-l">'+s.l+'</div></div>';
+  });
+  html += '</div>';
+  if(!mb.length) {
+    html += '<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">'+ic('bk',36,'var(--t3)')+'<p style="font-weight:700;font-size:16px">Okuma listen bos</p><p style="font-size:13px;color:var(--t2);max-width:260px;line-height:1.6">Kutuphaneden kitap ekle.</p><button class="btn btn-p" onclick="setTab(\'library\')">'+ic('bk',13)+' Kutuphaneye Git</button></div>';
+  } else {
+    html += '<div class="card" style="overflow:hidden"><table class="tbl"><thead><tr><th style="padding-left:16px">Kitap</th><th style="text-align:center">Puan</th><th>Durum</th><th style="width:36px"></th></tr></thead><tbody>';
+    mb.forEach(function(book){
+      var lb = LIB.find(function(b){return b.id===book.libId;});
+      html += '<tr><td style="padding-left:16px">'
+        +(lb?'<div style="display:flex;align-items:center;gap:7px"><div class="bc'+lb.cat+'" style="width:8px;height:8px;border-radius:50;flex-shrink:0"></div>':'')
+        +'<div><p style="font-weight:600;font-size:13px">'+U.escape(book.title)+'</p><p style="font-size:11px;color:var(--t2)">'+U.escape(book.author)+'</p></div>'+(lb?'</div>':'')+'</td>'
+        +'<td style="text-align:center"><div style="display:flex;justify-content:center;gap:2px">';
+      for(var st=1;st<=5;st++) {
+        html += '<span class="star" onclick="rateBook('+book.id+','+st+')" style="color:'+(st<=(book.rating||0)?'var(--yellow)':'var(--s3)')+'">&#9733;</span>';
+      }
+      html += '</div></td>'
+        +'<td><select class="inp" style="width:auto;padding:3px 8px;font-size:11px" onchange="updateBookStatus('+book.id+',this.value)">'
+        +'<option value="queue"'+(book.status==='queue'?' selected':'')+'>Sirada</option>'
+        +'<option value="reading"'+(book.status==='reading'?' selected':'')+'>Okunuyor</option>'
+        +'<option value="done"'+(book.status==='done'?' selected':'')+'>Bitti</option>'
+        +'</select></td>'
+        +'<td><button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+book.id+',\'mybook\')">'+ic('trash',12,'var(--t3)')+'</button></td></tr>';
     });
-    var CAT_PILL=['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},
-        h('div',null,
-          h('h1',{className:'sh-t'},'Kitap Kutuphanesi'),
-          h('p',{className:'sh-sub'},'100 kitap, 10 kategori, 1 sistem')
-        ),
-        h('div',{style:{display:'flex',gap:8,alignItems:'center'}},
-          h('button',{className:'btn btn-s btn-sm'+(coreOnly?' active':''),style:{background:coreOnly?'var(--orange)':'',color:coreOnly?'white':''},onClick:function(){setCoreOnly(function(x){return !x;});}},h(Ic,{n:'flame',s:12}),'Cekirdek 5+'),
-          h('button',{className:'btn btn-s btn-ic',onClick:function(){setView(view==='grid'?'list':'grid');}},h(Ic,{n:view==='grid'?'layers':'bk',s:14}))
-        )
-      ),
-      // Category filter
-      h('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},
-        h('button',{className:'btn btn-sm',style:{background:selCat==='all'?'var(--blue)':'var(--bg3)',color:selCat==='all'?'white':'var(--t2)'},onClick:function(){setSelCat('all');}},'Tumu ('+LIBRARY.length+')'),
-        BOOK_CATS.map(function(cat,i){
-          var cnt=LIBRARY.filter(function(b){return b.cat===i;}).length;
-          return h('button',{key:i,className:'btn btn-sm',style:{background:selCat===String(i)?'var(--blue)':'var(--bg3)',color:selCat===String(i)?'white':'var(--t2)'},onClick:function(){setSelCat(String(i));}},cat+' ('+cnt+')');
-        })
-      ),
-      h('p',{style:{fontSize:12,color:'var(--t2)'}},filtered.length+' kitap'),
-      // List/Grid
-      view==='grid'
-        ? h('div',{className:'grid-auto'},
-            filtered.map(function(lb){
-              var inList=myIds.indexOf(lb.id)>=0;
-              var mb=inList?(data.myBooks||[]).find(function(b){return b.libId===lb.id;}):null;
-              return h('div',{key:lb.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
-                h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}},
-                  h('div',{style:{width:38,height:52,borderRadius:5,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:'white'},className:'cat-'+lb.cat},lb.cat),
-                  h('div',{style:{flex:1}},
-                    h('p',{style:{fontWeight:700,fontSize:13,lineHeight:1.3}},lb.t),
-                    h('p',{style:{fontSize:11,color:'var(--t2)',marginTop:2}},lb.a)
-                  ),
-                  lb.core&&h('span',{className:'pill p-orange',style:{fontSize:9,flexShrink:0}},'Cekirdek')
-                ),
-                h('span',{className:'pill '+CAT_PILL[lb.cat],style:{fontSize:10,alignSelf:'flex-start'}},BOOK_CATS[lb.cat]||''),
-                h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.5}},lb.desc),
-                h('p',{style:{fontSize:11,color:'var(--t3)'}},lb.pages+' sayfa'),
-                inList
-                  ? h('div',{style:{display:'flex',gap:6,alignItems:'center'}},
-                      h('span',{className:'pill p-green',style:{fontSize:10}},'Listede'),
-                      mb&&h('select',{className:'inp',value:mb.status,onChange:function(e){updateMyBook(mb.id,{status:e.target.value});},style:{flex:1,padding:'4px 8px',fontSize:11}},
-                        h('option',{value:'queue'},'Sirada'),h('option',{value:'reading'},'Okunuyor'),h('option',{value:'done'},'Bitti')
-                      )
-                    )
-                  : h('button',{className:'btn btn-p',style:{fontSize:11,alignSelf:'flex-start'},onClick:function(){addToMyBooks(lb,'queue');}},h(Ic,{n:'plus',s:12}),'Listeye Ekle')
-              );
-            })
-          )
-        : h('div',{className:'card',style:{overflow:'hidden'}},
-            h('table',{className:'tbl'},
-              h('thead',null,h('tr',null,h('th',{style:{paddingLeft:16}},'Kitap'),h('th',null,'Kategori'),h('th',null,'Yazar'),h('th',{style:{textAlign:'center'}},'Sayfa'),h('th',{style:{width:120}}))),
-              h('tbody',null,
-                filtered.map(function(lb){
-                  var inList=myIds.indexOf(lb.id)>=0;
-                  return h('tr',{key:lb.id},
-                    h('td',{style:{paddingLeft:16}},
-                      h('div',{style:{display:'flex',alignItems:'center',gap:8}},
-                        h('div',{style:{width:8,height:8,borderRadius:99,flexShrink:0},className:'cat-'+lb.cat}),
-                        h('div',null,
-                          h('p',{style:{fontWeight:600}},lb.t),
-                          lb.core&&h('span',{className:'pill p-orange',style:{fontSize:9}},'Cekirdek')
-                        )
-                      )
-                    ),
-                    h('td',null,h('span',{className:'pill '+CAT_PILL[lb.cat],style:{fontSize:10}},BOOK_CATS[lb.cat]||'')),
-                    h('td',{style:{fontSize:12,color:'var(--t2)'}},lb.a),
-                    h('td',{style:{textAlign:'center',fontSize:12,color:'var(--t2)'}},lb.pages),
-                    h('td',null,inList?h('span',{className:'pill p-green',style:{fontSize:10}},'Listede'):h('button',{className:'btn btn-p btn-sm',onClick:function(){addToMyBooks(lb,'queue');}},h(Ic,{n:'plus',s:11}),'Ekle'))
-                  );
-                })
-              )
-            )
-          )
-    );
+    html += '</tbody></table></div>';
   }
+  html += '</div>';
+  show('pinner',html);
+}
+function rateBook(id,rating){snapshot();D.mybooks=(D.mybooks||[]).map(function(b){return b.id===id?Object.assign({},b,{rating:rating}):b;});addLog('Kitap puanlandi');save();renderPage();}
+window.rateBook = rateBook;
 
-  // ---- My Books ----
-  function MyBooksView(){
-    var STATUS_LABELS={queue:'Sirada',reading:'Okunuyor',done:'Bitti'};
-    var STATUS_PILLS={queue:'p-gray',reading:'p-blue',done:'p-green'};
-    var CAT_PILL=['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
-    var stats={queue:(data.myBooks||[]).filter(function(b){return b.status==='queue';}).length,reading:(data.myBooks||[]).filter(function(b){return b.status==='reading';}).length,done:(data.myBooks||[]).filter(function(b){return b.status==='done';}).length};
-    var totalPages=(data.myBooks||[]).filter(function(b){return b.status==='done';}).reduce(function(a,b){return a+(b.pages||0);},0);
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},
-        h('h1',{className:'sh-t'},'Okuma Listesi'),
-        h('button',{className:'btn btn-s',onClick:function(){setTab('library');}},h(Ic,{n:'bk',s:13}),'Kutuphaneye Git')
-      ),
-      h('div',{className:'grid4'},
-        [{l:'Sirada',v:stats.queue,c:'var(--t2)'},{l:'Okunuyor',v:stats.reading,c:'var(--blue)'},{l:'Tamamlandi',v:stats.done,c:'var(--green)'},{l:'Toplam Sayfa',v:totalPages,c:'var(--purple)'}].map(function(s){
-          return h('div',{key:s.l,className:'card kpi'},h('div',{className:'kpi-n',style:{color:s.c,fontSize:24}},s.v),h('div',{className:'kpi-l'},s.l));
-        })
-      ),
-      (data.myBooks||[]).length===0
-        ? h('div',{className:'card',style:{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:12}},
-            h(Ic,{n:'bk',s:36,c:'var(--t3)'}),
-            h('p',{style:{fontWeight:700,fontSize:16}},'Okuma listen bos'),
-            h('p',{style:{fontSize:13,color:'var(--t2)',maxWidth:260,lineHeight:1.6}},'Kitap kutuphanesinden kitap ekle ve okuma yolculugunu takip et.'),
-            h('button',{className:'btn btn-p',onClick:function(){setTab('library');}},h(Ic,{n:'bk',s:13}),'Kutuphaneye Git')
-          )
-        : h('div',{className:'card',style:{overflow:'hidden'}},
-            h('table',{className:'tbl'},
-              h('thead',null,h('tr',null,h('th',{style:{paddingLeft:16}},'Kitap'),h('th',{style:{textAlign:'center'}},'Puan'),h('th',null,'Durum'),h('th',{style:{width:130}},'Ilerleme'),h('th',{style:{width:36}}))),
-              h('tbody',null,
-                (data.myBooks||[]).map(function(book){
-                  var lb=LIBRARY.find(function(b){return b.id===book.libId;});
-                  var perc=book.pages?Math.round((book.pagesRead||0)/book.pages*100):0;
-                  return h('tr',{key:book.id},
-                    h('td',{style:{paddingLeft:16}},
-                      h('div',{style:{display:'flex',alignItems:'center',gap:8}},
-                        lb&&h('div',{style:{width:8,height:8,borderRadius:99,flexShrink:0},className:'cat-'+lb.cat}),
-                        h('div',null,
-                          h('p',{style:{fontWeight:600,fontSize:13}},book.title),
-                          h('p',{style:{fontSize:11,color:'var(--t2)'}},book.author)
-                        )
-                      )
-                    ),
-                    h('td',{style:{textAlign:'center'}},
-                      h('div',{style:{display:'flex',justifyContent:'center',gap:2}},
-                        [1,2,3,4,5].map(function(i){
-                          return h('span',{key:i,className:'star'+(i<=(book.rating||0)?'':' off'),onClick:function(){updateMyBook(book.id,{rating:i});}},i<=(book.rating||0)?'\u2605':'\u2606');
-                        })
-                      )
-                    ),
-                    h('td',null,
-                      h('select',{className:'inp',value:book.status,onChange:function(e){updateMyBook(book.id,{status:e.target.value});},style:{width:'auto',padding:'3px 8px',fontSize:11}},
-                        h('option',{value:'queue'},'Sirada'),h('option',{value:'reading'},'Okunuyor'),h('option',{value:'done'},'Bitti')
-                      )
-                    ),
-                    h('td',null,
-                      book.status==='reading'&&h('div',{style:{display:'flex',alignItems:'center',gap:6}},
-                        h('div',{className:'bar',style:{flex:1}},h('div',{className:'barf',style:{width:perc+'%',background:'var(--blue)'}})),
-                        h('span',{style:{fontSize:10,fontWeight:600,color:'var(--blue)',minWidth:26}},perc+'%')
-                      )
-                    ),
-                    h('td',null,h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(book,'mybook');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'})))
-                  );
-                })
-              )
-            )
-          )
-    );
+function renderReadingPlan() {
+  var ap = D.readingPlan;
+  var html = '<div class="fade"><div class="sh"><div><h1 class="sh-t">Okuma Planlari</h1><p class="sh-sub">90 gun icin kuraturlu okuma yol haritalari</p></div></div>';
+  if(ap) {
+    html += '<div class="card" style="padding:16px 18px;border-left:3px solid var(--green);margin-bottom:16px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+      +'<div><p class="lbl">Aktif Plan</p><p style="font-weight:700;font-size:15px">'+U.escape(ap.name)+'</p></div>'
+      +'<button class="btn btn-s btn-sm" onclick="if(confirm(\'Plani iptal et?\')){snapshot();D.readingPlan=null;addLog(\'Plan iptal\');save();renderPage();}">'+ic('x',12)+' Iptal</button></div>';
+    ap.books.forEach(function(b,i){
+      var mb=(D.mybooks||[]).find(function(m){return m.libId===b.libId;});
+      var isCurr=new Date()>=new Date(b.start)&&new Date()<=new Date(b.end);
+      var isDone=mb&&mb.status==='done';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:'+(isCurr?'var(--bl)':'var(--s2)')+';border:1px solid '+(isCurr?'var(--blue)':'transparent')+';margin-bottom:5px">'
+        +'<div style="width:22px;height:22px;border-radius:50%;background:'+(isDone?'var(--green)':isCurr?'var(--blue)':'var(--s3)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +(isDone?ic('chk',11,'#fff'):'<span style="font-size:11px;font-weight:700;color:#fff">'+(i+1)+'</span>')+'</div>'
+        +'<div style="flex:1"><p style="font-weight:600;font-size:12.5px">'+U.escape(b.title)+'</p><p style="font-size:10.5px;color:var(--t2)">'+b.start+' &mdash; '+b.end+'</p></div>'
+        +(isCurr?'<span class="pill p-blue" style="font-size:9px">Bugun</span>':'')
+        +(isDone?'<span class="pill p-green" style="font-size:9px">Bitti</span>':'')
+        +'</div>';
+    });
+    html += '</div>';
   }
+  html += '<div class="ga" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">';
+  RPLANS.forEach(function(plan){
+    var books = plan.books.map(function(bid){return LIB.find(function(b){return b.id===bid;});}).filter(Boolean);
+    var isActive = ap&&ap.id===plan.id;
+    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:11px;border-top:3px solid '+(isActive?'var(--green)':'var(--s3)')+'">'
+      +'<div><p style="font-weight:700;font-size:14px">'+U.escape(plan.name)+'</p><p style="font-size:11.5px;color:var(--t2);margin-top:2px">'+U.escape(plan.desc)+'</p></div>'
+      +'<div style="display:flex;flex-direction:column;gap:5px">';
+    books.slice(0,4).forEach(function(b){
+      html += '<div style="display:flex;align-items:center;gap:8px;font-size:12px">'
+        +'<div class="bc'+b.cat+'" style="width:14px;height:18px;border-radius:2px;flex-shrink:0"></div>'
+        +'<span style="flex:1;font-weight:500">'+U.escape(b.t)+'</span>'
+        +'<span style="font-size:11px;color:var(--t3)">'+U.escape(b.a.split(' ').pop())+'</span></div>';
+    });
+    if(books.length>4) html += '<p style="font-size:11px;color:var(--t3);padding-left:22px">+ '+(books.length-4)+' kitap daha</p>';
+    html += '</div>';
+    if(isActive) {
+      html += '<span class="pill p-green" style="align-self:flex-start">Aktif Plan</span>';
+    } else {
+      html += '<button class="btn btn-p" style="align-self:flex-start;font-size:12px" onclick="activatePlan(\''+plan.id+'\')">'+ic('play',12)+' Plani Baslat</button>';
+    }
+    html += '</div>';
+  });
+  html += '</div></div>';
+  show('pinner',html);
+}
+function activatePlan(planId) {
+  var plan = RPLANS.find(function(p){return p.id===planId;}); if(!plan)return;
+  if(!confirm(plan.name+' planini baslat?'))return;
+  var today = new Date();
+  var daysPerBook = Math.floor(90/plan.books.length);
+  var planBooks = plan.books.map(function(bid,i){
+    var lb = LIB.find(function(b){return b.id===bid;}); if(!lb)return null;
+    var s = new Date(today); s.setDate(s.getDate()+i*daysPerBook);
+    var e = new Date(s); e.setDate(e.getDate()+daysPerBook-2);
+    return {libId:bid,title:lb.t,author:lb.a,start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0]};
+  }).filter(Boolean);
+  snapshot();
+  D.readingPlan = {id:planId,name:plan.name,books:planBooks,startedAt:U.today()};
+  addLog('Okuma plani basladi: '+plan.name); gainXP(30,'Okuma plani'); save(); renderPage();
+}
+window.activatePlan = activatePlan;
 
-  // ---- Reading Plans ----
-  function ReadingPlanView(){
-    var ap=data.activeReadingPlan;
-    var CAT_PILL=['p-red','p-teal','p-blue','p-green','p-yellow','p-purple','p-teal','p-orange','p-blue','p-gray'];
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},
-        h('div',null,
-          h('h1',{className:'sh-t'},'Okuma Planlari'),
-          h('p',{className:'sh-sub'},'90 gun icin kuraturlu okuma yol haritalari')
-        )
-      ),
-      // Active plan
-      ap&&h('div',{className:'card',style:{padding:'16px 18px',borderLeft:'3px solid var(--green)',marginBottom:4}},
-        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}},
-          h('div',null,
-            h('p',{className:'lbl'},'Aktif Plan'),
-            h('p',{style:{fontWeight:700,fontSize:15}},ap.name)
-          ),
-          h('button',{className:'btn btn-s btn-sm',onClick:function(){if(confirm('Plani iptal et?'))upd(Object.assign({},data,{activeReadingPlan:null}),'Plan iptal edildi');}},h(Ic,{n:'x',s:12}),'Iptal')
-        ),
-        h('div',{style:{display:'flex',flexDirection:'column',gap:8}},
-          ap.books.map(function(b,i){
-            var lb=LIBRARY.find(function(l){return l.id===b.libId;});
-            var mb=(data.myBooks||[]).find(function(m){return m.libId===b.libId;});
-            var today=new Date(),start=new Date(b.start),end=new Date(b.end);
-            var isCurrent=today>=start&&today<=end;
-            var isDone=mb&&mb.status==='done';
-            return h('div',{key:i,style:{display:'flex',alignItems:'center',gap:10,padding:'8px 10px',borderRadius:8,background:isCurrent?'var(--bl)':'var(--bg3)',border:isCurrent?'1px solid var(--blue)':'1px solid transparent'}},
-              h('div',{style:{width:22,height:22,borderRadius:99,background:isDone?'var(--green)':isCurrent?'var(--blue)':'var(--bg4)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
-                isDone?h(Ic,{n:'chk',s:11,c:'white'}):h('span',{style:{fontSize:11,fontWeight:700,color:'white'}},i+1)
-              ),
-              h('div',{style:{flex:1}},
-                h('p',{style:{fontWeight:600,fontSize:12.5}},b.title),
-                h('p',{style:{fontSize:10.5,color:'var(--t2)'}},b.start+' -- '+b.end)
-              ),
-              isCurrent&&h('span',{className:'pill p-blue',style:{fontSize:9}},'Bugun'),
-              isDone&&h('span',{className:'pill p-green',style:{fontSize:9}},'Bitti')
-            );
-          })
-        )
-      ),
-      // Plan cards
-      h('div',{className:'grid-auto',style:{gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))'}},
-        READING_PLANS.map(function(plan){
-          var books=plan.books.map(function(bid){return LIBRARY.find(function(b){return b.id===bid;});}).filter(Boolean);
-          var isActive=ap&&ap.planId===plan.id;
-          return h('div',{key:plan.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:11,borderTop:isActive?'3px solid var(--green)':'3px solid var(--border)'}},
-            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
-              h('div',null,
-                h('p',{style:{fontWeight:700,fontSize:14}},plan.name),
-                h('p',{style:{fontSize:11.5,color:'var(--t2)',marginTop:2}},plan.desc)
-              ),
-              h('span',{className:'pill p-gray',style:{fontSize:10}},plan.weeks+' hafta')
-            ),
-            h('div',{style:{display:'flex',flexDirection:'column',gap:5}},
-              books.slice(0,4).map(function(b,i){
-                return h('div',{key:i,style:{display:'flex',alignItems:'center',gap:8,fontSize:12}},
-                  h('div',{style:{width:14,height:18,borderRadius:2,flexShrink:0},className:'cat-'+b.cat}),
-                  h('span',{style:{flex:1,fontWeight:500}},b.t),
-                  h('span',{style:{fontSize:11,color:'var(--t3)'}},b.a.split(' ').pop())
-                );
-              }),
-              books.length>4&&h('p',{style:{fontSize:11,color:'var(--t3)',paddingLeft:22}},'+ '+(books.length-4)+' kitap daha')
-            ),
-            isActive
-              ? h('span',{className:'pill p-green',style:{alignSelf:'flex-start'}},'Aktif Plan')
-              : h('button',{className:'btn btn-p',style:{alignSelf:'flex-start'},onClick:function(){if(confirm(plan.name+' planini baslat?')){activateReadingPlan(plan.id);}},},h(Ic,{n:'play',s:12}),'Plani Baslat')
-          );
-        })
-      )
-    );
-  }
+function renderGoals() {
+  var goals = fil(D.goals,['title','desc']);
+  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Hedefler</h1><button class="btn btn-p" onclick="openForm(\'goal\')">'+ic('plus',13)+' Hedef Ekle</button></div><div class="ga">';
+  goals.forEach(function(goal){
+    var dn=goal.steps.filter(function(s){return s.done;}).length;
+    var p=goal.steps.length?Math.round(dn/goal.steps.length*100):0;
+    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<div style="display:flex;align-items:center;gap:7px;flex:1">'
+      +(goal.frog?'<span style="font-size:18px">&#x1F438;</span>':'')
+      +'<div><p style="font-weight:700;font-size:14px;line-height:1.3">'+U.escape(goal.title)+'</p>'
+      +'<span class="pill p-blue" style="margin-top:4px;font-size:10px">'+goal.quarter+'</span></div></div>'
+      +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+goal.id+',\'goal\')">'+ic('trash',12,'var(--t3)')+'</button></div>'
+      +'<p style="font-size:12px;color:var(--t2);line-height:1.6;border-left:2px solid rgba(0,0,0,.07);padding-left:9px">'+U.escape(goal.desc)+'</p>'
+      +'<div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'
+      +'<span class="lbl">Aksiyon Plani</span>'
+      +'<button class="btn btn-g btn-sm" onclick="addGoalStep('+goal.id+')">'+ic('plus',11)+' Adim</button></div>'
+      +'<div id="steps-'+goal.id+'">';
+    if(!goal.steps.length) html += '<p style="font-size:12px;color:var(--t3);font-style:italic;text-align:center;padding:6px 0">Adim eklenmedi</p>';
+    goal.steps.forEach(function(s){
+      html += '<div class="srow">'
+        +'<input type="checkbox" class="cb" '+(s.done?'checked':'')+' onchange="toggleStep('+goal.id+','+s.id+')">'
+        +'<span style="font-size:12.5px;text-decoration:'+(s.done?'line-through':'none')+';color:'+(s.done?'var(--t3)':'var(--t)')+';flex:1">'+U.escape(s.t)+'</span>'
+        +'<button class="btn btn-g btn-ic" style="width:22px;height:22px" onclick="delStep('+goal.id+','+s.id+')">'+ic('x',10,'var(--t3)')+'</button></div>';
+    });
+    html += '</div></div>';
+    if(goal.steps.length) {
+      html += '<div><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px">'
+        +'<span style="color:var(--t2);font-weight:500">Ilerleme</span><span style="color:var(--blue);font-weight:700">'+p+'%</span></div>'
+        +progressPill(p)+'</div>';
+    }
+    html += '</div>';
+  });
+  if(!goals.length) html += '<div class="empty" style="grid-column:1/-1">'+ic('tgt',32,'var(--t3)')+'<p>Henuz hedef eklenmedi</p></div>';
+  html += '</div></div>';
+  show('pinner',html);
+}
+function addGoalStep(goalId){var t=prompt('Adim adi?');if(!t)return;snapshot();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:t,done:false}])}):g;});addLog('Adim eklendi');save();renderPage();}
+function toggleStep(goalId,stepId){snapshot();D.goals=D.goals.map(function(g){if(g.id!==goalId)return g;var ns=g.steps.map(function(s){return s.id===stepId?Object.assign({},s,{done:!s.done}):s;});var wasDone=g.steps.find(function(s){return s.id===stepId;}).done;if(!wasDone)gainXP(10,'Adim tamamlandi');return Object.assign({},g,{steps:ns});});addLog('Adim');save();renderPage();}
+function delStep(goalId,stepId){snapshot();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.filter(function(s){return s.id!==stepId;})}):g;});addLog('Adim silindi');save();renderPage();}
+window.addGoalStep=addGoalStep;window.toggleStep=toggleStep;window.delStep=delStep;
 
-  // ---- Goals ----
-  function GoalsView(){
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Hedefler'),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'goal'});}},h(Ic,{n:'plus',s:13}),'Hedef Ekle')),
-      h('div',{className:'grid-auto'},
-        fil(data.goals,['title','desc']).map(function(goal){
-          var dn=goal.steps.filter(function(s){return s.done;}).length;
-          var perc=goal.steps.length?Math.round(dn/goal.steps.length*100):0;
-          return h('div',{key:goal.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:12}},
-            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
-              h('div',{style:{display:'flex',alignItems:'center',gap:7,flex:1}},
-                goal.frog&&h('span',{style:{fontSize:18}},'\uD83D\uDC38'),
-                h('div',null,
-                  h('p',{style:{fontWeight:700,fontSize:14,lineHeight:1.3}},goal.title),
-                  h('span',{className:'pill p-blue',style:{marginTop:4,fontSize:10}},goal.quarter)
-                )
-              ),
-              h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(goal,'goal');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
-            ),
-            h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.6,borderLeft:'2px solid var(--border)',paddingLeft:9}},goal.desc),
-            h('div',null,
-              h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}},
-                h('span',{className:'lbl',style:{margin:0}},'Aksiyon Plani'),
-                h('button',{className:'btn btn-g btn-sm',onClick:function(){var t=prompt('Adim adi?');if(!t)return;var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:t,done:false}])}):g;});upd(Object.assign({},data,{goals:ng}),'Adim eklendi');}},h(Ic,{n:'plus',s:11}),'Adim')
-              ),
-              goal.steps.length===0&&h('p',{style:{fontSize:12,color:'var(--t3)',fontStyle:'italic',textAlign:'center',padding:'6px 0'}},'Adim eklenmedi'),
-              goal.steps.map(function(s){
-                return h('div',{key:s.id,className:'step-row'},
-                  h('input',{type:'checkbox',className:'cb',checked:s.done,onChange:function(){if(!s.done)gainXP(10,'Adim tamamlandi');var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.map(function(ss){return ss.id===s.id?Object.assign({},ss,{done:!ss.done}):ss;})}):g;});upd(Object.assign({},data,{goals:ng}),'Adim');}}),
-                  h('span',{style:{fontSize:12.5,textDecoration:s.done?'line-through':'none',color:s.done?'var(--t3)':'var(--text)',flex:1}},s.t),
-                  h('button',{className:'btn btn-g btn-ic',style:{width:22,height:22},onClick:function(){var ng=data.goals.map(function(g){return g.id===goal.id?Object.assign({},g,{steps:g.steps.filter(function(ss){return ss.id!==s.id;})}):g;});upd(Object.assign({},data,{goals:ng}),'Adim silindi');}},h(Ic,{n:'x',s:10,c:'var(--t3)'}))
-                );
-              })
-            ),
-            goal.steps.length>0&&h('div',null,
-              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}},
-                h('span',{style:{color:'var(--t2)',fontWeight:500}},'Ilerleme'),h('span',{style:{color:'var(--blue)',fontWeight:700}},perc+'%')
-              ),
-              h('div',{className:'bar'},h('div',{className:'barf',style:{width:perc+'%',background:'var(--blue)'}}))
-            )
-          );
-        }),
-        data.goals.length===0&&h('div',{className:'empty',style:{gridColumn:'1/-1'}},h(Ic,{n:'tgt',s:32,c:'var(--t3)'}),h('p',null,'Henuz hedef eklenmedi'))
-      )
-    );
-  }
+function renderTodos() {
+  var PLBL={urgent:'Acil',high:'Onemli',normal:'Normal'};
+  var PCLS={urgent:'p-red',high:'p-orange',normal:'p-gray'};
+  var todos = fil(D.todos,['text']);
+  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Yapilacaklar</h1><button class="btn btn-p" onclick="openForm(\'todo\')">'+ic('plus',13)+' Gorev Ekle</button></div>'
+    +'<div class="card" style="overflow:hidden"><table class="tbl"><thead><tr>'
+    +'<th style="padding-left:16px">Gorev</th><th style="text-align:center">Onem</th><th style="text-align:center">Kategori</th><th style="text-align:center">Bitis</th><th style="width:36px"></th>'
+    +'</tr></thead><tbody>';
+  todos.forEach(function(todo){
+    var ov=todo.end&&new Date(todo.end)<new Date()&&!todo.done;
+    html += '<tr style="opacity:'+(todo.done?.42:1)+'">'
+      +'<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:10px">'
+      +'<input type="checkbox" class="cb" '+(todo.done?'checked':'')+' onchange="toggleTodo('+todo.id+')">'
+      +'<span style="font-weight:500;text-decoration:'+(todo.done?'line-through':'none')+'">'+U.escape(todo.text)+'</span></div></td>'
+      +'<td style="text-align:center"><span class="pill '+(PCLS[todo.priority]||'p-gray')+'" style="font-size:10px">'+(PLBL[todo.priority]||todo.priority)+'</span></td>'
+      +'<td style="text-align:center;font-size:12px;color:var(--t2)">'+U.escape(todo.category||'')+'</td>'
+      +'<td style="text-align:center;font-size:12px;color:'+(ov?'var(--red)':'var(--t2)')+'">'+(todo.end||'&mdash;')+'</td>'
+      +'<td><button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+todo.id+',\'todo\')">'+ic('trash',12,'var(--t3)')+'</button></td></tr>';
+  });
+  if(!todos.length) html += '<tr><td colspan="5"><div class="empty">'+ic('csq',28,'var(--t3)')+'<p>Gorev yok</p></div></td></tr>';
+  html += '</tbody></table></div></div>';
+  show('pinner',html);
+}
+function toggleTodo(id){snapshot();D.todos=D.todos.map(function(t){if(t.id!==id)return t;if(!t.done)gainXP(15,'Gorev tamamlandi');return Object.assign({},t,{done:!t.done});});addLog('Gorev');save();renderPage();}
+window.toggleTodo=toggleTodo;
 
-  // ---- Todos ----
-  function TodosView(){
-    var PCLS={urgent:'p-red',high:'p-orange',normal:'p-gray'};
-    var PLBL={urgent:'Acil',high:'Onemli',normal:'Normal'};
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Yapilacaklar'),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'todo'});}},h(Ic,{n:'plus',s:13}),'Gorev Ekle')),
-      h('div',{className:'card',style:{overflow:'hidden'}},
-        h('table',{className:'tbl'},
-          h('thead',null,h('tr',null,h('th',{style:{paddingLeft:16}},'Gorev'),h('th',{style:{textAlign:'center'}},'Onem'),h('th',{style:{textAlign:'center'}},'Kategori'),h('th',{style:{textAlign:'center'}},'Bitis'),h('th',{style:{width:36}}))),
-          h('tbody',null,
-            fil(data.todos,['text']).map(function(todo){
-              var ov=todo.end&&new Date(todo.end)<new Date()&&!todo.done;
-              return h('tr',{key:todo.id,style:{opacity:todo.done?.42:1}},
-                h('td',{style:{paddingLeft:16}},h('div',{style:{display:'flex',alignItems:'center',gap:10}},
-                  h('input',{type:'checkbox',className:'cb',checked:todo.done,onChange:function(){if(!todo.done)gainXP(15,'Gorev tamamlandi');var nt=data.todos.map(function(t){return t.id===todo.id?Object.assign({},t,{done:!t.done}):t;});upd(Object.assign({},data,{todos:nt}),'Gorev');}}),
-                  h('span',{style:{fontWeight:500,textDecoration:todo.done?'line-through':'none'}},todo.text)
-                )),
-                h('td',{style:{textAlign:'center'}},h('span',{className:'pill '+(PCLS[todo.priority]||'p-gray'),style:{fontSize:10}},PLBL[todo.priority]||todo.priority)),
-                h('td',{style:{textAlign:'center',fontSize:12,color:'var(--t2)'}},todo.category),
-                h('td',{style:{textAlign:'center',fontSize:12,color:ov?'var(--red)':'var(--t2)'}},todo.end||'--'),
-                h('td',null,h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(todo,'todo');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'})))
-              );
-            }),
-            data.todos.length===0&&h('tr',null,h('td',{colSpan:5},h('div',{className:'empty'},h(Ic,{n:'csq',s:28,c:'var(--t3)'}),h('p',null,'Gorev yok'))))
-          )
-        )
-      )
-    );
-  }
+function renderRoutines() {
+  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Rutinler</h1><button class="btn btn-p" onclick="openForm(\'routine\')">'+ic('plus',13)+' Rutin Ekle</button></div><div class="gas">';
+  Object.keys(D.routines).forEach(function(period){
+    var items=D.routines[period]||[];
+    var done=items.filter(function(r){return !U.isActive(period,r.last);}).length;
+    html += '<div class="card cp"><div style="display:flex;justify-content:space-between;margin-bottom:11px;align-items:center">'
+      +'<p style="font-weight:700;font-size:13px;text-transform:capitalize">'+period+'</p>'
+      +'<span class="pill '+(done===items.length&&items.length>0?'p-green':'p-gray')+'" style="font-size:10px">'+done+'/'+items.length+'</span></div>'
+      +'<div style="display:flex;flex-direction:column;gap:3px">';
+    items.forEach(function(item){
+      var active=U.isActive(period,item.last);
+      html += '<div class="rrow'+(active?'':', done')+'" onclick="checkRoutine(\''+period+'\','+item.id+')">'
+        +'<div style="width:24px;height:24px;border-radius:6px;background:'+(active?'var(--bl)':'var(--s2)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +ic(active?'ci':'chk',12,active?'var(--blue)':'var(--green)')+'</div>'
+        +'<span style="font-size:12.5px;font-weight:500;flex:1">'+U.escape(item.t)+'</span>'
+        +'<button class="btn btn-g btn-ic" style="width:20px;height:20px;pointer-events:auto" onclick="event.stopPropagation();delRoutine(\''+period+'\','+item.id+')">'+ic('x',10,'var(--t3)')+'</button></div>';
+    });
+    if(!items.length) html += '<p style="font-size:11px;color:var(--t3);font-style:italic;text-align:center;padding:6px 0">Henuz rutin yok</p>';
+    html += '</div></div>';
+  });
+  html += '</div></div>';
+  show('pinner',html);
+}
+function checkRoutine(period,id){snapshot();D.routines[period]=D.routines[period].map(function(r){return r.id===id?Object.assign({},r,{last:new Date().toISOString()}):r;});gainXP(10,'Rutin tamamlandi');addLog('Rutin tamamlandi');save();renderPage();}
+function delRoutine(period,id){snapshot();D.routines[period]=(D.routines[period]||[]).filter(function(r){return r.id!==id;});addLog('Rutin silindi');save();renderPage();}
+window.checkRoutine=checkRoutine;window.delRoutine=delRoutine;
 
-  // ---- Routines ----
-  function RoutinesView(){
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Rutinler'),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:'routine'});}},h(Ic,{n:'plus',s:13}),'Rutin Ekle')),
-      h('div',{className:'grid-auto-sm'},
-        Object.entries(data.routines).map(function(entry){
-          var period=entry[0],items=entry[1];
-          var done=(items||[]).filter(function(r){return !U.isActive(period,r.last);}).length;
-          return h('div',{key:period,className:'card cp'},
-            h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:11,alignItems:'center'}},
-              h('p',{style:{fontWeight:700,fontSize:13,textTransform:'capitalize'}},period),
-              h('span',{className:'pill '+(done===(items||[]).length&&(items||[]).length>0?'p-green':'p-gray'),style:{fontSize:10}},done+'/'+(items||[]).length)
-            ),
-            h('div',{style:{display:'flex',flexDirection:'column',gap:3}},
-              (items||[]).map(function(item){
-                var active=U.isActive(period,item.last);
-                return h('div',{key:item.id,className:'rit'+(active?'':' done'),onClick:function(){if(active){gainXP(10,'Rutin tamamlandi');var nr=data.routines[period].map(function(r){return r.id===item.id?Object.assign({},r,{last:new Date().toISOString()}):r;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr})}),'Rutin');}}},
-                  h('div',{style:{width:24,height:24,borderRadius:6,background:active?'var(--bl)':'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},
-                    h(Ic,{n:active?'ci':'cc',s:12,c:active?'var(--blue)':'var(--green)'})
-                  ),
-                  h('span',{style:{fontSize:12.5,fontWeight:500,flex:1}},item.t),
-                  h('button',{className:'btn btn-g btn-ic',style:{width:20,height:20,pointerEvents:'auto'},onClick:function(e){e.stopPropagation();var nr2=(data.routines[period]||[]).filter(function(i){return i.id!==item.id;});upd(Object.assign({},data,{routines:Object.assign({},data.routines,{[period]:nr2})}),'Rutin silindi');}},h(Ic,{n:'x',s:10,c:'var(--t3)'}))
-                );
-              }),
-              (items||[]).length===0&&h('p',{style:{fontSize:11,color:'var(--t3)',fontStyle:'italic',textAlign:'center',padding:'6px 0'}},'Henuz rutin yok')
-            )
-          );
-        })
-      )
-    );
-  }
-
-  // ---- Challenges ----
-  function ChallengesView(){
-    var pks=useState(false); var pk=pks[0],setPk=pks[1];
-    var sts=useState(null); var sel=sts[0],setSel=sts[1];
-    var cns=useState(''); var cname=cns[0],setCname=cns[1];
-    var cds=useState(''); var cdesc=cds[0],setCdesc=cds[1];
-    var active=(data.challenges||[]).filter(function(c){return c.status==='active';});
-    var done=(data.challenges||[]).filter(function(c){return c.status==='done';});
-    function info(ch){
+function renderChallenges() {
+  var active=(D.challenges||[]).filter(function(c){return c.status==='active';});
+  var done=(D.challenges||[]).filter(function(c){return c.status==='done';});
+  var html = '<div class="fade"><div class="sh"><div><h1 class="sh-t">90-Gun Mucadelesi</h1><p class="sh-sub">Sinirlarini as, XP kazan</p></div>'
+    +'<button class="btn btn-p" onclick="openChallengePicker()">'+ic('plus',13)+' Mucadele Baslat</button></div>';
+  if(active.length) {
+    html += '<p class="lbl" style="margin-bottom:9px">Aktif ('+active.length+')</p><div class="ga">';
+    active.forEach(function(ch){
       var cis=ch.checkins||[],today=U.today();
-      var total=cis.length,perc=Math.round(total/90*100);
+      var total=cis.length,p=Math.round(total/90*100);
       var elapsed=Math.max(0,Math.ceil((new Date()-new Date(ch.start))/864e5));
       var left=Math.max(0,Math.ceil((new Date(ch.end)-new Date())/864e5));
-      return {today:cis.indexOf(today)>=0,total:total,perc:perc,elapsed:elapsed,left:left};
-    }
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},
-        h('div',null,h('h1',{className:'sh-t'},'90-Gun Mucadelesi'),h('p',{className:'sh-sub'},'Sinirlarini as, XP kazan')),
-        h('button',{className:'btn btn-p',onClick:function(){setPk(true);}},h(Ic,{n:'plus',s:13}),'Mucadele Baslat')
-      ),
-      active.length>0&&h('div',null,
-        h('p',{className:'lbl',style:{marginBottom:9}},'Aktif ('+active.length+')'),
-        h('div',{className:'grid-auto'},
-          active.map(function(ch){
-            var si=info(ch),dc=DIFF[ch.diff]||DIFF.medium;
-            return h('div',{key:ch.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:12}},
-              h('div',{style:{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}},
-                h('div',{style:{display:'flex',gap:9,alignItems:'center'}},
-                  h('div',{style:{width:36,height:36,borderRadius:9,background:'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:ch.icon||'trophy',s:17,c:'var(--blue)'})),
-                  h('div',null,h('p',{style:{fontWeight:700,fontSize:13}},ch.name),h('div',{style:{display:'flex',gap:4,marginTop:3}},h('span',{className:'pill '+dc.cls,style:{fontSize:9}},dc.l),h('span',{className:'pill p-gray',style:{fontSize:9}},ch.cat)))
-                ),
-                h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(ch,'challenge');}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
-              ),
-              h('p',{style:{fontSize:12,color:'var(--t2)',lineHeight:1.5}},ch.desc),
-              h('div',null,
-                h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:12}},h('span',{style:{color:'var(--t2)',fontWeight:500}},si.total+' / 90'),h('span',{style:{color:'var(--blue)',fontWeight:700}},si.perc+'%')),
-                h('div',{className:'bar'},h('div',{className:'barf',style:{width:si.perc+'%',background:'var(--blue)'}}))
-              ),
-              h('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:7}},
-                [{l:'Check-in',v:si.total,c:'var(--green)'},{l:'Gecen',v:si.elapsed+'g',c:'var(--blue)'},{l:'Kalan',v:si.left+'g',c:si.left<14?'var(--red)':'var(--orange)'}].map(function(s){
-                  return h('div',{key:s.l,style:{background:'var(--bg3)',borderRadius:7,padding:'7px 9px',textAlign:'center'}},h('div',{style:{fontWeight:700,fontSize:17,letterSpacing:'-.3px',color:s.c}},s.v),h('div',{style:{fontSize:9,color:'var(--t3)',fontWeight:600,textTransform:'uppercase',marginTop:1}},s.l));
-                })
-              ),
-              h('div',{style:{display:'flex',gap:7}},
-                si.today
-                  ? h('button',{className:'btn btn-green',style:{flex:1,justifyContent:'center'},disabled:true},h(Ic,{n:'cc',s:13}),'Bugun Yapildi')
-                  : h('button',{className:'btn btn-p',style:{flex:1,justifyContent:'center'},onClick:function(){checkin(ch.id);}},h(Ic,{n:'chk',s:13}),'Check-in Yap'),
-                si.perc>=100&&h('button',{className:'btn btn-orange',onClick:function(){var chs=(data.challenges||[]).map(function(c){return c.id===ch.id?Object.assign({},c,{status:'done'}):c;});upd(Object.assign({},data,{challenges:chs}),'Mucadele bitti');gainXP(ch.xp||300,'Mucadele: '+ch.name);}},h(Ic,{n:'trophy',s:13}),'Bitir')
-              )
-            );
-          })
-        )
-      ),
-      done.length>0&&h('div',null,
-        h('p',{className:'lbl',style:{marginBottom:9}},'Tamamlanan ('+done.length+')'),
-        h('div',{className:'grid-auto-sm'},
-          done.map(function(ch){return h('div',{key:ch.id,className:'card',style:{padding:'13px 15px',display:'flex',gap:10,alignItems:'center',opacity:.65}},h('div',{style:{width:32,height:32,borderRadius:8,background:'var(--gl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:'trophy',s:15,c:'var(--green)'})),h('div',{flex:1},h('p',{style:{fontWeight:600,fontSize:13}},ch.name),h('p',{style:{fontSize:11,color:'var(--t2)',marginTop:1}},'+'+ch.xp+' XP')),h('span',{className:'pill p-green',style:{fontSize:10}},'Bitti'));})
-        )
-      ),
-      active.length===0&&done.length===0&&h('div',{className:'card',style:{padding:48,textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:12}},
-        h('div',{style:{width:52,height:52,borderRadius:14,background:'var(--ol)',display:'flex',alignItems:'center',justifyContent:'center'}},h(Ic,{n:'trophy',s:26,c:'var(--orange)'})),
-        h('p',{style:{fontWeight:700,fontSize:16}},'Hic mucadeleniz yok'),
-        h('p',{style:{fontSize:13,color:'var(--t2)',maxWidth:260,lineHeight:1.6}},'90 gunluk bir mucadele baslatin ve her gun check-in yaparak XP kazanin!'),
-        h('button',{className:'btn btn-p',onClick:function(){setPk(true);}},h(Ic,{n:'plus',s:13}),'Baslat')
-      ),
-      pk&&h('div',{className:'ov',onClick:function(e){if(e.target===e.currentTarget){setPk(false);setSel(null);}}},
-        h('div',{className:'mbox',style:{maxWidth:520}},
-          h('div',{className:'mh',style:{paddingBottom:14}},
-            h('span',{style:{fontWeight:700,fontSize:15}},sel?'Mucadeleyi Onayla':'90-Gun Mucadele Sec'),
-            h('button',{className:'btn btn-g btn-ic',onClick:function(){setPk(false);setSel(null);}},h(Ic,{n:'x',s:14}))
-          ),
-          !sel
-            ? h('div',{style:{padding:'0 20px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,maxHeight:'60vh',overflowY:'auto'}},
-                CH_TPLS.map(function(tpl){
-                  var dc=DIFF[tpl.diff]||DIFF.medium;
-                  return h('button',{key:tpl.id,onClick:function(){setSel(tpl);},style:{display:'flex',gap:9,padding:'11px 12px',borderRadius:9,background:'var(--bg3)',border:'1px solid var(--border)',cursor:'pointer',textAlign:'left',width:'100%',fontFamily:'inherit',transition:'border .12s'},
-                    onMouseEnter:function(e){e.currentTarget.style.borderColor='var(--blue)';},onMouseLeave:function(e){e.currentTarget.style.borderColor='var(--border)';}},
-                    h('div',{style:{width:32,height:32,borderRadius:8,background:'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:tpl.icon,s:15,c:'var(--blue)'})),
-                    h('div',null,h('p',{style:{fontWeight:600,fontSize:12.5,color:'var(--text)'}},tpl.name),h('div',{style:{display:'flex',gap:4,marginTop:3}},h('span',{className:'pill '+dc.cls,style:{fontSize:9}},dc.l),h('span',{style:{fontSize:10,color:'var(--t2)',fontWeight:500}},'+'+tpl.xp+' XP')))
-                  );
-                })
-              )
-            : h('div',{style:{padding:'0 20px 20px',display:'flex',flexDirection:'column',gap:10}},
-                h('div',{style:{background:'var(--bg3)',borderRadius:9,padding:'11px 13px',display:'flex',gap:10}},
-                  h('div',{style:{width:36,height:36,borderRadius:9,background:'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:sel.icon,s:17,c:'var(--blue)'})),
-                  h('div',null,h('p',{style:{fontWeight:700,fontSize:13}},sel.name),h('p',{style:{fontSize:11.5,color:'var(--t2)',marginTop:2,lineHeight:1.5}},sel.desc))
-                ),
-                sel.id==='custom'&&h('input',{className:'inp',placeholder:'Mucadele adi',value:cname,onChange:function(e){setCname(e.target.value);}}),
-                sel.id==='custom'&&h('textarea',{className:'inp',placeholder:'Mucadele tanimi',value:cdesc,onChange:function(e){setCdesc(e.target.value);},rows:2}),
-                h('div',{style:{background:'var(--gl)',border:'1px solid rgba(52,199,89,.25)',borderRadius:8,padding:'9px 12px',fontSize:12,color:'var(--green)',fontWeight:500}},'Basarirsan +'+sel.xp+' XP kazanacaksin. 90 gun boyunca her gun check-in yapin!'),
-                h('div',{style:{display:'flex',gap:7}},
-                  h('button',{className:'btn btn-s',style:{flex:1},onClick:function(){setSel(null);}},'Geri'),
-                  h('button',{className:'btn btn-p',style:{flex:2},onClick:function(){startChallenge(sel,cname,cdesc);setPk(false);setSel(null);setCname('');setCdesc('');}},h(Ic,{n:'play',s:12}),'Mucadeleyi Baslat!')
-                )
-              )
-        )
-      )
-    );
+      var todayDone=cis.indexOf(today)>=0;
+      var dc=DIFF[ch.diff]||DIFF.medium;
+      var c=p>=100?'var(--green)':p>=70?'var(--orange)':'var(--red)';
+      html += '<div class="card cp" style="display:flex;flex-direction:column;gap:12px">'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between">'
+        +'<div style="display:flex;gap:9px;align-items:center">'
+        +'<div style="width:36px;height:36px;border-radius:9px;background:var(--bl);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(ch.icon||'trophy',17,'var(--blue)')+'</div>'
+        +'<div><p style="font-weight:700;font-size:13px">'+U.escape(ch.name)+'</p>'
+        +'<div style="display:flex;gap:4px;margin-top:3px"><span class="pill '+dc.cls+'" style="font-size:9px">'+dc.l+'</span><span class="pill p-gray" style="font-size:9px">'+ch.cat+'</span></div></div></div>'
+        +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+ch.id+',\'challenge\')">'+ic('trash',12,'var(--t3)')+'</button></div>'
+        +'<p style="font-size:12px;color:var(--t2);line-height:1.5">'+U.escape(ch.desc)+'</p>'
+        +'<div><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px"><span style="color:var(--t2);font-weight:500">'+total+' / 90</span><span style="color:var(--blue);font-weight:700">'+p+'%</span></div>'
+        +'<div class="bar"><div class="barf" style="width:'+p+'%;background:var(--blue)"></div></div></div>'
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">';
+      [{l:'Check-in',v:total,c:'var(--green)'},{l:'Gecen',v:elapsed+'g',c:'var(--blue)'},{l:'Kalan',v:left+'g',c:left<14?'var(--red)':'var(--orange)'}].forEach(function(s){
+        html += '<div style="background:var(--s2);border-radius:7px;padding:7px 9px;text-align:center"><div style="font-weight:700;font-size:17px;letter-spacing:-.3px;color:'+s.c+'">'+s.v+'</div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;margin-top:1px">'+s.l+'</div></div>';
+      });
+      html += '</div><div style="display:flex;gap:7px">';
+      if(todayDone) html += '<button class="btn btn-green" style="flex:1;justify-content:center" disabled>'+ic('chk',13)+' Bugun Yapildi</button>';
+      else html += '<button class="btn btn-p" style="flex:1;justify-content:center" onclick="doCheckin('+ch.id+')">'+ic('chk',13)+' Check-in Yap</button>';
+      if(p>=100) html += '<button class="btn btn-orange" onclick="finishCh('+ch.id+')">'+ic('trophy',13)+' Bitir</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
   }
-
-  // ---- Tools ----
-  function ToolsView(){
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:14}},
-      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Odaklanma Araclari')),
-      h('div',{className:'grid-auto-sm'},
-        SOUNDS.map(function(s){
-          var on=data.activeSound===s.url;
-          return h('button',{key:s.name,className:'snd'+(on?' on':''),onClick:function(){playSound(s.url);}},
-            h('div',{style:{width:36,height:36,borderRadius:8,background:on?'rgba(255,255,255,.2)':'var(--bl)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}},h(Ic,{n:s.icon,s:17,c:on?'white':'var(--blue)'})),
-            h('div',{style:{flex:1,textAlign:'left'}},h('p',{style:{fontWeight:600,fontSize:13}},s.name),h('p',{style:{fontSize:11,marginTop:1,opacity:.7}},on?'Caliniyor...':'Dinlemek icin tikla')),
-            on&&h('div',{style:{width:6,height:6,borderRadius:99,background:'white'}})
-          );
-        })
-      ),
-      h('div',{className:'card cp',style:{display:'flex',alignItems:'center',gap:12}},
-        h(Ic,{n:'vol',s:15,c:'var(--t2)'}),
-        h('input',{type:'range',min:0,max:1,step:.05,value:data.vol,onChange:function(e){var v=parseFloat(e.target.value);if(audioRef.current)audioRef.current.volume=v;setData(function(p){return Object.assign({},p,{vol:v});});},style:{flex:1}}),
-        h('span',{style:{fontSize:12,color:'var(--t2)',fontWeight:500,minWidth:30,textAlign:'right'}},Math.round(data.vol*100)+'%')
-      )
-    );
+  if(done.length) {
+    html += '<p class="lbl" style="margin-top:16px;margin-bottom:9px">Tamamlanan ('+done.length+')</p><div class="gas">';
+    done.forEach(function(ch){
+      html += '<div class="card" style="padding:13px 15px;display:flex;gap:10px;align-items:center;opacity:.65">'
+        +'<div style="width:32px;height:32px;border-radius:8px;background:var(--gl);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic('trophy',15,'var(--green)')+'</div>'
+        +'<div style="flex:1"><p style="font-weight:600;font-size:13px">'+U.escape(ch.name)+'</p><p style="font-size:11px;color:var(--t2);margin-top:1px">+'+ch.xp+' XP</p></div>'
+        +'<span class="pill p-green" style="font-size:10px">Bitti</span></div>';
+    });
+    html += '</div>';
   }
-
-  // ---- Generic list view ----
-  function GenericList(){
-    var CFG={vault:{k:'vault',keys:['title','text'],type:'vault',t:'Bilgi Kasasi',i:'arc'},quotes:{k:'quotes',keys:['text','author'],type:'quote',t:'Ozlu Sozler',i:'qt'},journal:{k:'journal',keys:['text','cat'],type:'journal',t:'Gunluk',i:'pen'},principles:{k:'principles',keys:['text','type'],type:'principle',t:'Prensipler',i:'sh'},coaching:{k:'coaching',keys:['title','text'],type:'coaching',t:'Kocluk',i:'us'},questions:{k:'questions',keys:['text'],type:'question',t:'Sorular',i:'hlp'}};
-    var cfg=CFG[tab]; if(!cfg)return null;
-    var list=data[cfg.k]||[];
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:16}},
-      h('div',{className:'sh'},h('h1',{className:'sh-t'},cfg.t),h('button',{className:'btn btn-p',onClick:function(){setModal({open:true,type:cfg.type});}},h(Ic,{n:'plus',s:13}),'Ekle')),
-      h('div',{className:'grid-auto'},
-        fil(list,cfg.keys).map(function(item){
-          return h('div',{key:item.id,className:'card cp',style:{display:'flex',flexDirection:'column',gap:9}},
-            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}},
-              h('span',{className:'pill p-blue',style:{fontSize:10}},item.cat||item.type||item.category||''),
-              h('div',{style:{display:'flex',gap:3}},
-                h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){setPrint(item);}},h(Ic,{n:'prn',s:12,c:'var(--t3)'})),
-                h('button',{className:'btn btn-g btn-ic',style:{width:26,height:26},onClick:function(){del(item,cfg.type);}},h(Ic,{n:'trash',s:12,c:'var(--t3)'}))
-              )
-            ),
-            item.title&&h('p',{style:{fontWeight:700,fontSize:13.5}},item.title),
-            h('p',{style:{fontSize:12.5,color:'var(--t2)',lineHeight:1.6,fontStyle:'italic',flex:1}},'"'+(item.text||item.content||'')+'"'),
-            item.author&&h('p',{style:{fontSize:11,color:'var(--t3)',fontWeight:500}},'-- '+item.author),
-            item.date&&h('p',{style:{fontSize:10.5,color:'var(--t3)'}},item.date)
-          );
-        }),
-        list.length===0&&h('div',{className:'empty',style:{gridColumn:'1/-1'}},h(Ic,{n:cfg.i,s:32,c:'var(--t3)'}),h('p',null,'Henuz icerik yok'))
-      )
-    );
+  if(!active.length&&!done.length) {
+    html += '<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">'
+      +'<div style="width:52px;height:52px;border-radius:14px;background:var(--ol);display:flex;align-items:center;justify-content:center">'+ic('trophy',26,'var(--orange)')+'</div>'
+      +'<p style="font-weight:700;font-size:16px">Hic mucadeleniz yok</p>'
+      +'<p style="font-size:13px;color:var(--t2);max-width:260px;line-height:1.6">90 gunluk bir mucadele baslatin ve her gun check-in yaparak XP kazanin!</p>'
+      +'<button class="btn btn-p" onclick="openChallengePicker()">'+ic('plus',13)+' Baslat</button></div>';
   }
+  html += '</div>';
+  show('pinner',html);
+}
+function doCheckin(id){snapshot();var today=U.today();D.challenges=(D.challenges||[]).map(function(c){if(c.id!==id||(c.checkins&&c.checkins.indexOf(today)>=0))return c;return Object.assign({},c,{checkins:(c.checkins||[]).concat([today])});});addLog('Check-in');gainXP(15,'Check-in');save();renderPage();}
+function finishCh(id){var ch=(D.challenges||[]).find(function(c){return c.id===id;});if(!ch)return;snapshot();D.challenges=(D.challenges||[]).map(function(c){return c.id===id?Object.assign({},c,{status:'done'}):c;});addLog('Mucadele bitti');gainXP(ch.xp||300,'Mucadele: '+ch.name);save();renderPage();}
+window.doCheckin=doCheckin;window.finishCh=finishCh;
 
-  // ---- History ----
-  function HistoryView(){
-    return h('div',{className:'fade',style:{display:'flex',flexDirection:'column',gap:14}},
-      h('div',{className:'sh'},h('h1',{className:'sh-t'},'Aktivite Gecmisi'),h('span',{className:'pill p-gray'},(data.logs||[]).length+' kayit')),
-      h('div',{className:'card',style:{padding:'4px 16px',maxHeight:'72vh',overflowY:'auto'}},
-        (data.logs||[]).map(function(lg,i){
-          var isXP=lg.action.indexOf('XP')>=0;
-          return h('div',{key:i,style:{display:'flex',gap:11,padding:'10px 0',borderBottom:'1px solid var(--border)'}},
-            h('div',{style:{width:7,height:7,borderRadius:99,background:isXP?'var(--green)':'var(--blue)',flexShrink:0,marginTop:4,boxShadow:isXP?'0 0 5px var(--green)':''}}),
-            h('div',null,h('p',{style:{fontSize:10.5,color:'var(--t2)',fontWeight:500,marginBottom:1}},lg.time),h('p',{style:{fontSize:13,fontWeight:500}},lg.action))
-          );
-        }),
-        (!data.logs||data.logs.length===0)&&h('div',{className:'empty'},h(Ic,{n:'act',s:28,c:'var(--t3)'}),h('p',null,'Henuz aktivite yok'))
-      )
-    );
+var _selTpl=null;
+function openChallengePicker(){_selTpl=null;_renderPicker();}
+function _renderPicker(){
+  var html;
+  if(!_selTpl){
+    html = '<div class="mh"><span style="font-weight:700;font-size:15px">90-Gun Mucadele Sec</span><button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>'
+      +'<div class="mb" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    CH_TPLS.forEach(function(tpl){
+      var dc=DIFF[tpl.diff]||DIFF.medium;
+      html += '<button style="display:flex;gap:9px;padding:11px 12px;border-radius:9px;background:var(--s2);border:1px solid rgba(0,0,0,.07);cursor:pointer;text-align:left;width:100%;font-family:inherit;transition:border .12s" onmouseenter="this.style.borderColor=\'var(--blue)\'" onmouseleave="this.style.borderColor=\'rgba(0,0,0,.07)\'" onclick="window._selTpl=CH_TPLS.find(function(t){return t.id===\''+tpl.id+'\'});_renderPicker()">'
+        +'<div style="width:32px;height:32px;border-radius:8px;background:var(--bl);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(tpl.icon,15,'var(--blue)')+'</div>'
+        +'<div><p style="font-weight:600;font-size:12.5px;color:var(--t)">'+U.escape(tpl.name)+'</p>'
+        +'<div style="display:flex;gap:4px;margin-top:3px"><span class="pill '+dc.cls+'" style="font-size:9px">'+dc.l+'</span><span style="font-size:10px;color:var(--t2);font-weight:500">+'+tpl.xp+' XP</span></div></div></button>';
+    });
+    html += '</div>';
+  } else {
+    var tpl=_selTpl,dc=DIFF[tpl.diff]||DIFF.medium;
+    html = '<div class="mh"><span style="font-weight:700;font-size:15px">Mucadeleyi Onayla</span><button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>'
+      +'<div class="mb">'
+      +'<div style="background:var(--s2);border-radius:9px;padding:11px 13px;display:flex;gap:10px">'
+      +'<div style="width:36px;height:36px;border-radius:9px;background:var(--bl);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(tpl.icon,17,'var(--blue)')+'</div>'
+      +'<div><p style="font-weight:700;font-size:13px">'+U.escape(tpl.name)+'</p><p style="font-size:11.5px;color:var(--t2);margin-top:2px;line-height:1.5">'+U.escape(tpl.desc)+'</p></div></div>'
+      +(tpl.id==='custom'?'<input type="text" class="inp" id="ch_name" placeholder="Mucadele adi"><textarea class="inp" id="ch_desc" placeholder="Tanim" rows="2"></textarea>':'')
+      +'<div style="background:var(--gl);border:1px solid rgba(52,199,89,.25);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--green);font-weight:500">Basarirsan +'+tpl.xp+' XP kazanacaksin!</div>'
+      +'</div><div class="mf"><button class="btn btn-s" style="flex:1" onclick="window._selTpl=null;_renderPicker()">Geri</button>'
+      +'<button class="btn btn-p" style="flex:2" onclick="confirmChallenge()">'+ic('play',12)+' Mucadeleyi Baslat!</button></div>';
   }
+  showModal(html);
+}
+function confirmChallenge(){
+  var tpl=_selTpl; if(!tpl)return;
+  var cname=tpl.id==='custom'&&$('ch_name')?$('ch_name').value:'';
+  var cdesc=tpl.id==='custom'&&$('ch_desc')?$('ch_desc').value:'';
+  var s=new Date(),e=new Date(s);e.setDate(e.getDate()+90);
+  snapshot();
+  D.challenges=[{id:Date.now(),tplId:tpl.id,name:cname||tpl.name,desc:cdesc||tpl.desc,icon:tpl.icon,cat:tpl.cat,diff:tpl.diff,xp:tpl.xp,start:U.today(),end:e.toISOString().split('T')[0],checkins:[],status:'active'}].concat(D.challenges||[]);
+  addLog('Mucadele basladi: '+(cname||tpl.name));gainXP(50,'Mucadele basladi');save();closeModal();renderPage();
+}
+window.openChallengePicker=openChallengePicker;window._renderPicker=_renderPicker;window.confirmChallenge=confirmChallenge;
 
-  function renderContent(){
-    if(tab==='dashboard')return h(DashView,null);
-    if(tab==='kpi')return h(KPIView,null);
-    if(tab==='challenges')return h(ChallengesView,null);
-    if(tab==='goals')return h(GoalsView,null);
-    if(tab==='todos')return h(TodosView,null);
-    if(tab==='routines')return h(RoutinesView,null);
-    if(tab==='library')return h(LibraryView,null);
-    if(tab==='mybooks')return h(MyBooksView,null);
-    if(tab==='readingplan')return h(ReadingPlanView,null);
-    if(tab==='tools')return h(ToolsView,null);
-    if(tab==='history')return h(HistoryView,null);
-    return h(GenericList,null);
-  }
+function renderTools() {
+  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">Odaklanma Araclari</h1></div><div class="gas">';
+  SOUNDS.forEach(function(s){
+    var on=D.activeSound===s.url;
+    html += '<button class="snd'+(on?' on':'')+'" onclick="toggleSound(\''+s.url+'\')">'
+      +'<div style="width:36px;height:36px;border-radius:8px;background:'+(on?'rgba(255,255,255,.2)':'var(--bl)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic(s.icon,17,on?'#fff':'var(--blue)')+'</div>'
+      +'<div style="flex:1;text-align:left"><p style="font-weight:600;font-size:13px">'+s.name+'</p><p style="font-size:11px;margin-top:1px;opacity:.7">'+(on?'Caliniyor...':'Dinlemek icin tikla')+'</p></div></button>';
+  });
+  html += '</div><div class="card cp" style="margin-top:12px;display:flex;align-items:center;gap:12px">'+ic('vol',15,'var(--t2)')
+    +'<input type="range" min="0" max="1" step=".05" value="'+D.vol+'" oninput="setVol(this.value)" style="flex:1">'
+    +'<span id="vol-pct" style="font-size:12px;color:var(--t2);font-weight:500;min-width:30px;text-align:right">'+Math.round(D.vol*100)+'%</span></div></div>';
+  show('pinner',html);
+}
+function toggleSound(url){if(audio&&D.activeSound===url){audio.pause();audio=null;D.activeSound=null;save();renderPage();}else{if(audio)audio.pause();try{audio=new Audio(url);audio.loop=true;audio.volume=D.vol;audio.play().catch(function(){});}catch(e){}D.activeSound=url;save();renderPage();}}
+function setVol(v){D.vol=parseFloat(v);if(audio)audio.volume=D.vol;var e=$('vol-pct');if(e)e.textContent=Math.round(D.vol*100)+'%';save();}
+window.toggleSound=toggleSound;window.setVol=setVol;
 
-  return h('div',{className:'shell'},
-    h('aside',{className:'sidebar no-print'},
-      h('div',{className:'logo'},
-        h('div',{className:'logo-mark'},h('svg',{viewBox:'0 0 24 24'},h('path',{fill:'currentColor',stroke:'none',d:'M13 2L3 14h9l-1 8 10-12h-9z'}))),
-        h('span',{className:'logo-name'},'FocusUp'),
-        h('span',{className:'logo-ver'},'V4')
-      ),
-      NAV_GROUPS.map(function(g){
-        return h('div',{key:g.label},
-          h('p',{className:'nsec'},g.label),
-          g.items.map(function(n){
-            return h('button',{key:n.id,className:'nb'+(tab===n.id?' active':''),onClick:function(){setTab(n.id);}},
-              h('span',{className:'ni'},h(Ic,{n:n.i,s:13})),
-              n.l,
-              n.badge&&tab!==n.id&&h('span',{className:'nb-badge'},'Yeni')
-            );
-          })
-        );
-      }),
-      h('div',{className:'div',style:{marginTop:'auto'}}),
-      h('div',{style:{display:'flex',flexDirection:'column',gap:0}},
-        h('button',{className:'nb'+(tab==='history'?' active':''),onClick:function(){setTab('history');}},h('span',{className:'ni'},h(Ic,{n:'act',s:13})),'Aktivite'),
-        h('button',{className:'nb',onClick:undo,disabled:hist.length===0,style:{opacity:hist.length?1:.3}},h('span',{className:'ni'},h(Ic,{n:'undo',s:13})),'Geri Al'+(hist.length?' ('+hist.length+')':'')),
-        h('button',{className:'nb',onClick:function(){U.dl(data,'FocusUp_V4_Backup.json');}},h('span',{className:'ni'},h(Ic,{n:'dl',s:13})),'Yedekle')
-      ),
-      h('p',{style:{fontSize:9.5,color:'var(--t3)',textAlign:'center',paddingTop:8,letterSpacing:'.04em'}},'FocusUp V4 / 2026')
-    ),
-    h('div',{className:'body'},
-      h('header',{className:'topbar no-print'},
-        h('div',{style:{display:'flex',gap:7,alignItems:'center'}},
-          h('span',{className:'pill p-blue',style:{fontSize:10.5}},U.quarter(new Date())+' Ceyrek'),
-          h('span',{className:'pill p-gray',style:{fontSize:10.5}},'Hafta '+U.isoWeek(new Date())),
-          h(Clock,null)
-        ),
-        h('div',{style:{display:'flex',gap:7,alignItems:'center'}},
-          h('div',{style:{position:'relative'}},
-            h(Ic,{n:'srch',s:12,c:'var(--t3)',st:{position:'absolute',left:9,top:'50%',transform:'translateY(-50%)'}}),
-            h('input',{className:'inp',type:'text',placeholder:'Ara...',value:q,onChange:function(e){setQ(e.target.value);},style:{paddingLeft:28,width:150,height:30,fontSize:12}})
-          ),
-          h('button',{className:'btn btn-s btn-ic',onClick:function(){setDark(function(x){return !x;});}},h(Ic,{n:dark?'sun':'moon',s:14}))
-        )
-      ),
-      h('main',{className:'page no-print'},h('div',{className:'pinner'},renderContent())),
-      h('nav',{className:'mob-nav'},
-        ['dashboard','kpi','goals','todos','library'].map(function(id){
-          var g=NAV_GROUPS.find(function(g){return g.items.find(function(n){return n.id===id;});});if(!g)return null;
-          var n=g.items.find(function(n){return n.id===id;});
-          return h('button',{key:id,onClick:function(){setTab(id);},style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2,padding:'4px 2px',background:'none',border:'none',cursor:'pointer',color:tab===id?'var(--blue)':'var(--t3)',borderRadius:7}},
-            h(Ic,{n:n.i,s:18,c:tab===id?'var(--blue)':'var(--t3)'}),
-            h('span',{style:{fontSize:8,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}},n.l.split(' ')[0])
-          );
-        })
-      )
-    ),
-    modal.open&&h(MForm,{type:modal.type,onSave:addItem,onClose:function(){setModal({open:false});}}),
-    printItem&&h('div',{className:'ov no-print',onClick:function(e){if(e.target===e.currentTarget)setPrint(null);}},
-      h('div',{className:'mbox',style:{maxWidth:500}},
-        h('div',{className:'mh',style:{paddingBottom:14}},
-          h('span',{style:{fontWeight:700,fontSize:15}},'Poster Baskisi'),
-          h('div',{style:{display:'flex',gap:7}},
-            h('button',{className:'btn btn-p btn-sm',onClick:function(){window.print();}},h(Ic,{n:'prn',s:12}),'Yazdir'),
-            h('button',{className:'btn btn-s btn-ic',onClick:function(){setPrint(null);}},h(Ic,{n:'x',s:13}))
-          )
-        ),
-        h('div',{style:{padding:'0 20px 20px'}},
-          h('div',{style:{border:'1px solid var(--border)',borderRadius:10,aspectRatio:'1/1.414',display:'flex',alignItems:'center',justifyContent:'center',padding:32,textAlign:'center',background:'white',color:'#1d1d1f'}},
-            h('div',null,
-              h('p',{style:{fontFamily:'Georgia,serif',fontStyle:'italic',fontSize:18,lineHeight:1.7,marginBottom:12}},'"'+(printItem.text||printItem.title||'')+'"'),
-              printItem.author&&h('p',{style:{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.14em',color:'#0071e3'}},'-- '+printItem.author)
-            )
-          )
-        )
-      )
-    ),
-    printItem&&h('div',{className:'for-print'},
-      h('div',{style:{fontFamily:'Georgia,serif',fontStyle:'italic',textAlign:'center',color:'#1d1d1f'}},
-        h('h1',{style:{fontSize:'38pt',marginBottom:20,lineHeight:1.4}},'"'+(printItem.text||printItem.title||'')+'"'),
-        printItem.author&&h('p',{style:{fontSize:'15pt',color:'#0071e3',textTransform:'uppercase',letterSpacing:'.18em',fontWeight:700}},'-- '+printItem.author)
-      )
-    )
-  );
+function renderGenericList(key, keyTitle, type, icon, searchKeys) {
+  var list = fil(D[key]||[], searchKeys);
+  var html = '<div class="fade"><div class="sh"><h1 class="sh-t">'+keyTitle+'</h1><button class="btn btn-p" onclick="openForm(\''+type+'\')">'+ic('plus',13)+' Ekle</button></div><div class="ga">';
+  list.forEach(function(item){
+    html += '<div class="card cp" style="display:flex;flex-direction:column;gap:9px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<span class="pill p-blue" style="font-size:10px">'+U.escape(item.cat||item.type||item.category||'')+'</span>'
+      +'<div style="display:flex;gap:3px">'
+      +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="printItem('+item.id+',\''+key+'\')">'+ic('prn',12,'var(--t3)')+'</button>'
+      +'<button class="btn btn-g btn-ic" style="width:26px;height:26px" onclick="del('+item.id+',\''+type+'\')">'+ic('trash',12,'var(--t3)')+'</button></div></div>'
+      +(item.title?'<p style="font-weight:700;font-size:13.5px">'+U.escape(item.title)+'</p>':'')
+      +'<p style="font-size:12.5px;color:var(--t2);line-height:1.6;font-style:italic;flex:1">&ldquo;'+U.escape(item.text||item.content||'')+'&rdquo;</p>'
+      +(item.author?'<p style="font-size:11px;color:var(--t3);font-weight:500">&mdash; '+U.escape(item.author)+'</p>':'')
+      +(item.date?'<p style="font-size:10.5px;color:var(--t3)">'+item.date+'</p>':'')
+      +'</div>';
+  });
+  if(!list.length) html += '<div class="empty" style="grid-column:1/-1">'+ic(icon,32,'var(--t3)')+'<p>Henuz icerik yok</p></div>';
+  html += '</div></div>';
+  show('pinner',html);
+}
+function printItem(id,key){
+  var list=D[key]||[];
+  var item=list.find(function(i){return i.id===id;}); if(!item)return;
+  var pa=$('print-area');
+  pa.innerHTML='<div style="font-family:Georgia,serif;font-style:italic;text-align:center;color:#1d1d1f">'
+    +'<h1 style="font-size:38pt;margin-bottom:20px;line-height:1.4">&ldquo;'+U.escape(item.text||item.title||'')+'&rdquo;</h1>'
+    +(item.author?'<p style="font-size:15pt;color:#0071e3;text-transform:uppercase;letter-spacing:.18em;font-weight:700">&mdash; '+U.escape(item.author)+'</p>':'')
+    +'</div>';
+  pa.style.display='flex';
+  window.print();
+  setTimeout(function(){pa.style.display='none';},500);
+}
+window.printItem=printItem;
+
+function renderHistory() {
+  var logs=D.logs||[];
+  var html='<div class="fade"><div class="sh"><h1 class="sh-t">Aktivite Gecmisi</h1><span class="pill p-gray">'+logs.length+' kayit</span></div>'
+    +'<div class="card" style="padding:4px 16px;max-height:72vh;overflow-y:auto">';
+  logs.forEach(function(lg,i){
+    var isXP=lg.action.indexOf('XP')>=0;
+    html+='<div style="display:flex;gap:11px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05)">'
+      +'<div style="width:7px;height:7px;border-radius:50%;background:'+(isXP?'var(--green)':'var(--blue)')+';flex-shrink:0;margin-top:4px'+(isXP?';box-shadow:0 0 5px var(--green)':'')+'"></div>'
+      +'<div><p style="font-size:10.5px;color:var(--t2);font-weight:500;margin-bottom:1px">'+lg.time+'</p><p style="font-size:13px;font-weight:500">'+U.escape(lg.action)+'</p></div></div>';
+  });
+  if(!logs.length) html+='<div class="empty">'+ic('act',28,'var(--t3)')+'<p>Henuz aktivite yok</p></div>';
+  html+='</div></div>';
+  show('pinner',html);
 }
 
-var root=ReactDOM.createRoot(document.getElementById('root'));
-root.render(h(App,null));
+// --- Main renderer ---
+function renderPage() {
+  switch(currentTab){
+    case 'dashboard': renderDashboard(); break;
+    case 'kpi': renderKPI(); break;
+    case 'library': renderLibrary(); break;
+    case 'mybooks': renderMyBooks(); break;
+    case 'readingplan': renderReadingPlan(); break;
+    case 'goals': renderGoals(); break;
+    case 'todos': renderTodos(); break;
+    case 'routines': renderRoutines(); break;
+    case 'challenges': renderChallenges(); break;
+    case 'tools': renderTools(); break;
+    case 'vault': renderGenericList('vault','Bilgi Kasasi','vault','arc',['title','text']); break;
+    case 'quotes': renderGenericList('quotes','Ozlu Sozler','quote','qt',['text','author']); break;
+    case 'journal': renderGenericList('journal','Gunluk','journal','pen',['text','cat']); break;
+    case 'principles': renderGenericList('principles','Prensipler','principle','sh',['text','type']); break;
+    case 'coaching': renderGenericList('coaching','Kocluk','coaching','us',['title','text']); break;
+    case 'questions': renderGenericList('questions','Sorular','question','hlp',['text']); break;
+    case 'history': renderHistory(); break;
+    default: renderDashboard();
+  }
+  renderNav();
+}
+
+function render() { renderPage(); }
+
+// --- Init ---
+applyTheme();
+renderNav();
+renderPage();
+
+$('dark-btn').addEventListener('click', function(){ toggleDark(); renderPage(); });
+$('search-inp').addEventListener('input', function(e){ searchQ=e.target.value; renderPage(); });
 </script>
 </body>
 </html>
