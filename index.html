@@ -243,7 +243,108 @@ var INIT={
   weeklyReview:{done:'',missed:'',why:'',next:'',oneThingNext:'',updatedAt:''},
   oneThing:{task:'',date:''},
   sops:[{id:501,title:'Haftalik Planlama SOP',steps:['Onceki haftayi gozden gecir','KPI guncelle','ONE Thing belirle','Zaman bloklama yap']}],
-  quotes:[{id:41,text:'Olcemedin seyi gelistiremezsin.',author:'Peter Drucker',cat:'Yonetim'},{id:42,text:'Basit kal, ahmak gibi kal.',author:'Steve Jobs',cat:'Vizyon'}],
+  quotes:[
+    {id:1001,text:'Bir anda bir sey. Iyi yap.',author:'Marcus Aurelius',cat:'Odak'},
+    {id:1002,text:'Konsantrasyon, dahiligin bedeli.',author:'Robert J. Ringer',cat:'Odak'},
+    {id:1003,text:'Basiret, nereye dikkat ettigini bilmektir.',author:'William James',cat:'Odak'},
+    {id:1004,text:'Coklu gorev bir mit; dikkat parcalanir, verim duserr.',author:'Cal Newport',cat:'Odak'},
+    {id:1005,text:'Dikkatini kontrolden cikarmak, hayatini kontrolden cikarmaktir.',author:'Mihaly Csikszentmihalyi',cat:'Odak'},
+    {id:1006,text:'Odak, hayir demekle ilgilidir.',author:'Steve Jobs',cat:'Odak'},
+    {id:1007,text:'Sessizlik zayifligin degil, odagin sesidir.',author:'Naval Ravikant',cat:'Odak'},
+    {id:1008,text:'En buyuk kahraman dikkatini kaybetmeyen kisidir.',author:'Marcus Aurelius',cat:'Odak'},
+    {id:1011,text:'Disiplin, arzu ile basari arasindaki koprudur.',author:'Jim Rohn',cat:'Disiplin'},
+    {id:1012,text:'Ozgurluk disiplinin meyvesidir.',author:'Jocko Willink',cat:'Disiplin'},
+    {id:1013,text:'Motivasyon seni baslatir; aliskanlik seni ilerletir.',author:'Jim Ryun',cat:'Disiplin'},
+    {id:1014,text:'Kendini yonetemeyen bakalari tarafindan yonetilir.',author:'Seneca',cat:'Disiplin'},
+    {id:1015,text:'Her gun kucuk bir eylem, zamanla olaganustu sonuclar uretir.',author:'James Clear',cat:'Disiplin'},
+    {id:1016,text:'Irade, her kullanildikca guclenen bir kasdir.',author:'Kelly McGonigal',cat:'Disiplin'},
+    {id:1017,text:'Disiplin, istedigin hayatla katlandiklarin arasindaki seci istir.',author:'Anon',cat:'Disiplin'},
+    {id:1018,text:'Acidan kac, hayal kirikligina kos; sonunda ikisini de bulursun.',author:'Haruki Murakami',cat:'Disiplin'},
+    {id:1021,text:'Net bir hedef, yolu kendiliginden aydinlatir.',author:'Brian Tracy',cat:'Hedef'},
+    {id:1022,text:'Hedefe ulasma yuzde sekseni kendini o hedefe inandirmaktir.',author:'Marissa Mayer',cat:'Hedef'},
+    {id:1023,text:'Yazili hedefleri olanlar yazmayanlara gore dokuz kat daha basarilidir.',author:'Gail Matthews',cat:'Hedef'},
+    {id:1024,text:'Buyuk bir neden, kucuk engelleri otomatik astirir.',author:'Viktor Frankl',cat:'Hedef'},
+    {id:1025,text:'Hedefini bilmiyorsan, herhangi bir yol seni oraya goturur.',author:'Lewis Carroll',cat:'Hedef'},
+    {id:1026,text:'En tehlikeli an, hedefe yaklastiginda olandir; o an gevsersin.',author:'Napoleon Bonaparte',cat:'Hedef'},
+    {id:1027,text:'Kisa vadeli rahatlik uzun vadeli basarinin dusmanidir.',author:'Shane Parrish',cat:'Hedef'},
+    {id:1028,text:'Hedefin boyutu, takim kalitenin sinyalidir.',author:'Peter Thiel',cat:'Hedef'},
+    {id:1031,text:'Kendini dununden bir milimetre daha iyi yap.',author:'Kaizen',cat:'Gelisim'},
+    {id:1032,text:'Bir kitap okumayan okumayi bilmeyenden farkli degildir.',author:'Mark Twain',cat:'Gelisim'},
+    {id:1033,text:'Ogrenmedigimiz gun kayip gundur.',author:'Charlie Munger',cat:'Gelisim'},
+    {id:1034,text:'Zihinsel modellerini genis tut; her alan baska bir merceq verir.',author:'Charlie Munger',cat:'Gelisim'},
+    {id:1035,text:'En iyi yatirim kendinee yaptigindir.',author:'Warren Buffett',cat:'Gelisim'},
+    {id:1036,text:'Her uzman bir zamanlar acemiydi. Baslayan kazanir.',author:'Helen Hayes',cat:'Gelisim'},
+    {id:1037,text:'Rahatsizlik olmadan buyume olmaz.',author:'Brian Tracy',cat:'Gelisim'},
+    {id:1038,text:'Ogrenmek icin utancini bir kenara birak.',author:'Confucius',cat:'Gelisim'},
+    {id:1039,text:'Hatalar bedava egitimdir.',author:'Naval Ravikant',cat:'Gelisim'},
+    {id:1041,text:'Zaman en degerli kaynagindir cunku geri dondurulemez.',author:'Peter Drucker',cat:'Zaman'},
+    {id:1042,text:'Bugunu yasayan yarina hazirdır.',author:'Seneca',cat:'Zaman'},
+    {id:1043,text:'Sahip oldugun tek sey bu andir.',author:'Eckhart Tolle',cat:'Zaman'},
+    {id:1044,text:'Gecmisi degistiremezsin; gelecegi ancak simdiki eylemle sekillendirirsin.',author:'Marcus Aurelius',cat:'Zaman'},
+    {id:1045,text:'Zaman yonetimi aslinda oz yonetimidir.',author:'Stephen Covey',cat:'Zaman'},
+    {id:1046,text:'Erteleme, zamanin en ciddi hirsizidır.',author:'Victor Hugo',cat:'Zaman'},
+    {id:1047,text:'Her dakika planlamak saatlerce tasarrufu saglar.',author:'Benjamin Franklin',cat:'Zaman'},
+    {id:1048,text:'Acele et, ama kosma.',author:'John Wooden',cat:'Zaman'},
+    {id:1051,text:'Insanlari yonet, surecleri yonet; ikisini karistirma.',author:'W. Edwards Deming',cat:'Liderlik'},
+    {id:1052,text:'Iyi lider konusmadan once dinler.',author:'Richard Branson',cat:'Liderlik'},
+    {id:1053,text:'Beklenti bir strateji degildir.',author:'Patrick Lencioni',cat:'Liderlik'},
+    {id:1054,text:'Kucuk eylemler buyuk ornek olur.',author:'John C. Maxwell',cat:'Liderlik'},
+    {id:1055,text:'Ekibini bugunde en iyisi olarak degil gelecekte olabilecegi icin ise al.',author:'Jack Welch',cat:'Liderlik'},
+    {id:1056,text:'Guclu liderler zaferleri dagitin, yenilgileri sahiplenir.',author:'Jocko Willink',cat:'Liderlik'},
+    {id:1057,text:'Guveni insa etmek yillar alir; kaybetmek saniyeler.',author:'Warren Buffett',cat:'Liderlik'},
+    {id:1061,text:'Basari, heyecanini kaybetmeden hayal kirikligından hayal kiriklgina gitmektir.',author:'Winston Churchill',cat:'Basari'},
+    {id:1062,text:'Basariyi tanimla, sonra geri sarip yolu ciz.',author:'Tony Robbins',cat:'Basari'},
+    {id:1063,text:'Her buyuk basarinin gerisinde basarili bir aliskanlik dizisi vardir.',author:'Aristotle',cat:'Basari'},
+    {id:1064,text:'Mukemmel, iyinin dusmanidir.',author:'Voltaire',cat:'Basari'},
+    {id:1065,text:'Yavaslayan kazanir; bitmek uzere olan kosarak biter.',author:'Robert Maurer',cat:'Basari'},
+    {id:1066,text:'Sistem kur; sonuclara degil sisteme guven.',author:'James Clear',cat:'Basari'},
+    {id:1067,text:'Baslangiclar gurus gerektirir; bitis kararliliik.',author:'Anon',cat:'Basari'},
+    {id:1068,text:'En iyi an iki yil once baslamakti; ikinci en iyi an simdi.',author:'Cin Atasyozu',cat:'Basari'},
+    {id:1071,text:'Gelecegi tahmin etmenin en iyi yolu onu yaratmaktir.',author:'Alan Kay',cat:'Vizyon'},
+    {id:1072,text:'Buyuk ruzgarlara karsi gobegi sil olmak yerine kanat ac.',author:'Rumi',cat:'Vizyon'},
+    {id:1073,text:'Imkansiz sadece denenmedik demektir.',author:'Anon',cat:'Vizyon'},
+    {id:1074,text:'Hayalinle dalga gecenlere kulak asma; onlar senin gosterinin biletini alamazlar.',author:'Anon',cat:'Vizyon'},
+    {id:1075,text:'On yil once buyuk gorunen hedef, simdi standart sayilir.',author:'Peter Thiel',cat:'Vizyon'},
+    {id:1076,text:'Dusunceler dunyayi degistirir.',author:'Steve Jobs',cat:'Vizyon'},
+    {id:1077,text:'Buyuk dusunceler buyuk insanlari ceker.',author:'Jim Rohn',cat:'Vizyon'},
+    {id:1081,text:'Zihin, ates gibidir: yakiti olmadan soner.',author:'Plutarch',cat:'Zihin'},
+    {id:1082,text:'Kalabalik zihin, uretken zihin degildir.',author:'David Allen',cat:'Zihin'},
+    {id:1083,text:'Dusuncelerini kontrol edemezsin; ama onlara katilmamayi secebilirsin.',author:'Viktor Frankl',cat:'Zihin'},
+    {id:1084,text:'Zihninizi bosaltmak icin sistemlere guvenin.',author:'David Allen',cat:'Zihin'},
+    {id:1085,text:'Merak, ogrenmenin yegane motorudur.',author:'Albert Einstein',cat:'Zihin'},
+    {id:1086,text:'Konfor zonu beyin icin zehirdir.',author:'David Eagleman',cat:'Zihin'},
+    {id:1087,text:'Endise, hayal gucunun yanlis kullanilmasidir.',author:'Anon',cat:'Zihin'},
+    {id:1088,text:'Uyku, zihnin bakimidir.',author:'Matthew Walker',cat:'Zihin'},
+    {id:1091,text:'Cesaret korkunun yoklugu degil, korkuya ragmen ilerleme kararidir.',author:'Mark Twain',cat:'Cesaret'},
+    {id:1092,text:'Hayir demek de bir cesaret ister.',author:'Paulo Coelho',cat:'Cesaret'},
+    {id:1093,text:'En buyuk risk, hic risk almamaktir.',author:'Mark Zuckerberg',cat:'Cesaret'},
+    {id:1094,text:'Basaramamanin acisi denememenin acisinin yuzde birinden azdir.',author:'Jim Carrey',cat:'Cesaret'},
+    {id:1095,text:'Beyin tehlikeyi buyutur, cesaret onu gercek boyutuna indirir.',author:'Anon',cat:'Cesaret'},
+    {id:1096,text:'Korkuya teslim olmak, hayatin en az yayandiginda olur.',author:'Eleanor Roosevelt',cat:'Cesaret'},
+    {id:1097,text:'Olcemedin seyi gelistiremezsin.',author:'Peter Drucker',cat:'Yonetim'},
+    {id:1098,text:'Basit kal, ahmak gibi kal.',author:'Steve Jobs',cat:'Vizyon'},
+    {id:1099,text:'80 sonuc 20 kaynaktan gelir. Dogruyu sec.',author:'Richard Koch',cat:'Uretkenlik'},
+    {id:1100,text:'Verimli olmak, dogru seyleri yapmaktir. Etkin olmak, seyleri dogru yapmaktir.',author:'Peter Drucker',cat:'Uretkenlik'},
+    {id:1101,text:'Yuzde yuz katilmadigin seylere yuzde yuz katilma.',author:'Naval Ravikant',cat:'Cesaret'},
+    {id:1102,text:'Hayatta iki tur insan vardir: olaylar yaratan ve olan olaylara tepki verenler.',author:'Jim Rohn',cat:'Cesaret'},
+    {id:1103,text:'Dusunmeden ogrenme emektir, ogenmeden dusunmek ise tehlike.',author:'Confucius',cat:'Zihin'},
+    {id:1104,text:'Mukemmelin dusmani iyidir; iyinin dusmani ise hicbir sey yapmamaktir.',author:'Voltaire',cat:'Disiplin'},
+    {id:1105,text:'Basit olmak zordur; o yuzden cogu insan karmakasikliga siginar.',author:'Steve Jobs',cat:'Vizyon'},
+    {id:1106,text:'Para kazanmak kolay; kazandiktan sonra akilli kalmak asil mesele.',author:'Charlie Munger',cat:'Yonetim'},
+    {id:1107,text:'Iyi bir sistem kurduğunda, kotu gunlerde bile ilerlemeye devam edersin.',author:'James Clear',cat:'Disiplin'},
+    {id:1108,text:'Ogrenmenin en iyi yolu ogretmektir.',author:'Richard Feynman',cat:'Gelisim'},
+    {id:1109,text:'Uyku en ucuz performans arttiricidir.',author:'Matthew Walker',cat:'Zihin'},
+    {id:1110,text:'Harika isler yapmanin tek yolu yaptigin isi sevmektir.',author:'Steve Jobs',cat:'Basari'},
+    {id:1111,text:'Kitaplar zaman makinesidir; baska birinin 30 yilini 6 saatte yasarsın.',author:'Naval Ravikant',cat:'Gelisim'},
+    {id:1112,text:'Enerjini takip et, zamanini degil.',author:'Naval Ravikant',cat:'Zaman'},
+    {id:1113,text:'Her insan kendi hayatinin yazari; bazi insanlar sadece virgul koymakla yetinir.',author:'Anon',cat:'Cesaret'},
+    {id:1114,text:'Duygularini denetleyemezsen kararlarini da denetleyemezsin.',author:'Daniel Kahneman',cat:'Zihin'},
+    {id:1115,text:'Basari ucgen degil, dongu gerektirir: yap, ol c, duzelт.',author:'Anon',cat:'Basari'},
+    {id:1116,text:'Sadece sonuclara bakma; sistemi degerlendير.',author:'W. Edwards Deming',cat:'Yonetim'},
+    {id:1117,text:'Rekabet yerine monopol kur; tek oldugun yerde yaris yoktur.',author:'Peter Thiel',cat:'Vizyon'},
+    {id:1118,text:'Her gece yatmadan once sorular: Bugun kime deger kattim? Bugun ne ogrendim?',author:'Tony Robbins',cat:'Gelisim'},
+    {id:1119,text:'Verimlilik bir his degil; bir olcumdur.',author:'Peter Drucker',cat:'Uretkenlik'}
+  ],
   journal:[{id:51,date:'2026-03-18',cat:'Sukran',text:'Bugün odaklanmayi basardim.'}],
   principles:[{id:91,type:'Vizyon',text:'Her gun %1 daha iyi olmak.'},{id:92,type:'Kural',text:'Ilk 2 saatimi derin calisma icin koru.'}],
   coaching:[{id:101,title:'OKR Sistemi',text:'Objective + Key Results. Her ceyrek 1 buyuk hedef.',cat:'Yontem'}],
@@ -268,6 +369,22 @@ function loadData(){
     }
   }catch(e){}
   return JSON.parse(JSON.stringify(INIT));
+}
+
+// ─── Quote helpers ───────────────────────────────────────────────────────────
+function rndQuote(cat){
+  var pool = cat ? D.quotes.filter(function(q){return q.cat===cat;}) : D.quotes;
+  if(!pool.length) pool = D.quotes;
+  return pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+}
+function quoteWidget(cat, accent){
+  var q = rndQuote(cat);
+  if(!q) return '';
+  var ac = accent || 'var(--blue)';
+  return '<div style="padding:14px 18px;border-radius:12px;background:var(--s2);border-left:3px solid '+ac+';margin-bottom:16px">'
+    + '<p style="font-size:13px;font-style:italic;line-height:1.7;color:var(--t)">&ldquo;'+U.esc(q.text)+'&rdquo;</p>'
+    + (q.author ? '<p style="font-size:11px;font-weight:700;color:'+ac+';margin-top:6px">&mdash; '+U.esc(q.author)+'</p>' : '')
+    + '<p style="font-size:10px;color:var(--t3);margin-top:3px">'+U.esc(q.cat)+'</p></div>';
 }
 var D=loadData();
 
@@ -680,8 +797,10 @@ function renderDashboard(){
   h+='<textarea class="inp" id="scratch-area" rows="4" placeholder="Aklina geleni yaz..." style="background:transparent;border:none;padding:0;font-size:13px;box-shadow:none">'+U.esc(D.scratch||'')+'</textarea></div>';
   if(rq){
     h+='<div class="card cp" style="text-align:center;display:flex;flex-direction:column;justify-content:center">';
-    h+='<p style="font-size:14px;font-style:italic;line-height:1.7">&ldquo;'+U.esc(rq.text)+'&rdquo;</p>';
-    if(rq.author)h+='<p style="margin-top:8px;font-size:10.5px;font-weight:600;color:var(--blue);text-transform:uppercase">&mdash; '+U.esc(rq.author)+'</p>';
+    h+='<p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">&#10024; Gunun Sozu</p>';
+    h+='<p style="font-size:14px;font-style:italic;line-height:1.75">&ldquo;'+U.esc(rq.text)+'&rdquo;</p>';
+    if(rq.author)h+='<p style="margin-top:8px;font-size:11px;font-weight:700;color:var(--blue)">&mdash; '+U.esc(rq.author)+'</p>';
+    if(rq.cat)h+='<span class="pill p-blue" style="font-size:9px;margin-top:8px;align-self:center">'+U.esc(rq.cat)+'</span>';
     h+='</div>';
   }
   h+='</div></div>';
@@ -698,6 +817,7 @@ function renderKPI(){
   var critical=kpis.filter(function(k){return pct(k.current,k.target)<50;}).length;
   var avg=kpis.length?Math.round(kpis.reduce(function(a,k){return a+pct(k.current,k.target);},0)/kpis.length):0;
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">KPI & Metrikler</h1><p class="sh-sub">&ldquo;Olcemedin seyi gelistiremezsin.&rdquo; &mdash; Peter Drucker</p></div><button class="btn btn-p" data-type="kpi" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' KPI Ekle</button></div>';
+  h+=quoteWidget('Yonetim','var(--blue)');
   h+='<div class="g4" style="margin-bottom:16px">';
   h+=statCard('Toplam',kpis.length,'kpi','var(--blue)');
   h+=statCard('Hedefe Ulasan',reached,'chk','var(--green)');
@@ -741,6 +861,7 @@ function renderGoals(){
   var doneCount=all.filter(function(g){return g.status==='done';}).length;
   var avgP=all.length?Math.round(all.reduce(function(a,g){return a+goalPct(g);},0)/all.length):0;
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Hedefler</h1><p class="sh-sub">Brian Tracy SMART sistemi</p></div>';
+  h+=quoteWidget('Hedef','var(--purple)');
   h+='<div style="display:flex;gap:7px;align-items:center"><div style="display:flex;gap:3px;background:var(--s2);border-radius:8px;padding:3px">';
   [{v:'grid',l:'Grid'},{v:'list',l:'Liste'}].forEach(function(vv){
     var a=gView===vv.v;
@@ -931,7 +1052,7 @@ function renderTodos(){
   var filtered=fil(all,['text','category']);
   var done=all.filter(function(t){return t.done;}).length;
   var urgent=all.filter(function(t){return !t.done&&t.priority==='urgent';}).length;
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Yapilacaklar</h1><p class="sh-sub">Eisenhower Matrisi</p></div>';
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Yapilacaklar</h1><p class="sh-sub">Eisenhower Matrisi</p></div>';h+=quoteWidget('Uretkenlik','var(--orange)');
   h+='<div style="display:flex;gap:7px"><div style="display:flex;gap:3px;background:var(--s2);border-radius:8px;padding:3px">';
   [{v:'list',l:'Liste'},{v:'matrix',l:'Matris'}].forEach(function(vv){var a=todoView===vv.v;h+='<button class="btn btn-sm" style="padding:4px 10px;background:'+(a?'var(--s)':'transparent')+';color:'+(a?'var(--t)':'var(--t2)')+'" data-tv="'+vv.v+'" onclick="todoView=this.dataset.tv;renderPage()">'+vv.l+'</button>';});
   h+='</div><button class="btn btn-p" data-type="todo" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Gorev Ekle</button></div></div>';
@@ -981,7 +1102,7 @@ function renderHabits(){
   var habits=D.habits||[];var today=U.today();
   var doneToday=habits.filter(function(h){return(h.checkins||[]).indexOf(today)>=0;}).length;
   var maxStreak=habits.reduce(function(a,h){return Math.max(a,calcStreak(h.checkins||[]));},0);
-  var hh='<div class="fade"><div class="sh"><div><h1 class="sh-t">Aliskanliklar</h1><p class="sh-sub">Atomic Habits &mdash; %1 iyilesme = 37x buyume</p></div><button class="btn btn-p" data-type="habit" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Aliskanlik Ekle</button></div>';
+  var hh='<div class="fade"><div class="sh"><div><h1 class="sh-t">Aliskanliklar</h1><p class="sh-sub">Atomic Habits &mdash; %1 iyilesme = 37x buyume</p></div><button class="btn btn-p" data-type="habit" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Aliskanlik Ekle</button></div>'+quoteWidget('Disiplin','var(--green)');
   hh+='<div class="g4" style="margin-bottom:16px">';
   hh+=statCard('Toplam',habits.length,'ref','var(--blue)');
   hh+=statCard('Bugun',doneToday,'chk','var(--green)');
@@ -1010,7 +1131,7 @@ window.checkHabit=checkHabit;
 
 function renderRoutines(){
   var pLabels={daily:'Gunluk',weekly:'Haftalik',monthly:'Aylik',quarterly:'Ceyreklik',yearly:'Yillik'};
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Rutinler</h1></div><button class="btn btn-p" data-type="routine" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Rutin Ekle</button></div>';
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Rutinler</h1></div><button class="btn btn-p" data-type="routine" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Rutin Ekle</button></div>';h+=quoteWidget('Disiplin','var(--purple)');
   var daily=D.routines.daily||[];
   if(daily.length){
     h+='<p style="font-weight:700;font-size:14px;margin-bottom:10px">Gunluk Rutinler</p><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:16px">';
@@ -1053,6 +1174,7 @@ function renderLibrary(){
     return true;
   });
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Kitap Kutuphanesi</h1><p class="sh-sub">'+LIB.length+' kitap &mdash; 10 kategori</p></div><button class="btn btn-s btn-sm" style="background:'+(coreOnly?'var(--orange)':'')+';color:'+(coreOnly?'#fff':'')+'" onclick="window._lcore=!'+coreOnly+';renderPage()">'+ic('flame',12)+' Cekirdek</button></div>';
+  h+=quoteWidget('Gelisim','var(--teal)');
   h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px"><button class="btn btn-sm" style="background:'+(catFilter==='all'?'var(--blue)':'var(--s2)')+';color:'+(catFilter==='all'?'#fff':'var(--t2)')+'" data-cat="all" onclick="window._lcat=this.dataset.cat;renderPage()">Tumu ('+LIB.length+')</button>';
   BOOK_CATS.forEach(function(cat,i){var cnt=LIB.filter(function(b){return b.cat===i;}).length;h+='<button class="btn btn-sm" style="background:'+(catFilter===String(i)?'var(--blue)':'var(--s2)')+';color:'+(catFilter===String(i)?'#fff':'var(--t2)')+'" data-ci="'+i+'" onclick="window._lcat=this.dataset.ci;renderPage()">'+cat+' ('+cnt+')</button>';});
   h+='</div><div class="ga">';
@@ -1166,6 +1288,7 @@ function renderChallenges(){
   var challenges=D.challenges||[];
   var active=challenges.filter(function(c){return c.status==='active';});
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">90-Gun Mucadelesi</h1><p class="sh-sub">Kendinle anlasma yap. Her gun kazan.</p></div><button class="btn btn-p" onclick="openChallengeModal()">'+ic('plus',13)+' Mucadele Baslat</button></div>';
+  h+=quoteWidget('Cesaret','var(--red)');
   h+='<div class="g4" style="margin-bottom:16px">';
   h+=statCard('Aktif',active.length,'trophy','var(--orange)');
   h+=statCard('Tamamlanan',challenges.filter(function(c){return c.status==='done';}).length,'chk','var(--green)');
@@ -1231,6 +1354,21 @@ function renderGenericList(type){
   var c=cfg[type];if(!c)return;
   var list=fil(D[type]||[],c.keys);
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">'+c.t+'</h1></div><button class="btn btn-p" data-type="'+type+'" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Ekle</button></div>';
+  /* Category filter for quotes */
+  if(type==='quotes'){
+    var cats=['Tumu','Odak','Disiplin','Hedef','Gelisim','Zaman','Liderlik','Basari','Vizyon','Zihin','Cesaret','Uretkenlik','Yonetim'];
+    var activeCat=window._qcat||'Tumu';
+    h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">';
+    cats.forEach(function(ct){
+      var on=activeCat===ct;
+      h+='<button class="btn btn-sm" style="background:'+(on?'var(--blue)':'var(--s2)')+';color:'+(on?'#fff':'var(--t2)')+';font-size:11px" data-ct="'+ct+'" onclick="window._qcat=this.dataset.ct;renderPage()">'+ct+'</button>';
+    });
+    h+='</div>';
+    if(activeCat!=='Tumu') list=list.filter(function(q){return q.cat===activeCat;});
+    /* Random quote highlight */
+    var rq2=rndQuote(activeCat==='Tumu'?null:activeCat);
+    if(rq2) h+='<div style="padding:18px 20px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(175,82,222,.07));border:1px solid rgba(0,113,227,.15);margin-bottom:16px"><p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">&#10024; Anin Sozu</p><p style="font-size:15px;font-style:italic;line-height:1.75">&ldquo;'+U.esc(rq2.text)+'&rdquo;</p>'+(rq2.author?'<p style="font-size:12px;font-weight:700;color:var(--blue);margin-top:8px">&mdash; '+U.esc(rq2.author)+'</p>':'')+'</div>';
+  }
   if(!list.length)h+='<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">'+ic(c.i,32,'var(--t3)')+'<p style="font-weight:700;font-size:16px">Henuz eklenmedi</p></div>';
   else{h+='<div class="ga">';list.forEach(function(i){h+='<div class="card cp">'+c.cardFn(i)+'</div>';});h+='</div>';}
   h+='</div>';sh('pinner',h);
@@ -1239,6 +1377,7 @@ function renderGenericList(type){
 function renderSMART(){
   var goals=D.goals||[];
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">SMART Hedef Motoru</h1><p class="sh-sub">Spesifik &bull; Olculebilir &bull; Ulasabilir &bull; Anlamli &bull; Zamanli</p></div><button class="btn btn-p" onclick="openGoalForm()">'+ic('plus',13)+' SMART Hedef</button></div>';
+  h+=quoteWidget('Hedef','var(--blue)');
   h+='<div style="margin-bottom:16px;padding:14px 18px;border-radius:12px;background:linear-gradient(135deg,var(--bl),rgba(175,82,222,.08));border:1px solid rgba(0,113,227,.15)">';
   h+='<p style="font-size:13px;font-style:italic;font-weight:500;line-height:1.7">&ldquo;People with clear, written goals accomplish far more in a shorter period of time.&rdquo;</p><p style="font-size:11px;font-weight:700;color:var(--blue);margin-top:4px">&mdash; Brian Tracy</p></div>';
   h+='<div class="g5" style="margin-bottom:16px">';
@@ -1683,7 +1822,7 @@ function renderDeepWork(){
   h+='<p style="font-size:11px;color:rgba(140,160,255,.5)">&mdash; Cal Newport, Deep Work (2016)</p></div>';
 
   /* Oturum başlat */
-  h+='<div class="card cp" style="margin-bottom:16px"><p style="font-weight:700;font-size:14px;margin-bottom:6px">&#9654; Oturum Baslat</p>';
+  h+=quoteWidget('Odak','var(--purple)');h+='<div class="card cp" style="margin-bottom:16px"><p style="font-weight:700;font-size:14px;margin-bottom:6px">&#9654; Oturum Baslat</p>';
   h+='<p style="font-size:12px;color:var(--t2);margin-bottom:12px">Gorev yazarken &ldquo;X konusunda Y cikti uretecegim&rdquo; gibi somut bir tanim yap.</p>';
   h+='<input class="inp" id="dw-task-inp" placeholder="Ornek: Q3 raporu icin veri analizi yap" style="margin-bottom:12px">';
   h+='<div class="g3">';
