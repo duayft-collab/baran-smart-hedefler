@@ -175,6 +175,52 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 </div>
 <script>
 
+// ─── Dil Sistemi ─────────────────────────────────────────────────────────────
+var LANG = localStorage.getItem('fu_lang') || 'tr';
+var LABELS = {
+  tr: {
+    secMain:'Ana', secMethod:'Metodoloji', secProd:'Üretkenlik',
+    secBook:'Kitap', secKnow:'Bilgi', secSys:'Sistem',
+    dashboard:'Dashboard', kpi:'KPI & Metrikler', challenges:'90-Gün Mücadelesi',
+    smart:'SMART Hedef Motoru', onething:'ONE Thing', frog:'Eat That Frog',
+    timeblock:'Zaman Bloklama', weeklyreview:'Haftalık Review', gtd:'GTD Inbox',
+    goals:'Hedefler', todos:'Yapılacaklar', habits:'Alışkanlıklar', routines:'Rutinler',
+    library:'Kitap Kütüphanesi', mybooks:'Okuma Listesi', readingplan:'Okuma Planları',
+    quotes:'Öz Sözler', journal:'Günlük', principles:'Prensipler',
+    coaching:'Koçluk', vault:'Bilgi Kasası', deepwork:'Derin Çalışma',
+    sop:'SOP Şablonları', tools:'Odak Araçları', history:'Aktivite',
+    undo:'Geri Al', backup:'Yedekle', search:'Ara...',
+    confirm:'Silinsin mi?', required:'Zorunlu alanları doldurun.'
+  },
+  en: {
+    secMain:'Main', secMethod:'Methodology', secProd:'Productivity',
+    secBook:'Books', secKnow:'Knowledge', secSys:'System',
+    dashboard:'Dashboard', kpi:'KPI & Metrics', challenges:'90-Day Challenge',
+    smart:'SMART Goal Engine', onething:'ONE Thing', frog:'Eat That Frog',
+    timeblock:'Time Blocking', weeklyreview:'Weekly Review', gtd:'GTD Inbox',
+    goals:'Goals', todos:'To-Dos', habits:'Habits', routines:'Routines',
+    library:'Book Library', mybooks:'Reading List', readingplan:'Reading Plans',
+    quotes:'Quotes', journal:'Journal', principles:'Principles',
+    coaching:'Coaching', vault:'Knowledge Vault', deepwork:'Deep Work',
+    sop:'SOP Templates', tools:'Focus Tools', history:'Activity',
+    undo:'Undo', backup:'Backup', search:'Search...',
+    confirm:'Delete this item?', required:'Please fill required fields.'
+  }
+};
+function L(key){ return (LABELS[LANG] && LABELS[LANG][key]) || (LABELS.tr[key]) || key; }
+function setLang(lang){
+  LANG = lang;
+  localStorage.setItem('fu_lang', lang);
+  document.querySelectorAll('.lang-sw button').forEach(function(b){
+    b.className = b.dataset.lang === lang ? 'on' : '';
+  });
+  var s = document.getElementById('srch');
+  if(s) s.placeholder = L('search');
+  render();
+}
+window.setLang = setLang;
+
+
 var BOOK_CATS=['Temel','Hedef','Disiplin','Sistem','Odak','Alışkanlık','Zaman','Performans','Verimlilik','İlişki'];
 var LIB=[
   {id:'b1',t:'The ONE Thing',a:'Gary Keller',cat:0,pages:240,core:true,desc:'Tek en önemli seye odaklanma sanati.'},
