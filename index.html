@@ -1268,10 +1268,88 @@ function renderSMART(){
 function renderOneThing(){
   var ot=D.oneThing||{};var today=U.today();var isDoneToday=ot.date===today&&ot.task;
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">ONE Thing</h1><p class="sh-sub">Gary Keller &mdash; Tek en kritik gorev</p></div></div>';
-  h+='<div style="margin-bottom:20px;padding:20px;border-radius:14px;background:linear-gradient(135deg,#1a3a2e,#0d2d1e);text-align:center"><p style="font-size:12px;font-weight:600;color:rgba(167,243,208,.7);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Bugunun Sorusu</p><p style="font-size:16px;font-style:italic;color:#a7f3d0;line-height:1.7;max-width:520px;margin:0 auto">&ldquo;Bugün yaparsam her seyi kolaylastiracak TEK sey ne?&rdquo;</p><p style="font-size:11px;color:rgba(110,231,183,.6);margin-top:8px">&mdash; Gary Keller</p></div>';
-  if(isDoneToday){h+='<div style="padding:20px;border-radius:14px;background:var(--gl);border:2px solid var(--green);text-align:center;margin-bottom:16px"><p style="font-size:22px;margin-bottom:6px">&#10003;</p><p style="font-weight:700;font-size:18px;color:var(--green);margin-bottom:6px">Secildi!</p><p style="font-size:14px;font-weight:600">'+U.esc(ot.task)+'</p><button class="btn btn-s btn-sm" style="margin-top:12px" onclick="clearOT()">Degistir</button></div>';}
-  else{h+='<div class="card" style="padding:20px;margin-bottom:16px"><p style="font-weight:700;font-size:14px;margin-bottom:12px">Bugunun ONE Thing&#39;ini sec:</p><input class="inp" id="ot-inp" placeholder="Bugün yaparsam her seyi kolaylastiracak tek sey..." style="font-size:14px;padding:13px 16px;margin-bottom:12px"><button class="btn btn-p" style="width:100%;justify-content:center" onclick="saveOneThing()">'+ic('chk',14)+' ONE Thing Olarak Belirle (+25 XP)</button></div>';}
-  h+='<div class="g2"><div class="card cp"><p style="font-weight:700;font-size:13px;margin-bottom:8px">Pomodoro ile Calis</p><p style="font-size:12px;color:var(--t2);margin-bottom:10px">25dk odak, 5dk mola.</p><button class="btn btn-p btn-sm" onclick="startFocusDash()">Baslat</button></div><div class="card cp"><p style="font-weight:700;font-size:13px;margin-bottom:8px">Deep Work ile Calis</p><p style="font-size:12px;color:var(--t2);margin-bottom:10px">50-90dk kesintisiz derin calisma.</p><button class="btn btn-p btn-sm" data-tab="deepwork" onclick="gotoTab(this.dataset.tab)">Deep Work</button></div></div></div>';
+
+  /* Hero soru */
+  h+='<div style="margin-bottom:20px;padding:24px 20px;border-radius:14px;background:linear-gradient(135deg,#1a3a2e,#0d2d1e);text-align:center">';
+  h+='<p style="font-size:11px;font-weight:700;color:rgba(167,243,208,.6);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px">&#9889; Odak Sorusu</p>';
+  h+='<p style="font-size:16px;font-style:italic;color:#a7f3d0;line-height:1.75;max-width:520px;margin:0 auto">&ldquo;Bugün yaparsam, diger her seyi daha kolay ya da gereksiz kilacak TEK sey ne?&rdquo;</p>';
+  h+='<p style="font-size:11px;color:rgba(110,231,183,.5);margin-top:10px">&mdash; Gary Keller, The ONE Thing</p></div>';
+
+  /* ONE Thing seçimi */
+  if(isDoneToday){
+    h+='<div style="padding:20px;border-radius:14px;background:var(--gl);border:2px solid var(--green);text-align:center;margin-bottom:16px">';
+    h+='<p style="font-size:26px;margin-bottom:6px">&#10003;</p>';
+    h+='<p style="font-weight:700;font-size:18px;color:var(--green);margin-bottom:8px">Bugunun ONE Thing&#39;i belirlendi</p>';
+    h+='<p style="font-size:15px;font-weight:600;padding:10px 16px;background:rgba(0,0,0,.08);border-radius:10px;display:inline-block">'+U.esc(ot.task)+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2);margin-top:10px">Simdi bu goreve odaklan. Diger her sey bekleyebilir.</p>';
+    h+='<button class="btn btn-s btn-sm" style="margin-top:12px" onclick="clearOT()">Degistir</button></div>';
+  } else {
+    h+='<div class="card" style="padding:20px;margin-bottom:16px">';
+    h+='<p style="font-weight:700;font-size:14px;margin-bottom:6px">Bugunun ONE Thing&#39;ini sec</p>';
+    h+='<p style="font-size:12px;color:var(--t2);margin-bottom:12px">Sadece bir sey yazacaksin. En onemli, en etkili, en zorlayici gorev.</p>';
+    h+='<input class="inp" id="ot-inp" placeholder="Ornek: X konu hakkinda raporun taslagi..." style="font-size:14px;padding:13px 16px;margin-bottom:12px">';
+    h+='<button class="btn btn-p" style="width:100%;justify-content:center" onclick="saveOneThing()">'+ic('chk',14)+' ONE Thing Olarak Belirle &nbsp;(+25 XP)</button></div>';
+  }
+
+  /* Felsefe & nasıl çalışır */
+  h+='<div style="margin-bottom:16px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(175,82,222,.07));border:1px solid rgba(0,113,227,.12)">';
+  h+='<p style="font-weight:700;font-size:14px;margin-bottom:12px">&#128218; ONE Thing Nedir &mdash; Kitap Ozeti</p>';
+  h+='<p style="font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:10px">Gary Keller&#39;in 2012&#39;de yayimlanan <em>The ONE Thing</em> kitabi, odaginizi <strong>tek bir kritik goreve</strong> yonlendirmenin nasil domino etkisi yarattigi fikrini temel alir: bir domino, kendisinden %50 daha buyuk bir dominoyu devirebilir.</p>';
+  h+='<p style="font-size:13px;color:var(--t2);line-height:1.75">Kitabin tezi: Cok is yapmak degil, <strong>dogru isi</strong> yapmak basariya goturur. Her gun ONE Thing&#39;ini yapan biri, dagink calisanlara kiyasla aylar icerisinde katbekat daha ileri gider.</p></div>';
+
+  /* Domino etkisi görseli */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:14px">&#127869; Domino Etkisi &mdash; Kucuk eylem, buyuk sonuc</p>';
+  h+='<div style="display:flex;align-items:flex-end;gap:8px;overflow-x:auto;padding-bottom:4px">';
+  var dominos=[{h:16,l:'Bugun'},{h:24,l:'Hafta'},{h:36,l:'Ay'},{h:54,l:'3 Ay'},{h:80,l:'Yil'},{h:120,l:'3 Yil'}];
+  for(var di=0;di<dominos.length;di++){
+    var dm=dominos[di];
+    h+='<div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px">';
+    h+='<div style="width:28px;border-radius:5px 5px 3px 3px;background:linear-gradient(180deg,var(--blue),rgba(0,113,227,.5));height:'+dm.h+'px"></div>';
+    h+='<span style="font-size:10px;color:var(--t3);text-align:center">'+dm.l+'</span></div>';
+  }
+  h+='</div>';
+  h+='<p style="font-size:11.5px;color:var(--t3);margin-top:10px">Her gun ONE Thing&#39;ini yaparak baslattigin domino zinciri zamanla katlanarak buyur.</p></div>';
+
+  /* 5 adım metodoloji */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:14px">&#128218; ONE Thing Nasil Yapilir &mdash; 5 Adim</p>';
+  var steps=[
+    ['1','Listeni yaz','Bugun yapmak istedigin her seyi kagida doku. Uzun, karma bir liste olsun.','var(--blue)'],
+    ['2','Tek soruyu sor','&ldquo;Yaparsam diger her seyi kolaylastiracak ya da gereksiz kilacak TEK sey ne?&rdquo;','var(--purple)'],
+    ['3','Korku faktorunu bul','En zor, en kacindigi, en cok itmis oldugu sey genellikle en yuksek degerli istir.','var(--orange)'],
+    ['4','Gunu buna ayir','ONE Thing&#39;i sabah, enerji en yuksekken yap. En az 4 saat blok zaman ayir.','var(--green)'],
+    ['5','Hayir demek ozgurlugu','ONE Thing&#39;in disindaki her seye &ldquo;Simdilik hayir&rdquo; diyebilirsin. Bu bir zaaf degil, stratejidir.','var(--red)'],
+  ];
+  for(var si=0;si<steps.length;si++){
+    var st=steps[si];
+    h+='<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">';
+    h+='<div style="width:28px;height:28px;border-radius:8px;background:'+st[3]+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0">'+st[0]+'</div>';
+    h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:2px">'+st[1]+'</p><p style="font-size:12px;color:var(--t2);line-height:1.6">'+st[2]+'</p></div></div>';
+  }
+  h+='</div>';
+
+  /* Yanlış anlamalar */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:12px">&#10060; Yanlis Anlamalar</p>';
+  var myths=[
+    ['"Gunun geri kalaninda hic is yapmayacagim"','Yanlis. ONE Thing tamamlandiktan sonra normal hayatina devam edersin.'],
+    ['"Her zaman ayni sey olmali"','Yanlis. ONE Thing her gun, her hafta degisebilir.'],
+    ['"Kucuk gorev secmek israf"','Yanlis. Bazi gunler en kritik ONE Thing &ldquo;15 dakika dinlen&rdquo; olabilir.'],
+  ];
+  for(var mi=0;mi<myths.length;mi++){
+    var my=myths[mi];
+    h+='<div style="margin-bottom:10px;padding:10px 12px;border-radius:10px;background:var(--rl)">';
+    h+='<p style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:3px">'+my[0]+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2)">'+my[1]+'</p></div>';
+  }
+  h+='</div>';
+
+  /* Çalışma araçları */
+  h+='<div class="g2">';
+  h+='<div class="card cp"><p style="font-weight:700;font-size:13px;margin-bottom:6px">&#9201; Pomodoro ile Calis</p><p style="font-size:12px;color:var(--t2);margin-bottom:10px">25 dk odak + 5 dk mola dongusuyle ONE Thing&#39;ine yonel.</p><button class="btn btn-p btn-sm" onclick="startFocusDash()">Baslat</button></div>';
+  h+='<div class="card cp"><p style="font-weight:700;font-size:13px;margin-bottom:6px">&#129504; Deep Work ile Calis</p><p style="font-size:12px;color:var(--t2);margin-bottom:10px">50-90 dk kesintisiz, tam odakli calisma oturumu.</p><button class="btn btn-p btn-sm" data-tab="deepwork" onclick="gotoTab(this.dataset.tab)">Deep Work</button></div>';
+  h+='</div></div>';
   sh('pinner',h);
 }
 
@@ -1286,40 +1364,140 @@ window.saveOneThing=saveOneThing;
 function renderFrog(){
   var frog=D.todos.find(function(t){return !t.done&&t.priority==='urgent';});
   var urgent=D.todos.filter(function(t){return !t.done&&t.priority==='urgent';});
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Eat That Frog</h1><p class="sh-sub">Brian Tracy &mdash; En zor gorevi once yap</p></div><button class="btn btn-p" data-type="todo" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Acil Gorev</button></div>';
-  h+='<div style="margin-bottom:16px;padding:16px;border-radius:14px;background:linear-gradient(135deg,#1a3a2e,#0d2d1e)"><p style="font-size:28px;margin-bottom:8px">&#128056;</p><p style="font-weight:700;font-size:16px;color:#a7f3d0;margin-bottom:5px">Kurbagayi Ye!</p><p style="font-size:13px;color:#6ee7b7;line-height:1.6">&ldquo;Her sabah canli bir kurbagayi yersen, gunun geri kalaninda daha kotu bir sey olmaz.&rdquo; &mdash; Brian Tracy</p></div>';
-  if(frog)h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:var(--rl);border:2px solid var(--red)"><p class="lbl" style="color:var(--red);margin-bottom:8px">BUGUNUN KURBAGASI</p><p style="font-weight:700;font-size:18px;margin-bottom:12px">'+U.esc(frog.text)+'</p><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" class="cb" style="width:20px;height:20px;border-radius:7px" data-tid="'+frog.id+'" onchange="toggleTodo(+this.dataset.tid)"><span style="font-size:13px;font-weight:500">Tamamlandi</span></label></div>';
-  else h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:var(--gl);text-align:center"><p style="font-size:28px;margin-bottom:8px">&#127881;</p><p style="font-weight:700;font-size:16px;color:var(--green)">Tum acil gorevler tamam!</p></div>';
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Eat That Frog</h1><p class="sh-sub">Brian Tracy &mdash; En zor gorevi once bitir</p></div><button class="btn btn-p" data-type="todo" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Acil Gorev Ekle</button></div>';
+
+  /* Hero */
+  h+='<div style="margin-bottom:16px;padding:22px 20px;border-radius:14px;background:linear-gradient(135deg,#1a3a2e,#0d2d1e)">';
+  h+='<p style="font-size:32px;margin-bottom:8px">&#128056;</p>';
+  h+='<p style="font-weight:800;font-size:17px;color:#a7f3d0;margin-bottom:8px">Kurbagayi Ye!</p>';
+  h+='<p style="font-size:13.5px;color:#6ee7b7;line-height:1.7;font-style:italic">&ldquo;Her sabah canli bir kurbagayi yersen, gunun geri kalaninda senden daha kotu bir sey beklemek zorunda kalmazsin.&rdquo;</p>';
+  h+='<p style="font-size:11px;color:rgba(110,231,183,.55);margin-top:8px">&mdash; Mark Twain (Brian Tracy tarafindan populerlestirilen)</p></div>';
+
+  /* Bugunun kurbaği */
+  if(frog){
+    h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:var(--rl);border:2px solid var(--red)">';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
+    h+='<span style="font-size:18px">&#128056;</span>';
+    h+='<p style="font-weight:800;font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:.08em">Bugunun Kurbagasi</p></div>';
+    h+='<p style="font-weight:700;font-size:17px;margin-bottom:14px">'+U.esc(frog.text)+'</p>';
+    h+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:rgba(255,255,255,.15);padding:10px 14px;border-radius:10px">';
+    h+='<input type="checkbox" class="cb" style="width:20px;height:20px;border-radius:7px" data-tid="'+frog.id+'" onchange="toggleTodo(+this.dataset.tid)">';
+    h+='<span style="font-size:13px;font-weight:600">Kurbagayi Yedim! &#127881;</span></label></div>';
+  } else {
+    h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:var(--gl);border:2px solid var(--green);text-align:center">';
+    h+='<p style="font-size:32px;margin-bottom:8px">&#127881;</p>';
+    h+='<p style="font-weight:700;font-size:16px;color:var(--green);margin-bottom:4px">Tum acil gorevler tamamlandi!</p>';
+    h+='<p style="font-size:12px;color:var(--t2)">Bugun kurbaganı yedin. Harika is!</p></div>';
+  }
+
+  /* Felsefe */
+  h+='<div style="margin-bottom:16px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(0,113,227,.04));border:1px solid rgba(0,113,227,.12)">';
+  h+='<p style="font-weight:700;font-size:14px;margin-bottom:12px">&#128218; Kurbaga Metaforu &mdash; Brian Tracy</p>';
+  h+='<p style="font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:10px">Brian Tracy&#39;in 2001 yilinda yayimlanan <em>Eat That Frog!</em> kitabi, ertelemeyi yenmenin en etkili yolunun <strong>gunun en zor, en onemli gorevini ilk anda yapmak</strong> oldugunu savunur.</p>';
+  h+='<p style="font-size:13px;color:var(--t2);line-height:1.75">Mantik basit: Sabahın ilk saatlerinde enerjin ve irade gucun en yuksektir. Bu pencereyi email kontrolüne degil, <strong>en yuksek etkili goreve</strong> harca. Gerisi kolaylesir.</p></div>';
+
+  /* 3 kural */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:14px">&#127869; Eat That Frog&#39;un 3 Altin Kurali</p>';
+  var frogrules=[
+    ['1','Kurbagani sabah ye','Gunu email veya sosyal medya ile baslatma. Ilk goreve dokunmadan once kurbaganı piste sur.','var(--red)'],
+    ['2','Kurbagani tanimla','Bugun mutlaka yapmam gereken, en zor, en erteledigim, en yuksek sonuclu gorev nedir? Onu sec.','var(--orange)'],
+    ['3','İki kurbagan varsa daha cirkin olanini ye','Bir gunde iki buyuk gorev varsa, en korkuncu ile basla. Ikincisi artik kolay gelecek.','var(--purple)'],
+  ];
+  for(var fgi=0;fgi<frogrules.length;fgi++){
+    var fr=frogrules[fgi];
+    h+='<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">';
+    h+='<div style="width:30px;height:30px;border-radius:9px;background:'+fr[3]+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0">'+fr[0]+'</div>';
+    h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:3px">'+fr[1]+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2);line-height:1.6">'+fr[2]+'</p></div></div>';
+  }
+  h+='</div>';
+
+  /* Acil gorevler listesi */
   if(urgent.length){
-    h+='<p class="lbl" style="margin-bottom:8px">Acil Gorevler</p><div class="card" style="overflow:hidden">';
-    urgent.forEach(function(t){h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.05)"><input type="checkbox" class="cb" '+(t.done?'checked':'')+' data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><span style="font-weight:500;flex:1;font-size:13.5px">'+U.esc(t.text)+'</span><span class="pill p-red" style="font-size:10px">Acil</span></div>';});
+    h+='<p class="lbl" style="margin-bottom:8px">Acil Gorevler Listesi</p><div class="card" style="overflow:hidden">';
+    urgent.forEach(function(t){
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.05)">';
+      h+='<input type="checkbox" class="cb" '+(t.done?'checked':'')+' data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)">';
+      h+='<span style="font-weight:500;flex:1;font-size:13.5px;'+(t.done?'text-decoration:line-through;opacity:.5':'')+'"">'+U.esc(t.text)+'</span>';
+      h+='<span class="pill p-red" style="font-size:10px">Acil</span></div>';
+    });
     h+='</div>';
   }
+
   h+='</div>';sh('pinner',h);
 }
 
 function renderGTD(){
   var inbox=D.gtdInbox||[];var pending=inbox.filter(function(i){return i.status==='inbox';});
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">GTD Inbox</h1><p class="sh-sub">David Allen &mdash; Zihinsel yuku sisteme devret</p></div><button class="btn btn-p" data-type="gtd" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Inbox&#39;a Ekle</button></div>';
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">GTD Inbox</h1><p class="sh-sub">David Allen &mdash; Zihnini bosalt, sisteme devret</p></div><button class="btn btn-p" data-type="gtd" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Inbox&#39;a Ekle</button></div>';
+
+  /* Felsefe */
+  h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:linear-gradient(135deg,#1a2535,#0d1520)">';
+  h+='<p style="font-size:11px;font-weight:700;color:rgba(160,200,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">&#129504; GTD Felsefesi</p>';
+  h+='<p style="font-size:15px;font-style:italic;color:#b0d4ff;line-height:1.75;margin-bottom:8px">&ldquo;Zihnin fikirler uretmek icin var, onlari tutmak icin degil.&rdquo;</p>';
+  h+='<p style="font-size:11px;color:rgba(140,180,255,.5)">&mdash; David Allen, Getting Things Done (2001)</p></div>';
+
+  /* GTD nedir */
+  h+='<div style="margin-bottom:16px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(0,113,227,.04));border:1px solid rgba(0,113,227,.12)">';
+  h+='<p style="font-weight:700;font-size:14px;margin-bottom:12px">&#128218; GTD (Getting Things Done) Nedir?</p>';
+  h+='<p style="font-size:13px;color:var(--t2);line-height:1.75;margin-bottom:10px">David Allen&#39;in 2001&#39;de yayimlanan metodolojisidir. Temel fikir: <strong>kafanda tuttugun her sey seni yorar</strong>. Yapilacak isler, sorumluluklar, fikirler &mdash; bunlari bir sisteme aktarirsan zihnin raharlar ve odaklanabilirsin.</p>';
+  h+='<p style="font-size:13px;color:var(--t2);line-height:1.75">GTD&#39;nin temeli: <strong>Inbox</strong>&#39;a her seyi at, sonra isle. Atma aksiyonu, isleme aksiyonu ayridir.</p></div>';
+
+  /* 5 adım */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:14px">&#128336; GTD&#39;nin 5 Adimi</p>';
+  var gtdsteps=[
+    ['1','Yakala (Capture)','Aklina gelen her seyi &mdash; yapilacaklar, fikirler, sorumluluklar &mdash; aninda inbox&#39;a at. Kafanda tutma.','var(--blue)','&#128229;'],
+    ['2','Acıkla (Clarify)','Her inbox itemini al: &ldquo;Bu eyleme donusulebilir mi?&rdquo; Evet ise sonraki adim ne? 2 dakikadan azsa hemen yap.','var(--purple)','&#128269;'],
+    ['3','Organize Et (Organize)','Projeler, sonraki aksiyonlar, bekleyenler, bir gun belki listeleri &mdash; her seyi yerine koy.','var(--green)','&#128229;'],
+    ['4','Gözden Gecir (Reflect)','Haftalik review&#39;de sistemini tara. Eski itemler var mi? Guncellik kaybeden listeler?','var(--orange)','&#128065;'],
+    ['5','Yap (Engage)','Organize sistemine bakarak ne yapacagini se&ccedil;. Enerji, zaman ve baglam ile uyumlu gorevi sec.','var(--red)','&#9654;'],
+  ];
+  for(var gi=0;gi<gtdsteps.length;gi++){
+    var gs=gtdsteps[gi];
+    h+='<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">';
+    h+='<div style="width:30px;height:30px;border-radius:9px;background:'+gs[3]+';display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+gs[4]+'</div>';
+    h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:2px">'+gs[0]+'. '+gs[1]+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2);line-height:1.6">'+gs[2]+'</p></div></div>';
+  }
+  h+='</div>';
+
+  /* İstatistik */
+  h+='<div style="display:flex;gap:10px;margin-bottom:14px">';
   h+=statCard('Toplam',inbox.length,'arc','var(--blue)');
-  h+='<div style="margin-bottom:14px"></div>';
-  if(!inbox.length)h+='<div class="empty">'+ic('arc',32,'var(--t3)')+'<p>GTD Inbox bos!</p></div>';
-  else{
+  h+=statCard('Bekliyor',pending.length,'ci','var(--orange)');
+  h+=statCard('Islendi',inbox.length-pending.length,'chk','var(--green)');
+  h+='</div>';
+
+  /* Inbox listesi */
+  if(!inbox.length){
+    h+='<div class="empty">'+ic('arc',32,'var(--t3)')+'<p>GTD Inbox bos! Aklına gelen her seyi buraya at.</p></div>';
+  } else {
+    h+='<p class="lbl" style="margin-bottom:8px">Inbox Listesi</p>';
     h+='<div class="card" style="overflow:hidden">';
     inbox.forEach(function(item){
       var sc=item.status!=='inbox';
-      h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.05);opacity:'+(sc?0.45:1)+'"><div style="flex:1"><p style="font-weight:500;font-size:13px;text-decoration:'+(sc?'line-through':'none')+'">'+U.esc(item.text)+'</p><p style="font-size:10.5px;color:var(--t2)">'+U.esc(item.addedAt||'')+' &bull; '+U.esc(item.status)+'</p></div>';
-      if(!sc)h+='<div style="display:flex;gap:4px">'
-        +'<button class="btn btn-sm p-green" style="font-size:10px" data-iid="'+item.id+'" data-status="done" onclick="processGTD(+this.dataset.iid,this.dataset.status)">Yap</button>'
-        +'<button class="btn btn-sm p-blue" style="font-size:10px" data-iid="'+item.id+'" data-status="planned" onclick="processGTD(+this.dataset.iid,this.dataset.status)">Planla</button>'
-        +'<button class="btn btn-sm p-red" style="font-size:10px" data-iid="'+item.id+'" data-status="deleted" onclick="processGTD(+this.dataset.iid,this.dataset.status)">Sil</button>'
-        +'</div>';
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.05);opacity:'+(sc?0.4:1)+'">';
+      h+='<div style="flex:1">';
+      h+='<p style="font-weight:500;font-size:13px;text-decoration:'+(sc?'line-through':'none')+'">'+U.esc(item.text)+'</p>';
+      h+='<p style="font-size:10.5px;color:var(--t2);margin-top:2px">'+U.esc(item.addedAt||'')+' &bull; ';
+      var statusLabel={inbox:'&#128229; Bekliyor',done:'&#10003; Yapildi',planned:'&#128197; Planlandı',deleted:'&#128465; Silindi'}[item.status]||item.status;
+      h+=statusLabel+'</p></div>';
+      if(!sc){
+        h+='<div style="display:flex;gap:4px">';
+        h+='<button class="btn btn-sm p-green" style="font-size:10px" data-iid="'+item.id+'" data-status="done" onclick="processGTD(+this.dataset.iid,this.dataset.status)">&#10003; Yap</button>';
+        h+='<button class="btn btn-sm p-blue" style="font-size:10px" data-iid="'+item.id+'" data-status="planned" onclick="processGTD(+this.dataset.iid,this.dataset.status)">&#128197; Planla</button>';
+        h+='<button class="btn btn-sm p-red" style="font-size:10px" data-iid="'+item.id+'" data-status="deleted" onclick="processGTD(+this.dataset.iid,this.dataset.status)">&#128465; Sil</button>';
+        h+='</div>';
+      }
       h+='</div>';
     });
     h+='</div>';
   }
   h+='</div>';sh('pinner',h);
 }
+
 function processGTD(id,status){
   snap();D.gtdInbox=(D.gtdInbox||[]).map(function(i){return i.id===id?Object.assign({},i,{status:status}):i;});
   if(status==='done')xp(10,'GTD item');save();renderPage();
@@ -1328,23 +1506,86 @@ window.processGTD=processGTD;
 
 function renderTimeBlock(){
   var today=U.today();var blocks=D.timeblocks[today]||[];
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Zaman Bloklama</h1><p class="sh-sub">Cal Newport &mdash; Her saate bir gorev tahsis et</p></div><button class="btn btn-p" onclick="addTimeBlock()">'+ic('plus',13)+' Blok Ekle</button></div>';
-  h+='<div class="card" style="overflow:hidden">';
+  var filled=blocks.length;
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Zaman Bloklama</h1><p class="sh-sub">Cal Newport &mdash; Her saate bir misyon ver</p></div><button class="btn btn-p" onclick="addTimeBlock()">'+ic('plus',13)+' Blok Ekle</button></div>';
+
+  /* Felsefe banner */
+  h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:linear-gradient(135deg,#0d1a2e,#1a0d2e)">';
+  h+='<p style="font-size:11px;font-weight:700;color:rgba(160,180,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">&#128197; Zaman Bloklama Felsefesi</p>';
+  h+='<p style="font-size:15px;font-style:italic;color:#b0c4ff;line-height:1.75;margin-bottom:8px">&ldquo;Yapacaklarini planlamak icin bir planin olmasi gerekir &mdash; ve o plana saygili olmak.&rdquo;</p>';
+  h+='<p style="font-size:11px;color:rgba(140,160,255,.5)">&mdash; Cal Newport, Deep Work &amp; A World Without Email</p></div>';
+
+  /* Ne işe yarar */
+  h+='<div style="margin-bottom:16px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(0,113,227,.04));border:1px solid rgba(0,113,227,.12)">';
+  h+='<p style="font-weight:700;font-size:14px;margin-bottom:12px">&#128161; Neden Zaman Bloklama?</p>';
+  h+='<div style="display:flex;flex-direction:column;gap:10px">';
+  var whys=[
+    ['&#128248; Reaktiflikten proaktiflige gec','Yoksa gun biterken &ldquo;Ne yaptim ben bugun?&rdquo; diye dusunursun. Bloklar, gunu sen tasarlarsın.'],
+    ['&#129504; Bilissel yuklenmeyi azalt','Her saat basinda &ldquo;Simdi ne yapsam?&rdquo; sorusu yoktur. Karar onceden verilmistir.'],
+    ['&#128293; Odak korunur','Blok varken email, mesaj, toplanti isteklerine &ldquo;Simdi bloktayim&rdquo; diyebilirsin.'],
+    ['&#128200; Gercekci tahmin gelisir','Bir is ne kadar surer? Bloklar tuttukca giderek daha iyi tahmin yaparsın.'],
+  ];
+  for(var wi=0;wi<whys.length;wi++){
+    var wy=whys[wi];
+    h+='<div style="display:flex;gap:10px;align-items:flex-start">';
+    h+='<span style="font-size:16px;flex-shrink:0">'+wy[0].split(' ')[0]+'</span>';
+    h+='<div><p style="font-weight:600;font-size:12.5px;margin-bottom:2px">'+wy[0].slice(wy[0].indexOf(' ')+1)+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2);line-height:1.6">'+wy[1]+'</p></div></div>';
+  }
+  h+='</div></div>';
+
+  /* Nasıl yapılır */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:14px">&#128218; Nasil Yapilir &mdash; 5 Adim</p>';
+  var tbsteps=[
+    ['1','Sabah planla, aksam gozden gecir','Blokları gunu baslamadan once kur. Aksam yarının taslağını hazirla.','var(--blue)'],
+    ['2','Tur bazli bloklar olustur','Deep Work, yuzeysel is (email), toplanti ve enerji yenileme bloklari farkli renklerde olmali.','var(--purple)'],
+    ['3','Blok bozulursa hemen yeniden planla','Bir acil durum bloklarini bozdu mu? Kalan gunu yeniden planla &mdash; kaos devam etmesin.','var(--orange)'],
+    ['4','Tampon bloklar ekle','Her iki ciddi bloktan sonra 30 dk tampon birak. Insanlar kapina gelir, beklenmedik seyler olur.','var(--green)'],
+    ['5','Gercegi kaydet','Plana karsi gercegi karsilastir. Nerede saptigin zamanla sana planlamayi ogretir.','var(--red)'],
+  ];
+  for(var ti=0;ti<tbsteps.length;ti++){
+    var ts=tbsteps[ti];
+    h+='<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">';
+    h+='<div style="width:28px;height:28px;border-radius:8px;background:'+ts[3]+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0">'+ts[0]+'</div>';
+    h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:2px">'+ts[1]+'</p><p style="font-size:12px;color:var(--t2);line-height:1.6">'+ts[2]+'</p></div></div>';
+  }
+  h+='</div>';
+
+  /* İstatistik + bugünkü plan */
+  h+='<div style="display:flex;gap:10px;margin-bottom:16px">';
+  h+=statCard('Bugun Planlanan',filled,'ci','var(--blue)');
+  h+=statCard('Saatlik Doluluk',filled?Math.round(filled/17*100)+"%" :"0%",'star','var(--green)');
+  h+='</div>';
+
+  /* Zaman çizelgesi */
+  h+='<div class="card" style="overflow:hidden;margin-bottom:8px"><div style="padding:12px 16px;border-bottom:1px solid var(--s3);display:flex;justify-content:space-between;align-items:center"><p style="font-weight:700;font-size:13px">Bugunun Plani &mdash; '+today+'</p><span style="font-size:11px;color:var(--t3)">Bos bloga tikla &rarr; gorev ekle</span></div>';
   for(var hr=6;hr<=22;hr++){
     var b=blocks.find(function(x){return x.hour===hr;});
     var hstr=(hr<10?'0':'')+hr+':00';
-    h+='<div style="display:flex;align-items:center;gap:12px;padding:9px 16px;border-bottom:1px solid rgba(0,0,0,.05)">';
-    h+='<span style="font-size:12px;font-weight:700;color:var(--t3);min-width:38px">'+hstr+'</span>';
+    var nowHr=new Date().getHours();
+    var isCurrent=hr===nowHr;
+    h+='<div style="display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid rgba(0,0,0,.04);'+(isCurrent?'background:rgba(0,113,227,.05)':'')+'">';
+    h+='<span style="font-size:11.5px;font-weight:'+(isCurrent?'800':'600')+';color:'+(isCurrent?'var(--blue)':'var(--t3)')+';min-width:38px">'+hstr+'</span>';
     if(b){
-      var pc={urgent:'var(--red)',high:'var(--orange)',normal:'var(--blue)'}[b.priority]||'var(--t2)';
-      h+='<div style="flex:1;padding:7px 10px;border-radius:7px;background:var(--bl);border-left:3px solid '+pc+'"><p style="font-weight:600;font-size:12.5px">'+U.esc(b.task)+'</p></div>';
+      var pc={urgent:'var(--red)',high:'var(--orange)',normal:'var(--blue)'}[b.priority]||'var(--blue)';
+      h+='<div style="flex:1;padding:7px 10px;border-radius:7px;background:var(--bl);border-left:3px solid '+pc+'">';
+      h+='<p style="font-weight:600;font-size:12.5px">'+U.esc(b.task)+'</p></div>';
       h+='<button class="btn btn-g btn-ic" style="width:24px;height:24px" data-hr="'+hr+'" onclick="removeTimeBlock(+this.dataset.hr)">'+ic('x',10,'var(--t3)')+'</button>';
     }else{
-      h+='<div style="flex:1;height:30px;border-radius:7px;border:1.5px dashed var(--s3);cursor:pointer;display:flex;align-items:center;padding:0 10px" data-hr="'+hr+'" onclick="addTimeBlock(+this.dataset.hr)"><span style="font-size:11px;color:var(--t3)">Bos blok &mdash; tikla</span></div>';
+      h+='<div style="flex:1;height:32px;border-radius:7px;border:1.5px dashed var(--s3);cursor:pointer;display:flex;align-items:center;padding:0 12px;transition:all .12s" data-hr="'+hr+'" onclick="addTimeBlock(+this.dataset.hr)">';
+      h+='<span style="font-size:11px;color:var(--t3)">Bos &mdash; tikla ve gorev ekle</span></div>';
     }
     h+='</div>';
   }
-  h+='</div></div>';sh('pinner',h);
+  h+='</div>';
+
+  /* Cal Newport hakkında */
+  h+='<div style="margin-top:16px;padding:16px 18px;border-radius:12px;background:var(--s2)">';
+  h+='<p style="font-weight:700;font-size:12px;color:var(--t2);margin-bottom:6px">&#128065; Cal Newport Kimdir?</p>';
+  h+='<p style="font-size:12px;color:var(--t3);line-height:1.65">Georgetown Universitesi bilgisayar bilimi profesoru ve &ldquo;Deep Work&rdquo;, &ldquo;Digital Minimalism&rdquo;, &ldquo;A World Without Email&rdquo; kitaplarinin yazari. Zaman bloklama metodunu akademik kariyeri boyunca uygulamis; her sabah gunun bloklarini fiziksel bir deftere cizer, aksam gercekle karsilastirir.</p>';
+  h+='</div></div>';
+  sh('pinner',h);
 }
 function addTimeBlock(hr){
   var hour=hr!==undefined?hr:parseInt(prompt('Saat (6-22):',new Date().getHours())||new Date().getHours());
@@ -1361,17 +1602,71 @@ window.addTimeBlock=addTimeBlock;window.removeTimeBlock=removeTimeBlock;
 
 function renderWeeklyReview(){
   var wr=D.weeklyReview||{};
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Haftalik Review</h1></div></div>';
-  h+='<div class="card cp"><div style="display:flex;flex-direction:column;gap:12px">';
-  [{id:'done',l:'Bu hafta ne yaptim?',ph:'Tamamlanan gorevler, basarilar...'},{id:'missed',l:'Yapamadigim neydi?',ph:'Ertelenenler, engeller...'},{id:'why',l:'Neden yapamadim?',ph:'Gercek sebepler...'},{id:'next',l:'Gelecek hafta ne yapacagim?',ph:'Konkret planlar...'},{id:'oneThingNext',l:'Gelecek haftanin ONE Thing&#39;i?',ph:'En kritik tek sey...'}].forEach(function(f){
-    h+='<div><p class="lbl" style="margin-bottom:3px">'+f.l+'</p><textarea class="inp" id="wr_'+f.id+'" rows="3" placeholder="'+f.ph+'">'+U.esc(wr[f.id]||'')+'</textarea></div>';
-  });
-  h+='<button class="btn btn-p" onclick="saveWeeklyReview()">'+ic('chk',13)+' Kaydet (+35 XP)</button></div></div></div>';
+  var lastDate=wr.updatedAt||null;
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Haftalik Review</h1><p class="sh-sub">David Allen & GTD &mdash; Haftayi kapatirken ayna tut</p></div></div>';
+
+  /* Felsefe */
+  h+='<div style="margin-bottom:16px;padding:20px;border-radius:14px;background:linear-gradient(135deg,#1a2a1a,#0d200d)">';
+  h+='<p style="font-size:11px;font-weight:700;color:rgba(167,243,208,.6);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">&#128218; Haftalik Review Nedir?</p>';
+  h+='<p style="font-size:14px;color:#a7f3d0;line-height:1.75;margin-bottom:8px">David Allen&#39;in GTD (Getting Things Done) metodolojisinin temel rituelidir. Her haftanin sonunda 30-60 dakika ayrip <strong>gectigi, kaldi ve gelecege baktigi</strong> bir zihni temizlik yapar.</p>';
+  h+='<p style="font-size:12px;color:rgba(110,231,183,.65)">&ldquo;Zihninizi sifirlamak icin en guclu arac: haftalik review.&rdquo; &mdash; David Allen</p></div>';
+
+  /* Neden önemli */
+  h+='<div style="margin-bottom:16px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--gl),rgba(52,199,89,.04));border:1px solid rgba(52,199,89,.18)">';
+  h+='<p style="font-weight:700;font-size:14px;margin-bottom:12px">&#128161; Neden Her Hafta?</p>';
+  var reasons=[
+    ['&#128540; Zihin temizlenir','Haftalık review olmadan zihinde bitmemis isler birikerek enerji tuketir. Cikartma yapinca &ldquo;Bunu yapmam lazim&rdquo; gerginligi gider.'],
+    ['&#127919; Yön düzelir','1 hafta sapmayi kolay duzeltirsin. 1 ay sapmayi duzeltmek cok daha zordur.'],
+    ['&#127881; Kazanımlar görünür olur','Depresif hissetmenin en buyuk nedenlerinden biri: ne yaptigini görmemek. Review&#39;de kazanimlari liste yapinca &ldquo;Aslında cok şey yaptım&rdquo; farkındaligi gelir.'],
+    ['&#128197; Gelecek planlanır','Yeni hafta ne kadar yoğun olacak? ONE Thing nedir? Bloklar nerede?'],
+  ];
+  for(var ri=0;ri<reasons.length;ri++){
+    var rs=reasons[ri];
+    h+='<div style="display:flex;gap:10px;margin-bottom:11px;align-items:flex-start">';
+    h+='<span style="font-size:16px;flex-shrink:0">'+rs[0].split(' ')[0]+'</span>';
+    h+='<div><p style="font-weight:600;font-size:12.5px;margin-bottom:2px">'+rs[0].slice(rs[0].indexOf(' ')+1)+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2);line-height:1.6">'+rs[1]+'</p></div></div>';
+  }
+  h+='</div>';
+
+  /* Son review bilgisi */
+  if(lastDate){
+    h+='<div style="margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--gl);display:flex;align-items:center;gap:8px">';
+    h+='<span style="font-size:16px">&#10003;</span>';
+    h+='<span style="font-size:12.5px;font-weight:600;color:var(--green)">Son review: '+U.esc(lastDate)+'</span></div>';
+  } else {
+    h+='<div style="margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--ol);display:flex;align-items:center;gap:8px">';
+    h+='<span style="font-size:16px">&#128336;</span>';
+    h+='<span style="font-size:12.5px;font-weight:600;color:var(--orange)">Bu haftanin review&#39;i henuz yapilmadi</span></div>';
+  }
+
+  /* Sorular */
+  h+='<div class="card cp"><p style="font-weight:700;font-size:14px;margin-bottom:14px">&#128221; Bu Haftanin Review&#39;i</p><div style="display:flex;flex-direction:column;gap:14px">';
+  var wrfields=[
+    {id:'done',l:'&#127881; Bu hafta ne yaptim?',ph:'Tamamlanan gorevler, kaslar, basarilar, gururlandigin anlar...'},
+    {id:'missed',l:'&#10060; Yapamadigim neydi?',ph:'Ertelenenler, yari birakilanlar, kacindiklarim...'},
+    {id:'why',l:'&#128269; Neden yapamadim?',ph:'Gercek sebepler &mdash; dis etkenler mi, ic engeller mi?'},
+    {id:'learn',l:'&#128218; Bu hafta ne ogrendim?',ph:'Yeni beceri, insight, ders, degisen bakis acisi...'},
+    {id:'next',l:'&#128640; Gelecek hafta ne yapacagim?',ph:'Somut, gercekci, oncelikli planlar...'},
+    {id:'oneThingNext',l:'&#9889; Gelecek haftanin ONE Thing&#39;i?',ph:'En kritik, en yuksek etkili tek sey...'},
+  ];
+  for(var fi=0;fi<wrfields.length;fi++){
+    var f=wrfields[fi];
+    h+='<div><p class="lbl" style="margin-bottom:4px;font-size:12.5px;font-weight:700">'+f.l+'</p>';
+    h+='<textarea class="inp" id="wr_'+f.id+'" rows="3" placeholder="'+f.ph+'" style="font-size:13px">'+U.esc(wr[f.id]||'')+'</textarea></div>';
+  }
+  h+='<button class="btn btn-p" style="margin-top:4px" onclick="saveWeeklyReview()">'+ic('chk',13)+' Review&#39;i Tamamla &nbsp;(+35 XP)</button></div></div>';
+
+  /* Ne zaman yapılır */
+  h+='<div style="margin-top:16px;padding:16px 18px;border-radius:12px;background:var(--s2)">';
+  h+='<p style="font-weight:700;font-size:12px;margin-bottom:8px">&#128336; Ideal Zamanlama</p>';
+  h+='<p style="font-size:12px;color:var(--t3);line-height:1.65">Cuma aksami is biterken <em>veya</em> Pazar aksami. Hafta icindeki bir gun yapma &mdash; once haftayi kapatman gerekiyor. Takvinine &ldquo;Haftalik Review &mdash; 30 dk&rdquo; diye tekrarlayan bir blok ekle, aksatma.</p>';
+  h+='</div></div>';
   sh('pinner',h);
 }
 function saveWeeklyReview(){
   snap();
-  var fields=['done','missed','why','next','oneThingNext'];
+  var fields=['done','missed','why','learn','next','oneThingNext'];
   fields.forEach(function(f){var el=ge('wr_'+f);if(el)D.weeklyReview[f]=el.value;});
   D.weeklyReview.updatedAt=U.today();
   xp(35,'Haftalik review');save();renderPage();
@@ -1379,22 +1674,75 @@ function saveWeeklyReview(){
 window.saveWeeklyReview=saveWeeklyReview;
 
 function renderDeepWork(){
-  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Derin Calisma</h1><p class="sh-sub">Cal Newport &mdash; Dikkat dagitmadan calisma</p></div></div>';
-  h+='<div class="card cp" style="margin-bottom:16px"><p style="font-weight:700;font-size:14px;margin-bottom:12px">Oturumu Baslat</p><input class="inp" id="dw-task-inp" placeholder="Ne uzerinde calisacaksin?" style="margin-bottom:12px"><div class="g3">';
-  [{m:25,l:'Kisa'},{m:50,l:'Standart'},{m:90,l:'Derin'}].forEach(function(opt){
-    h+='<button class="btn btn-s" style="flex-direction:column;padding:14px;height:auto;gap:4px" data-mins="'+opt.m+'" onclick="enterDW(+this.dataset.mins)"><span style="font-size:20px;font-weight:800">'+opt.m+'dk</span><span style="font-size:11px;color:var(--t2)">'+opt.l+'</span></button>';
+  var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Derin Calisma</h1><p class="sh-sub">Cal Newport &mdash; Odak, modern dunyanin supergucudur</p></div></div>';
+
+  /* Hero */
+  h+='<div style="margin-bottom:16px;padding:22px 20px;border-radius:14px;background:linear-gradient(135deg,#0d1a2e,#1a0d2e)">';
+  h+='<p style="font-size:11px;font-weight:700;color:rgba(160,180,255,.6);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">&#129504; Deep Work Tanimi</p>';
+  h+='<p style="font-size:15px;font-style:italic;color:#b0c4ff;line-height:1.75;margin-bottom:8px">&ldquo;Profesyonel aktiviteler, dikkat dagitici unsurlardan uzakta, tam biliseel kapasite ile gerceklestirildiklerinde yeni deger uretir, becerileri gelistirir ve tekrar edilmesi zor isle sonuclanir.&rdquo;</p>';
+  h+='<p style="font-size:11px;color:rgba(140,160,255,.5)">&mdash; Cal Newport, Deep Work (2016)</p></div>';
+
+  /* Oturum başlat */
+  h+='<div class="card cp" style="margin-bottom:16px"><p style="font-weight:700;font-size:14px;margin-bottom:6px">&#9654; Oturum Baslat</p>';
+  h+='<p style="font-size:12px;color:var(--t2);margin-bottom:12px">Gorev yazarken &ldquo;X konusunda Y cikti uretecegim&rdquo; gibi somut bir tanim yap.</p>';
+  h+='<input class="inp" id="dw-task-inp" placeholder="Ornek: Q3 raporu icin veri analizi yap" style="margin-bottom:12px">';
+  h+='<div class="g3">';
+  [{m:25,l:'Kisa',d:'Baslangic',c:'var(--blue)'},{m:50,l:'Standart',d:'Newport onerisi',c:'var(--purple)'},{m:90,l:'Derin',d:'Tam odak',c:'var(--orange)'}].forEach(function(opt){
+    h+='<button class="btn btn-s" style="flex-direction:column;padding:14px 10px;height:auto;gap:3px;border:2px solid '+opt.c+';background:transparent" data-mins="'+opt.m+'" onclick="enterDW(+this.dataset.mins)">';
+    h+='<span style="font-size:22px;font-weight:800;color:'+opt.c+'">'+opt.m+'dk</span>';
+    h+='<span style="font-size:12px;font-weight:600">'+opt.l+'</span>';
+    h+='<span style="font-size:10px;color:var(--t3)">'+opt.d+'</span></button>';
   });
   h+='</div></div>';
-  h+='<div class="g2"><div class="card cp"><p style="font-weight:700;font-size:14px;margin-bottom:10px">Derin Calisma Kurallari</p><div style="display:flex;flex-direction:column;gap:8px">';
-  ['Telefonu sessize al','Bildirimleri kapat','Tarayici sekmeleri temizle','Su ve atistirmalik hazirla','Deep Work overlay devreye girer'].forEach(function(r,i){
-    h+='<div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:99px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">'+(i+1)+'</div><span style="font-size:12.5px">'+r+'</span></div>';
+
+  /* Felsefe: Deep Work vs Shallow Work */
+  h+='<div style="margin-bottom:16px;padding:18px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(0,113,227,.04));border:1px solid rgba(0,113,227,.12)">';
+  h+='<p style="font-weight:700;font-size:14px;margin-bottom:12px">&#9878; Deep Work vs Shallow Work</p>';
+  h+='<div class="g2" style="gap:12px">';
+  h+='<div style="padding:14px;border-radius:10px;background:var(--gl);border:1.5px solid var(--green)">';
+  h+='<p style="font-weight:700;font-size:12px;color:var(--green);margin-bottom:8px">&#9989; DERIN CALISMA</p>';
+  ['Tam odak gerektirir','Bilissel efor yuksektir','Yeni beceri & deger uretir','Kesintiye gelemez','Makina ile rekabet edilemez'].forEach(function(i){
+    h+='<div style="display:flex;gap:6px;margin-bottom:5px;align-items:flex-start"><span style="color:var(--green);font-size:11px;font-weight:800;flex-shrink:0">+</span><span style="font-size:12px">'+i+'</span></div>';
+  });
+  h+='</div>';
+  h+='<div style="padding:14px;border-radius:10px;background:var(--rl);border:1.5px solid var(--red)">';
+  h+='<p style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:8px">&#10071; YUZEYSEL CALISMA</p>';
+  ['Email, Slack, toplanti','Asla tam odak gerekmez','Minimal yeni deger uretir','Kolayca kesilip devam edilir','Robotlar / asistanis yapabilir'].forEach(function(i){
+    h+='<div style="display:flex;gap:6px;margin-bottom:5px;align-items:flex-start"><span style="color:var(--red);font-size:11px;font-weight:800;flex-shrink:0">-</span><span style="font-size:12px">'+i+'</span></div>';
+  });
+  h+='</div></div></div>';
+
+  /* 4 disiplin */
+  h+='<div class="card" style="padding:18px;margin-bottom:16px">';
+  h+='<p style="font-weight:700;font-size:13px;margin-bottom:14px">&#127775; Deep Work&#39;un 4 Felsefi Yaklasimi</p>';
+  var philosophies=[
+    ['Keşisci (Monastic)','Sosyal medya, email, anlık mesaj &mdash; dijital kaos yok. Kalıcı olarak derin calisma modunda yasayan insanlar icin. (Don Knuth, Neal Stephenson)','var(--purple)','&#128111;'],
+    ['İkili (Bimodal)','Yilın/haftanın belli donemlerini tamamen Deep Work&#39;e, kalanini normal hayata ayir. (Carl Jung, Adam Grant)','var(--blue)','&#9878;'],
+    ['Ritimsel (Rhythmic)','Her gun belli saatte Deep Work blogu. Takvime kor, istisnasız yap. Cogu profesyonel icin en uygun yaklasim.','var(--green)','&#128197;'],
+    ['Gazeteci (Journalistic)','Boş zaman buldukça hemen Deep Work moduna gec. Deneyim gerektirir; yeni baslayanlara tavsiye edilmez.','var(--orange)','&#128240;'],
+  ];
+  for(var pi=0;pi<philosophies.length;pi++){
+    var ph=philosophies[pi];
+    h+='<div style="display:flex;gap:12px;margin-bottom:12px;align-items:flex-start">';
+    h+='<div style="width:34px;height:34px;border-radius:10px;background:'+ph[2]+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">'+ph[3]+'</div>';
+    h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:2px">'+ph[0]+'</p>';
+    h+='<p style="font-size:12px;color:var(--t2);line-height:1.6">'+ph[1]+'</p></div></div>';
+  }
+  h+='</div>';
+
+  /* Kurallar + istatistik */
+  h+='<div class="g2">';
+  h+='<div class="card cp"><p style="font-weight:700;font-size:13px;margin-bottom:10px">&#128241; Oturum Oncesi Kontrol</p><div style="display:flex;flex-direction:column;gap:7px">';
+  ['Telefon sessiz, uzakta','Bildirimler kapali','Sadece 1-2 sekme acik','Su & atistirmalik hazir','Kulaklık & odak muzigi hazir','Hedef net: ne uretecegim?'].forEach(function(r,i){
+    h+='<div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+(i+1)+'</div><span style="font-size:12px">'+r+'</span></div>';
   });
   h+='</div></div>';
-  h+='<div class="card cp"><p style="font-weight:700;font-size:14px;margin-bottom:10px">Istatistikler</p><div style="display:flex;flex-direction:column;gap:8px">';
-  [{l:'Toplam Oturum',v:D.deepWorkSessions||0},{l:'Toplam Odak',v:(D.stats.totalFocus||0)+' dk'},{l:'XP',v:(D.stats.xp||0)},{l:'Seviye',v:'Lv. '+(D.stats.level||1)}].forEach(function(s){
-    h+='<div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:8px;font-size:13px"><span style="color:var(--t2)">'+s.l+'</span><span style="font-weight:600">'+s.v+'</span></div>';
+  h+='<div class="card cp"><p style="font-weight:700;font-size:13px;margin-bottom:10px">&#128200; Istatistiklerin</p><div style="display:flex;flex-direction:column;gap:7px">';
+  [{l:'Deep Work Oturumu',v:D.deepWorkSessions||0},{l:'Toplam Odak',v:(D.stats.totalFocus||0)+' dk'},{l:'Toplam XP',v:D.stats.xp||0},{l:'Seviye',v:'Lv. '+(D.stats.level||1)}].forEach(function(s){
+    h+='<div style="display:flex;justify-content:space-between;padding:8px 10px;background:var(--s2);border-radius:8px;font-size:13px"><span style="color:var(--t2)">'+s.l+'</span><span style="font-weight:700">'+s.v+'</span></div>';
   });
-  h+='</div></div></div></div>';sh('pinner',h);
+  h+='</div></div></div></div>';
+  sh('pinner',h);
 }
 
 function renderSOP(){
