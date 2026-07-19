@@ -634,22 +634,9 @@ async function initCloud(){
     if(!firebase.apps.length)firebase.initializeApp(cfg);
     CLOUD.auth=firebase.auth();
     CLOUD.db=firebase.firestore();
-
-    await CLOUD.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
     try{await CLOUD.db.enablePersistence({synchronizeTabs:true});}catch(e){if(e.code!=='failed-precondition'&&e.code!=='unimplemented')console.warn(e);}
-
-    var user=await new Promise(function(resolve,reject){
-      var unsubscribe=CLOUD.auth.onAuthStateChanged(function(currentUser){
-        unsubscribe();
-        resolve(currentUser);
-      },reject);
-    });
-
-    if(!user){
-      var cred=await CLOUD.auth.signInAnonymously();
-      user=cred.user;
-    }
+    var user=CLOUD.auth.currentUser;
+    if(!user){var cred=await CLOUD.auth.signInAnonymously();user=cred.user;}
     CLOUD.user=user;CLOUD.uid=user.uid;updateAuthButton(user);
     var ref=stateRef(user.uid);
     var snap=await ref.get();
