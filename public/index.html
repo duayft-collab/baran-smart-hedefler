@@ -596,12 +596,22 @@ function writeLocal(ts){
     localStorage.setItem('fu7_rev',String(CLOUD.revision||0));
   }catch(e){console.warn('[SYNC] Yerel kayıt başarısız',e);}
 }
-function mergeRemotePayload(payload){
-  D=Object.assign({},INIT,payload||{}, {
+/* Uzak payload'dan yerel state uretir. Saf: D'ye dokunmaz.
+   Karsilastirmada da kullanilir; boylece INIT ile birlesmeden dogan alan farki
+   sahte tutarsizlik uretmez. */
+function buildStateFromPayload(payload){
+  return Object.assign({},INIT,payload||{}, {
     routines:Object.assign({},INIT.routines,(payload&&payload.routines)||{}),
     stats:Object.assign({},INIT.stats,(payload&&payload.stats)||{}),
     compat:Object.assign({},INIT.compat,(payload&&payload.compat)||{})
   });
+}
+function mergeRemotePayload(payload){D=buildStateFromPayload(payload);}
+/* Uzak payload ile mevcut yerel state ayni mi? Anahtar sirasina duyarli
+   JSON.stringify kullanilmaz. Her iki taraf da bir kez serilestirlir. */
+function samePayloadAsLocal(payload){
+  try{return canonicalStringify(buildStateFromPayload(payload))===canonicalStringify(D);}
+  catch(e){console.warn('[SYNC] Payload karşılaştırılamadı',e);return false;}
 }
 function stateRef(uid){return CLOUD.db.collection('users').doc(uid).collection('app').doc('state');}
 /* ── Pending mutation ──────────────────────────────────────────────────────
@@ -865,14 +875,20 @@ async function bootstrapUser(user){
   }
 
   if(remote&&remote.payload){
-    var takeRemote;
+    /* Karar matrisi:
+       B  remoteRev > localRev            -> uzak otorite, uygula, YAZMA YOK
+       D  remoteRev === localRev, ayni    -> HICBIR YAZMA, yalniz listener
+       E  remoteRev === localRev, farkli  -> veri tutarsizligi, sessiz ezme YOK
+       C  remoteRev < localRev            -> yerel gercekten yeni, transaction */
+    var takeRemote,equalRev=false;
     if(remoteRev>0){
       takeRemote=remoteRev>CLOUD.revision;
+      equalRev=remoteRev===CLOUD.revision;
     }else{
       // schemaVersion 2 belgesi: revision yok, eski davranisa geri dus
       takeRemote=Number(remote.clientUpdatedAt||0)>localStamp();
     }
-    if(CLOUD.revision===0&&localStamp()===0)takeRemote=true; // bos cihaz dolu bulutu ezmez
+    if(CLOUD.revision===0&&localStamp()===0){takeRemote=true;equalRev=false;} // bos cihaz dolu bulutu ezmez
     if(takeRemote){
       CLOUD.applyingRemote=true;
       try{
@@ -882,8 +898,24 @@ async function bootstrapUser(user){
         render();
       }finally{CLOUD.applyingRemote=false;}
       console.log('[SYNC] Açılışta bulut verisi alındı. revision:',CLOUD.revision);
+    }else if(equalRev){
+      CLOUD.revision=remoteRev;
+      CLOUD.ready=true;
+      if(samePayloadAsLocal(remote.payload)){
+        // D: sunucu ve yerel ayni. Yazma yok, revision artmaz, mutationId uretilmez.
+        if(!user.isAnonymous)startDocListener(user.uid);
+        else console.log('[SYNC] Anonim oturum, gerçek zamanlı listener kurulmadı');
+        console.log('[SYNC] Açılışta yerel ve bulut aynı. revision:',CLOUD.revision);
+        setSync(navigator.onLine?'ok':'offline');
+        return;
+      }
+      // E: ayni revision farkli icerik -> hangisinin dogru oldugu bilinemez
+      console.warn('[SYNC] Aynı revision, farklı içerik. Kullanıcı kararı isteniyor.');
+      if(!user.isAnonymous)startDocListener(user.uid);
+      enterConflict(remote,newPendingMutation());
+      return;
     }else{
-      // Yerel daha yeni: transaction ile yukselt
+      // C: yerel daha yeni, transaction ile yukselt
       CLOUD.revision=remoteRev;
       CLOUD.ready=true;
       CLOUD.pendingMutation=newPendingMutation();savePending();
