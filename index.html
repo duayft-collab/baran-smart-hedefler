@@ -608,8 +608,9 @@ function stateRef(uid){return CLOUD.db.collection('users').doc(uid).collection('
    CLOUD.revision YALNIZ dogrulanmis sunucu revision'ini temsil eder.
    Yerel kayitta asla erken artirilmaz; yalniz basarili commit sonrasi guncellenir. */
 function newPendingMutation(){
+  var now=Date.now();
   return {id:newMutationId(),expectedRevision:CLOUD.revision||0,
-    payload:JSON.parse(JSON.stringify(D)),createdAt:Date.now()};
+    payload:JSON.parse(JSON.stringify(D)),createdAt:now,updatedAt:now};
 }
 function savePending(){
   try{
@@ -689,11 +690,23 @@ function flushPending(){
 function queueCloudSave(){
   if(!CLOUD.ready||!CLOUD.db||!CLOUD.uid)return;
   if(CLOUD.applyingRemote)return;         // uzak veri uygulanirken geri yazma yok
-  if(CLOUD.conflict){setSync('conflict');return;} // cakisma varken yeni bulut yazmasi bloke
-  // Tek pending mutation: varsa yalniz payload tazelenir, expectedRevision KORUNUR
-  if(CLOUD.pendingMutation)CLOUD.pendingMutation.payload=JSON.parse(JSON.stringify(D));
-  else CLOUD.pendingMutation=newPendingMutation();
+  // Pending payload HER durumda tazelenir. Cakismada yalniz BULUT YAZMASI bloke edilir;
+  // boylece cakisma acikken yapilan degisiklik pending'e islenir ve kaybolmaz.
+  if(CLOUD.pendingMutation){
+    CLOUD.pendingMutation.payload=JSON.parse(JSON.stringify(D)); // derin kopya, D ile paylasimsiz
+    // Payload degisti -> bu artik yeni bir mantiksal mutation. Ayni id ile gonderilirse
+    // sunucudaki lastMutationId eslesmesi yeni veriyi yanlislikla duplicate sayabilir.
+    CLOUD.pendingMutation.id=newMutationId();
+    CLOUD.pendingMutation.updatedAt=Date.now();
+  }else{
+    CLOUD.pendingMutation=newPendingMutation();
+  }
   savePending();
+  if(CLOUD.conflict){                     // cakisma cozulmeden buluta yazilmaz
+    CLOUD.conflict.mutation=CLOUD.pendingMutation;
+    setSync('conflict');
+    return;
+  }
   clearTimeout(CLOUD.timer);
   setSync('saving');
   CLOUD.timer=setTimeout(flushPending,500);
@@ -770,9 +783,12 @@ function conflictLoadRemote(){
 function conflictKeepLocal(){
   if(!CLOUD.conflict)return;
   var srv=CLOUD.conflict.serverData,m=CLOUD.conflict.mutation;
-  // Yeni sunucu revision'i baz alinarak yeniden dene. Ayni mutationId korunur.
+  // Yeni sunucu revision'i baz alinarak yeniden dene. Payload en guncel yerel state'tir;
+  // icerik degistigi icin yeni mutationId uretilir (duplicate yanlis eslesmesini onler).
   m.expectedRevision=srv?Number(srv.revision||0):0;
   m.payload=JSON.parse(JSON.stringify(D));
+  m.id=newMutationId();
+  m.updatedAt=Date.now();
   CLOUD.pendingMutation=m;savePending();
   CLOUD.conflict=null;hideConflictUI();
   console.log('[SYNC] Yerel değişiklik yeniden deneniyor. expectedRevision:',m.expectedRevision);
