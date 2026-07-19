@@ -563,6 +563,7 @@ var SYNC_TEXT={
   local:'Yerel mod'
 };
 function setSync(state){
+  if(RESTORE.state!=='IDLE')return;         // geri yukleme kendi rozetini yonetir
   clearTimeout(CLOUD.badgeTimer);
   if(CLOUD.conflict&&state!=='conflict')state='conflict'; // cakisma cozulmeden durum degismez
   var key=state;
@@ -572,6 +573,148 @@ function setSync(state){
     CLOUD.badgeTimer=setTimeout(function(){setSync('ok');},2500);
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   D5 — RESTORE LOCK DURUM MAKINESI
+   Geri yukleme sirasinda tum mutasyon yollarini bloke eder. Kilit yalniz
+   bellektedir; localStorage'a kalici kilit yazilmaz (sekme cokerse kilit kalmaz).
+   Bu turda GERCEK restore YOK; yalniz altyapi ve kilit.
+   ══════════════════════════════════════════════════════════════════════════ */
+var RESTORE_WATCHDOG_MS=60000;
+var RESTORE_STATES=['IDLE','PREPARING','VERIFYING','PREVIEW','AWAITING_CONFIRM',
+  'SAFEGUARDING','COMMITTING','FINALIZING','FAILED'];
+// Gecis matrisi tek yerde. FAILED her aktif asamadan failRestoreSession ile erisilir.
+var RESTORE_TRANSITIONS={
+  IDLE:['PREPARING'],
+  PREPARING:['VERIFYING','FAILED','IDLE'],
+  VERIFYING:['PREVIEW','FAILED','IDLE'],
+  PREVIEW:['AWAITING_CONFIRM','FAILED','IDLE'],
+  AWAITING_CONFIRM:['SAFEGUARDING','FAILED','IDLE'], // kullanici iptal -> IDLE
+  SAFEGUARDING:['COMMITTING','FAILED'],
+  COMMITTING:['FINALIZING','FAILED'],
+  FINALIZING:['IDLE','FAILED'],
+  FAILED:['IDLE']
+};
+// Asama basi watchdog. AWAITING_CONFIRM kullanici karari bekler -> watchdog kapali.
+// COMMITTING gercek transaction; Firestore 270s ustunde tutulur, korlemesine kesilmez.
+var RESTORE_WATCHDOG={PREPARING:RESTORE_WATCHDOG_MS,VERIFYING:RESTORE_WATCHDOG_MS,
+  PREVIEW:RESTORE_WATCHDOG_MS,AWAITING_CONFIRM:0,SAFEGUARDING:RESTORE_WATCHDOG_MS,
+  COMMITTING:300000,FINALIZING:RESTORE_WATCHDOG_MS};
+var RESTORE_TEXT={PREPARING:'Geri yükleme hazırlanıyor',VERIFYING:'Yedek doğrulanıyor',
+  PREVIEW:'Geri yükleme önizlemesi hazırlanıyor',AWAITING_CONFIRM:'Onay bekleniyor',
+  SAFEGUARDING:'Güvenlik yedeği alınıyor',COMMITTING:'Geri yükleme uygulanıyor',
+  FINALIZING:'Son kontroller yapılıyor',FAILED:'Geri yükleme başarısız',IDLE:null};
+
+var RESTORE={state:'IDLE',startedAt:0,stageStartedAt:0,lastError:null,watchdogTimer:null,
+  operationId:null,context:null,deferredRemoteSnapshot:null,commitUncertain:false,lastResult:null};
+
+var _restoreBadgeState=null;
+function restoreBadge(state){
+  if(_restoreBadgeState===state)return;     // ayni state icin tekrar basma
+  _restoreBadgeState=state;
+  var t=RESTORE_TEXT[state];
+  if(t)cloudBadge(t,'restore');
+  else if(state==='IDLE')setSync(navigator.onLine?'ok':'offline'); // normale don
+}
+function getRestoreState(){return RESTORE.state;}
+function isRestoreLocked(){return RESTORE.state!=='IDLE';}
+function canTransitionRestore(from,to){
+  if(RESTORE_STATES.indexOf(to)<0)return false;
+  return (RESTORE_TRANSITIONS[from]||[]).indexOf(to)>=0;
+}
+function transitionRestore(next,context){
+  if(RESTORE_STATES.indexOf(next)<0)throw new Error('Bilinmeyen restore durumu: '+next);
+  var cur=RESTORE.state;
+  if(next===cur)return false;               // gereksiz tekrar gecis
+  if(!canTransitionRestore(cur,next))throw new Error('Geçersiz restore geçişi: '+cur+' -> '+next);
+  RESTORE.state=next;
+  RESTORE.stageStartedAt=Date.now();
+  if(context!==undefined)RESTORE.context=context;
+  restoreBadge(next);
+  if(next==='IDLE'||next==='FAILED')stopRestoreWatchdog();
+  else startRestoreWatchdog();
+  console.log('[RESTORE] '+cur+' -> '+next);
+  return true;
+}
+function beginRestoreSession(context){
+  if(RESTORE.state!=='IDLE')throw new Error('Zaten bir geri yükleme oturumu var: '+RESTORE.state);
+  RESTORE.operationId=newMutationId();
+  RESTORE.startedAt=Date.now();
+  RESTORE.lastError=null;RESTORE.commitUncertain=false;RESTORE.lastResult=null;
+  RESTORE.deferredRemoteSnapshot=null;
+  transitionRestore('PREPARING',context||null);
+  console.log('[RESTORE] Oturum başladı:',RESTORE.operationId);
+  return RESTORE.operationId;
+}
+function failRestoreSession(error){
+  RESTORE.lastError=error||new Error('Bilinmeyen geri yükleme hatası');
+  if(RESTORE.state!=='FAILED'&&RESTORE.state!=='IDLE'){
+    RESTORE.state='FAILED';RESTORE.stageStartedAt=Date.now();
+    stopRestoreWatchdog();restoreBadge('FAILED');
+    console.error('[RESTORE] Başarısız:',RESTORE.lastError.message);
+  }
+  return RESTORE.state;
+}
+function finishRestoreSession(result){
+  RESTORE.lastResult=result||'success';
+  if(result==='uncertain')RESTORE.commitUncertain=true; // kor basari deme
+  console.log('[RESTORE] Oturum sonucu:',RESTORE.lastResult);
+  resetRestoreSession();
+  return RESTORE.lastResult;
+}
+function resetRestoreSession(){
+  stopRestoreWatchdog();
+  RESTORE.state='IDLE';RESTORE.stageStartedAt=Date.now();
+  RESTORE.operationId=null;RESTORE.context=null;RESTORE.deferredRemoteSnapshot=null;
+  restoreBadge('IDLE');
+}
+function startRestoreWatchdog(){
+  stopRestoreWatchdog();
+  var ms=RESTORE_WATCHDOG[RESTORE.state];
+  if(!ms)return;                            // IDLE / AWAITING_CONFIRM / FAILED -> watchdog yok
+  var opId=RESTORE.operationId;
+  RESTORE.watchdogTimer=setTimeout(function(){
+    if(opId!==RESTORE.operationId)return;    // eski timer yeni oturumu etkilemez
+    console.warn('[RESTORE] Watchdog: '+RESTORE.state+' zaman aşımı');
+    if(RESTORE.state==='COMMITTING'){
+      // gercek transaction devam ediyor olabilir; korlemesine IDLE yapma
+      RESTORE.commitUncertain=true;
+      RESTORE.lastError=new Error('Commit zaman aşımı; sonuç belirsiz');
+    }else{
+      failRestoreSession(new Error(RESTORE.state+' aşamasında zaman aşımı'));
+    }
+  },ms);
+}
+function stopRestoreWatchdog(){
+  if(RESTORE.watchdogTimer){clearTimeout(RESTORE.watchdogTimer);RESTORE.watchdogTimer=null;}
+}
+var _restoreWarnAt=0;
+function assertRestoreIdle(actionName){
+  if(RESTORE.state==='IDLE')return true;
+  var now=Date.now();
+  if(now-_restoreWarnAt>2000){              // ayni olay icin tekrar toast basma
+    _restoreWarnAt=now;
+    cloudBadge('Geri yükleme devam ediyor','restore');
+    console.warn('[RESTORE] Engellendi ('+RESTORE.state+'):',actionName);
+  }
+  return false;
+}
+function withRestoreLock(stage,fn){
+  return Promise.resolve().then(function(){
+    if(!canTransitionRestore(RESTORE.state,stage))
+      throw new Error('withRestoreLock geçersiz aşama: '+RESTORE.state+' -> '+stage);
+    transitionRestore(stage);
+    return fn();
+  }).then(function(res){return {status:'success',result:res};})
+    .catch(function(e){failRestoreSession(e);return {status:'failed',error:e};});
+}
+/* D6 finalizasyonda cagrilacak; bu turda OTOMATIK cagrilmaz. */
+function clearPendingForRestore(){
+  CLOUD.pendingMutation=null;
+  clearTimeout(CLOUD.timer);clearTimeout(CLOUD.retryTimer);
+  try{localStorage.removeItem('fu7_pending_mutation');}catch(e){}
+}
+function clearUndoHistoryForRestore(){hist=[];}
 function updateAuthButton(user){
   var btn=document.getElementById('google-auth-btn');
   if(!btn)return;
@@ -669,6 +812,7 @@ function scheduleRetry(ms){
   CLOUD.retryTimer=setTimeout(flushPending,ms||8000);
 }
 function flushPending(){
+  if(RESTORE.state!=='IDLE')return;         // restore kilidi: transaction/retry yok
   if(CLOUD.flushing||!CLOUD.pendingMutation)return;
   if(!CLOUD.ready||!CLOUD.db||!CLOUD.uid)return;
   if(CLOUD.conflict){setSync('conflict');return;}
@@ -697,7 +841,8 @@ function flushPending(){
     scheduleRetry();
   });
 }
-function queueCloudSave(){
+function queueCloudSave(bypassLock){
+  if(RESTORE.state!=='IDLE'&&!bypassLock)return; // restore kilidi: yeni pending/yazma yok
   if(!CLOUD.ready||!CLOUD.db||!CLOUD.uid)return;
   if(CLOUD.applyingRemote)return;         // uzak veri uygulanirken geri yazma yok
   // Pending payload HER durumda tazelenir. Cakismada yalniz BULUT YAZMASI bloke edilir;
@@ -721,7 +866,16 @@ function queueCloudSave(){
   setSync('saving');
   CLOUD.timer=setTimeout(flushPending,500);
 }
-function save(){writeLocal(Date.now());queueCloudSave();}
+function save(opts){
+  opts=opts||{};
+  // Restore kilidi. Bypass yalniz dogrulanmis dahili restore cagrisi icin (operationId eslesmeli).
+  // Kullanici aksiyonlari save()'i argumansiz cagirir; bypass edemez.
+  var bypass=opts.source==='restore'&&opts.bypassRestoreLock===true&&
+    RESTORE.operationId&&opts.operationId===RESTORE.operationId;
+  if(RESTORE.state!=='IDLE'&&!bypass){assertRestoreIdle('save');return;}
+  writeLocal(Date.now());
+  queueCloudSave(bypass);
+}
 
 /* ── Gercek zamanli listener ───────────────────────────────────────────────── */
 function stopDocListener(){
@@ -746,6 +900,14 @@ function onRemoteSnapshot(snap){
   var md=snap.metadata;
   if(md.hasPendingWrites)return;            // kendi yazmamiz, sunucuya ulasmadi
   if(md.fromCache){setSync('offline');return;} // sunucu dogrulamasi yok
+  if(RESTORE.state!=='IDLE'){
+    // Restore kilidi: uzak veri uygulanmaz, revision degismez, render tetiklenmez.
+    // Yalniz en son sunucu-dogrulanmis payload tamponlanir (D6 karar verir).
+    if(snap.exists){var d0=snap.data()||{};
+      if(d0.payload)RESTORE.deferredRemoteSnapshot={
+        payload:JSON.parse(JSON.stringify(d0.payload)),revision:Number(d0.revision||0),at:Date.now()};}
+    return;
+  }
   if(!snap.exists){setSync('ok');return;}
   var data=snap.data()||{};
   if(!data.payload){setSync('ok');return;}
@@ -771,6 +933,7 @@ function enterConflict(serverData,m){
   showConflictUI();
 }
 function conflictLoadRemote(){
+  if(!assertRestoreIdle('conflictLoadRemote'))return; // restore kilidi
   if(!CLOUD.conflict)return;
   var srv=CLOUD.conflict.serverData;
   if(!srv||!srv.payload){console.warn('[SYNC] Sunucu sürümü okunamadı');return;}
@@ -791,6 +954,7 @@ function conflictLoadRemote(){
   }finally{CLOUD.applyingRemote=false;}
 }
 function conflictKeepLocal(){
+  if(!assertRestoreIdle('conflictKeepLocal'))return; // restore kilidi
   if(!CLOUD.conflict)return;
   var srv=CLOUD.conflict.serverData,m=CLOUD.conflict.mutation;
   // Yeni sunucu revision'i baz alinarak yeniden dene. Payload en guncel yerel state'tir;
@@ -943,6 +1107,7 @@ async function bootstrapUser(user){
 function handleAuthChange(user){
   if(!user){
     console.log('[AUTH] Oturum yok');
+    if(RESTORE.state!=='IDLE'){failRestoreSession(new Error('Oturum kapandı'));resetRestoreSession();}
     stopDocListener();
     CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
     updateAuthButton(null);
@@ -950,6 +1115,7 @@ function handleAuthChange(user){
   }
   if(CLOUD.uid===user.uid){CLOUD.user=user;updateAuthButton(user);return;} // ayni kullanici
   console.log('[AUTH] Kullanıcı değişti:',user.uid,user.isAnonymous?'(anonim)':'(google)');
+  if(RESTORE.state!=='IDLE'){failRestoreSession(new Error('Kullanıcı değişti'));resetRestoreSession();}
   stopDocListener(); // UID degistiyse eski listener mutlaka kapanir
   CLOUD.user=user;CLOUD.uid=user.uid;
   updateAuthButton(user);
@@ -1033,7 +1199,7 @@ window.addEventListener('online',function(){
   setSync('ok');
   if(CLOUD.pendingMutation&&!CLOUD.conflict)flushPending(); // bekleyen degisikligi yeniden dene
 });
-window.addEventListener('beforeunload',function(){stopDocListener();});
+window.addEventListener('beforeunload',function(){stopDocListener();stopRestoreWatchdog();});
 
 /* ══════════════════════════════════════════════════════════════════════════
    BACKUP ALTYAPISI (D1 temel · D2 yazma · D3 dogrulama)
@@ -1214,6 +1380,12 @@ function detectSuspect(counts,plainBytes,prev){
 async function createBackup(reason,options){
   options=options||{};
   if(BACKUP_REASONS.indexOf(reason)<0)throw new Error('Geçersiz yedek nedeni: '+reason);
+  // Restore kilidi: yalniz dogrulanmis dahili before_restore izinli (operationId eslesmeli).
+  if(RESTORE.state!=='IDLE'){
+    var okBefore=reason==='before_restore'&&options.__restoreOperationId&&
+      options.__restoreOperationId===RESTORE.operationId;
+    if(!okBefore)throw new Error('Geri yükleme sırasında yedek oluşturulamaz');
+  }
   assertCanBackup();
   var uid=CLOUD.uid;
 
@@ -1878,10 +2050,21 @@ window.BACKUP_API={getBackupCapabilities:getBackupCapabilities,canonicalStringif
   diffBackups:diffBackups,buildRestorePreview:buildRestorePreview,
   analyzeSuspiciousChange:analyzeSuspiciousChange};
 
+window.RESTORE_API={getRestoreState:getRestoreState,isRestoreLocked:isRestoreLocked,
+  canTransitionRestore:canTransitionRestore,transitionRestore:transitionRestore,
+  beginRestoreSession:beginRestoreSession,failRestoreSession:failRestoreSession,
+  finishRestoreSession:finishRestoreSession,resetRestoreSession:resetRestoreSession,
+  assertRestoreIdle:assertRestoreIdle,withRestoreLock:withRestoreLock,
+  startRestoreWatchdog:startRestoreWatchdog,stopRestoreWatchdog:stopRestoreWatchdog,
+  clearPendingForRestore:clearPendingForRestore,clearUndoHistoryForRestore:clearUndoHistoryForRestore};
+
 function log(m){D.logs=[{time:U.ts(),action:m}].concat(D.logs||[]).slice(0,100);}
 function xp(amt,why){D.stats.xp=(D.stats.xp||0)+amt;D.stats.level=Math.floor(D.stats.xp/500)+1;log('+'+amt+' XP: '+why);save();}
 function snap(){hist=[JSON.stringify(D)].concat(hist).slice(0,50);}
-function undo(){if(!hist.length)return;D=JSON.parse(hist[0]);hist=hist.slice(1);save();render();}
+function undo(){
+  if(!assertRestoreIdle('undo'))return;     // restore kilidi: hist tuketilmez, D degismez
+  if(!hist.length)return;D=JSON.parse(hist[0]);hist=hist.slice(1);save();render();
+}
 
 function ge(id){return document.getElementById(id);}
 function sh(id,html){var e=ge(id);if(e)e.innerHTML=html;}
