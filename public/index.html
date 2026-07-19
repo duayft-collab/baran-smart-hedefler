@@ -520,7 +520,24 @@ var gFilter='all';
 var openGId=null;
 var todoView='list';
 
-var CLOUD={ready:false,uid:null,db:null,auth:null,user:null,timer:null,lastError:null};
+var SCHEMA_VERSION=3;
+var CLOUD={ready:false,uid:null,db:null,auth:null,user:null,timer:null,lastError:null,
+  deviceId:null,unsubAuth:null,unsubDoc:null,listenerUid:null,
+  revision:0,applyingRemote:false,badgeTimer:null};
+
+/* Kalici, kisisel veri icermeyen cihaz kimligi */
+function deviceId(){
+  if(CLOUD.deviceId)return CLOUD.deviceId;
+  var id=localStorage.getItem('fu7_device');
+  if(!id){
+    id='dev-'+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,10);
+    try{localStorage.setItem('fu7_device',id);}catch(e){}
+  }
+  CLOUD.deviceId=id;
+  return id;
+}
+function newMutationId(){return deviceId()+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);}
+
 function cloudBadge(text,state){
   var el=document.getElementById('cloud-sync-status');
   if(!el){
@@ -530,6 +547,27 @@ function cloudBadge(text,state){
   }
   el.textContent=text;
   el.dataset.state=state||'';
+}
+
+/* Tek senkronizasyon durum makinesi. Rozet yalnizca buradan guncellenir. */
+var SYNC_TEXT={
+  connecting:'Bağlanıyor',
+  saving:'Kaydediliyor',
+  ok:'Bulutta kayıtlı',
+  okGoogle:'Google hesabında kayıtlı',
+  offline:'Çevrimdışı',
+  remote:'Buluttan güncellendi',
+  error:'Senkronizasyon hatası',
+  local:'Yerel mod'
+};
+function setSync(state){
+  clearTimeout(CLOUD.badgeTimer);
+  var key=state;
+  if(state==='ok'&&CLOUD.user&&!CLOUD.user.isAnonymous)key='okGoogle';
+  cloudBadge(SYNC_TEXT[key]||SYNC_TEXT.ok,state);
+  if(state==='remote'){
+    CLOUD.badgeTimer=setTimeout(function(){setSync('ok');},2500);
+  }
 }
 function updateAuthButton(user){
   var btn=document.getElementById('google-auth-btn');
@@ -547,11 +585,13 @@ function updateAuthButton(user){
   }
 }
 function localStamp(){return Number(localStorage.getItem('fu7_cloud_ts')||0);}
+function localRevision(){return Number(localStorage.getItem('fu7_rev')||0);}
 function writeLocal(ts){
   try{
     localStorage.setItem('fu7',JSON.stringify(D));
     if(ts)localStorage.setItem('fu7_cloud_ts',String(ts));
-  }catch(e){console.warn('Yerel kayıt başarısız',e);}
+    localStorage.setItem('fu7_rev',String(CLOUD.revision||0));
+  }catch(e){console.warn('[SYNC] Yerel kayıt başarısız',e);}
 }
 function mergeRemotePayload(payload){
   D=Object.assign({},INIT,payload||{}, {
@@ -561,74 +601,184 @@ function mergeRemotePayload(payload){
   });
 }
 function stateRef(uid){return CLOUD.db.collection('users').doc(uid).collection('app').doc('state');}
-async function uploadCurrentState(ref){
-  var ts=Date.now();
-  await ref.set({
+/* Yazma. revision otorite alanidir; clientUpdatedAt yalnizca teshis icindir. */
+function uploadCurrentState(ref){
+  CLOUD.revision=(CLOUD.revision||0)+1;
+  var payload={
     payload:JSON.parse(JSON.stringify(D)),
     updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-    clientUpdatedAt:ts,
-    schemaVersion:2
-  },{merge:true});
-  localStorage.setItem('fu7_cloud_ts',String(ts));
-}
-async function loadGoogleState(user){
-  CLOUD.user=user;CLOUD.uid=user.uid;updateAuthButton(user);
-  var ref=stateRef(user.uid),snap=await ref.get();
-  if(snap.exists&&snap.data()&&snap.data().payload){
-    var remote=snap.data();
-    mergeRemotePayload(remote.payload);
-    writeLocal(Number(remote.clientUpdatedAt||Date.now()));
-    render();
-  }else{
-    await uploadCurrentState(ref);
-  }
-  CLOUD.ready=true;
-  cloudBadge('Google hesabında kayıtlı','ok');
+    revision:CLOUD.revision,
+    updatedByUid:CLOUD.uid||null,
+    updatedByDeviceId:deviceId(),
+    lastMutationId:newMutationId(),
+    schemaVersion:SCHEMA_VERSION,
+    clientUpdatedAt:Date.now() // debug amacli
+  };
+  localStorage.setItem('fu7_cloud_ts',String(payload.clientUpdatedAt));
+  localStorage.setItem('fu7_rev',String(CLOUD.revision));
+  // Cevrimdisiyken bu promise sunucu onayina kadar cozulmez; UI onu beklemez.
+  return ref.set(payload,{merge:true});
 }
 function queueCloudSave(){
   if(!CLOUD.ready||!CLOUD.db||!CLOUD.uid)return;
+  if(CLOUD.applyingRemote)return; // uzak veri uygulanirken geri yazma yok
   clearTimeout(CLOUD.timer);
-  cloudBadge('Buluta kaydediliyor…','saving');
-  CLOUD.timer=setTimeout(async function(){
-    try{
-      await uploadCurrentState(stateRef(CLOUD.uid));
-      cloudBadge(CLOUD.user&&!CLOUD.user.isAnonymous?'Google hesabında kayıtlı':'Bulutta kayıtlı','ok');
-    }catch(e){
+  setSync('saving');
+  CLOUD.timer=setTimeout(function(){
+    uploadCurrentState(stateRef(CLOUD.uid)).then(function(){
+      setSync('ok');
+    }).catch(function(e){
       CLOUD.lastError=e;
-      console.error('Firestore kayıt hatası',e);
-      cloudBadge('Bulut kaydı başarısız','error');
-    }
+      console.error('[FIRESTORE] Kayıt hatası',e);
+      setSync(navigator.onLine?'error':'offline');
+    });
   },500);
 }
 function save(){writeLocal(Date.now());queueCloudSave();}
-async function connectGoogle(){
-  if(!CLOUD.auth)return;
-  if(CLOUD.auth.currentUser&&!CLOUD.auth.currentUser.isAnonymous){
-    await loadGoogleState(CLOUD.auth.currentUser);
+
+/* ── Gercek zamanli listener ───────────────────────────────────────────────── */
+function stopDocListener(){
+  if(CLOUD.unsubDoc){
+    console.log('[SYNC] Listener kapatıldı:',CLOUD.listenerUid);
+    CLOUD.unsubDoc();
+  }
+  CLOUD.unsubDoc=null;CLOUD.listenerUid=null;
+}
+function startDocListener(uid){
+  if(CLOUD.listenerUid===uid&&CLOUD.unsubDoc)return; // tekrar kurulum yok
+  stopDocListener();
+  CLOUD.listenerUid=uid;
+  console.log('[SYNC] Listener kuruldu:',uid);
+  CLOUD.unsubDoc=stateRef(uid).onSnapshot({includeMetadataChanges:true},onRemoteSnapshot,function(e){
+    CLOUD.lastError=e;
+    console.error('[SYNC] Listener hatası',e);
+    setSync('error');
+  });
+}
+function onRemoteSnapshot(snap){
+  var md=snap.metadata;
+  if(md.hasPendingWrites)return;            // kendi yazmamiz, sunucuya ulasmadi
+  if(md.fromCache){setSync('offline');return;} // sunucu dogrulamasi yok
+  if(!snap.exists){setSync('ok');return;}
+  var data=snap.data()||{};
+  if(!data.payload){setSync('ok');return;}
+  var remoteRev=Number(data.revision||0);
+  if(data.updatedByDeviceId===deviceId()){  // kendi yazmamizin sunucu yankisi
+    CLOUD.revision=Math.max(CLOUD.revision||0,remoteRev);
+    localStorage.setItem('fu7_rev',String(CLOUD.revision));
+    setSync('ok');return;
+  }
+  if(remoteRev<=(CLOUD.revision||0)){setSync('ok');return;} // eski/ilk snapshot yereli ezmez
+  applyRemoteState(data);
+}
+function applyRemoteState(data){
+  CLOUD.applyingRemote=true;
+  try{
+    mergeRemotePayload(data.payload);
+    CLOUD.revision=Number(data.revision||0);
+    writeLocal(Date.now());
+    render();
+    console.log('[SYNC] Buluttan güncellendi. revision:',CLOUD.revision);
+    setSync('remote');
+  }catch(e){
+    CLOUD.lastError=e;
+    console.error('[SYNC] Uzak veri uygulanamadı',e);
+    setSync('error');
+  }finally{
+    CLOUD.applyingRemote=false;
+  }
+}
+/* Acilis uzlasmasi. Otorite sirasi: revision > eski belgelerde clientUpdatedAt > yerel. */
+async function bootstrapUser(user){
+  CLOUD.ready=false;
+  CLOUD.revision=localRevision();
+  var ref=stateRef(user.uid);
+  var snap=await ref.get();
+  var remote=snap.exists?snap.data():null;
+
+  if(remote&&remote.payload){
+    var remoteRev=Number(remote.revision||0);
+    var takeRemote;
+    if(remoteRev>0){
+      takeRemote=remoteRev>CLOUD.revision;
+    }else{
+      // schemaVersion 2 belgesi: revision yok, eski davranisa geri dus
+      takeRemote=Number(remote.clientUpdatedAt||0)>localStamp();
+    }
+    if(CLOUD.revision===0&&localStamp()===0)takeRemote=true; // bos cihaz dolu bulutu ezmez
+    if(takeRemote){
+      CLOUD.applyingRemote=true;
+      try{
+        mergeRemotePayload(remote.payload);
+        CLOUD.revision=remoteRev;
+        writeLocal(Date.now());
+        render();
+      }finally{CLOUD.applyingRemote=false;}
+      console.log('[SYNC] Açılışta bulut verisi alındı. revision:',CLOUD.revision);
+    }else{
+      CLOUD.revision=Math.max(CLOUD.revision,remoteRev);
+      CLOUD.ready=true;
+      await uploadCurrentState(ref); // yerel daha yeni, revision artirilarak yukselt
+    }
+  }else{
+    CLOUD.ready=true;
+    await uploadCurrentState(ref); // belge yok, ilk kurulum
+  }
+
+  CLOUD.ready=true;
+  // Listener yalnizca Google kullanicisi icin. Anonim oturumda kurulmaz.
+  if(!user.isAnonymous)startDocListener(user.uid);
+  else console.log('[SYNC] Anonim oturum, gerçek zamanlı listener kurulmadı');
+  setSync(navigator.onLine?'ok':'offline');
+}
+
+function handleAuthChange(user){
+  if(!user){
+    console.log('[AUTH] Oturum yok');
+    stopDocListener();
+    CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
+    updateAuthButton(null);
     return;
   }
+  if(CLOUD.uid===user.uid){CLOUD.user=user;updateAuthButton(user);return;} // ayni kullanici
+  console.log('[AUTH] Kullanıcı değişti:',user.uid,user.isAnonymous?'(anonim)':'(google)');
+  stopDocListener(); // UID degistiyse eski listener mutlaka kapanir
+  CLOUD.user=user;CLOUD.uid=user.uid;
+  updateAuthButton(user);
+  bootstrapUser(user).catch(function(e){
+    CLOUD.lastError=e;
+    console.error('[SYNC] Açılış senkronizasyonu başarısız',e);
+    setSync('error');
+  });
+}
+
+async function connectGoogle(){
+  if(!CLOUD.auth)return;
+  if(CLOUD.auth.currentUser&&!CLOUD.auth.currentUser.isAnonymous)return; // zaten bagli
   var btn=document.getElementById('google-auth-btn');
   if(btn){btn.disabled=true;btn.textContent='Google açılıyor…';}
-  cloudBadge('Google hesabına giriş yapılıyor…','loading');
+  setSync('connecting');
   var provider=new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({prompt:'select_account'});
   try{
-    // Her cihaz doğrudan aynı Google hesabına giriş yapar. Böylece UID her cihazda aynıdır.
-    var signed=await CLOUD.auth.signInWithPopup(provider);
-    await loadGoogleState(signed.user);
+    // Her cihaz aynı Google hesabına girer, böylece UID her cihazda aynıdır.
+    // Sonraki adımları onAuthStateChanged üstlenir.
+    await CLOUD.auth.signInWithPopup(provider);
   }catch(e){
     if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request'){
-      cloudBadge('Bulutta kayıtlı','ok');
+      setSync('ok');
     }else{
-      console.error('Google giriş hatası',e);
-      cloudBadge('Google girişi başarısız','error');
+      console.error('[AUTH] Google giriş hatası',e);
+      setSync('error');
     }
     updateAuthButton(CLOUD.auth.currentUser);
   }
 }
 window.connectGoogle=connectGoogle;
+
 async function initCloud(){
-  cloudBadge('Buluta bağlanıyor…','loading');
+  setSync('connecting');
+  deviceId();
   try{
     var cfg=await fetch('/__/firebase/init.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('Firebase yapılandırması alınamadı');return r.json();});
     if(!firebase.apps.length)firebase.initializeApp(cfg);
@@ -637,40 +787,41 @@ async function initCloud(){
 
     await CLOUD.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-    try{await CLOUD.db.enablePersistence({synchronizeTabs:true});}catch(e){if(e.code!=='failed-precondition'&&e.code!=='unimplemented')console.warn(e);}
+    try{
+      await CLOUD.db.enablePersistence({synchronizeTabs:true});
+      console.log('[FIRESTORE] Offline persistence açık');
+    }catch(e){
+      if(e.code==='failed-precondition')console.warn('[FIRESTORE] Persistence açılamadı: başka sekme kilitli tutuyor');
+      else if(e.code==='unimplemented')console.warn('[FIRESTORE] Persistence bu tarayıcıda desteklenmiyor');
+      else console.warn('[FIRESTORE] Persistence hatası',e);
+    }
 
-    var user=await new Promise(function(resolve,reject){
-      var unsubscribe=CLOUD.auth.onAuthStateChanged(function(currentUser){
-        unsubscribe();
-        resolve(currentUser);
-      },reject);
+    // Kalici auth dinleyicisi. Tek kez kurulur, oturum degisimlerini izlemeye devam eder.
+    if(!CLOUD.unsubAuth)CLOUD.unsubAuth=CLOUD.auth.onAuthStateChanged(handleAuthChange,function(e){
+      CLOUD.lastError=e;
+      console.error('[AUTH] Dinleyici hatası',e);
     });
 
-    if(!user){
-      var cred=await CLOUD.auth.signInAnonymously();
-      user=cred.user;
-    }
-    CLOUD.user=user;CLOUD.uid=user.uid;updateAuthButton(user);
-    var ref=stateRef(user.uid);
-    var snap=await ref.get();
-    var remote=snap.exists?snap.data():null;
-    var remoteTs=remote&&Number(remote.clientUpdatedAt||0);
-    var localTs=localStamp();
-    if(remote&&remote.payload&&remoteTs>localTs){
-      mergeRemotePayload(remote.payload);
-      writeLocal(remoteTs);
-      render();
-    }else if(!remote||localTs>=remoteTs){
-      await uploadCurrentState(ref);
-    }
-    CLOUD.ready=true;
-    cloudBadge(user.isAnonymous?'Bulutta kayıtlı':'Google hesabında kayıtlı','ok');
+    // Ilk callback'i bekle; kullanici yoksa anonim oturum ac.
+    await new Promise(function(resolve){
+      var done=false;
+      var stop=CLOUD.auth.onAuthStateChanged(function(u){
+        if(done)return;done=true;stop();
+        if(!u)CLOUD.auth.signInAnonymously().catch(function(e){console.error('[AUTH] Anonim giriş hatası',e);});
+        resolve();
+      });
+    });
   }catch(e){
     CLOUD.lastError=e;
-    console.error('Firebase başlatma hatası',e);
-    cloudBadge('Yerel mod','offline');
+    console.error('[FIRESTORE] Başlatma hatası',e);
+    setSync('local');
   }
 }
+
+// Ag durumu yalnizca yardimci gostergedir; otorite Firestore metadata'sidir.
+window.addEventListener('offline',function(){if(CLOUD.ready)setSync('offline');});
+window.addEventListener('online',function(){if(CLOUD.ready)setSync('ok');});
+window.addEventListener('beforeunload',function(){stopDocListener();});
 function log(m){D.logs=[{time:U.ts(),action:m}].concat(D.logs||[]).slice(0,100);}
 function xp(amt,why){D.stats.xp=(D.stats.xp||0)+amt;D.stats.level=Math.floor(D.stats.xp/500)+1;log('+'+amt+' XP: '+why);save();}
 function snap(){hist=[JSON.stringify(D)].concat(hist).slice(0,50);}
