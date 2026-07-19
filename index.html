@@ -523,7 +523,8 @@ var todoView='list';
 var SCHEMA_VERSION=3;
 var CLOUD={ready:false,uid:null,db:null,auth:null,user:null,timer:null,lastError:null,
   deviceId:null,unsubAuth:null,unsubDoc:null,listenerUid:null,
-  revision:0,applyingRemote:false,badgeTimer:null};
+  revision:0,applyingRemote:false,badgeTimer:null,
+  pendingMutation:null,conflict:null,flushing:false,retryTimer:null};
 
 /* Kalici, kisisel veri icermeyen cihaz kimligi */
 function deviceId(){
@@ -557,11 +558,13 @@ var SYNC_TEXT={
   okGoogle:'Google hesabında kayıtlı',
   offline:'Çevrimdışı',
   remote:'Buluttan güncellendi',
+  conflict:'Çakışma bulundu',
   error:'Senkronizasyon hatası',
   local:'Yerel mod'
 };
 function setSync(state){
   clearTimeout(CLOUD.badgeTimer);
+  if(CLOUD.conflict&&state!=='conflict')state='conflict'; // cakisma cozulmeden durum degismez
   var key=state;
   if(state==='ok'&&CLOUD.user&&!CLOUD.user.isAnonymous)key='okGoogle';
   cloudBadge(SYNC_TEXT[key]||SYNC_TEXT.ok,state);
@@ -601,38 +604,99 @@ function mergeRemotePayload(payload){
   });
 }
 function stateRef(uid){return CLOUD.db.collection('users').doc(uid).collection('app').doc('state');}
-/* Yazma. revision otorite alanidir; clientUpdatedAt yalnizca teshis icindir. */
-function uploadCurrentState(ref){
-  CLOUD.revision=(CLOUD.revision||0)+1;
-  var payload={
-    payload:JSON.parse(JSON.stringify(D)),
-    updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-    revision:CLOUD.revision,
-    updatedByUid:CLOUD.uid||null,
-    updatedByDeviceId:deviceId(),
-    lastMutationId:newMutationId(),
-    schemaVersion:SCHEMA_VERSION,
-    clientUpdatedAt:Date.now() // debug amacli
-  };
-  localStorage.setItem('fu7_cloud_ts',String(payload.clientUpdatedAt));
-  localStorage.setItem('fu7_rev',String(CLOUD.revision));
-  // Cevrimdisiyken bu promise sunucu onayina kadar cozulmez; UI onu beklemez.
-  return ref.set(payload,{merge:true});
+/* ── Pending mutation ──────────────────────────────────────────────────────
+   CLOUD.revision YALNIZ dogrulanmis sunucu revision'ini temsil eder.
+   Yerel kayitta asla erken artirilmaz; yalniz basarili commit sonrasi guncellenir. */
+function newPendingMutation(){
+  return {id:newMutationId(),expectedRevision:CLOUD.revision||0,
+    payload:JSON.parse(JSON.stringify(D)),createdAt:Date.now()};
+}
+function savePending(){
+  try{
+    if(CLOUD.pendingMutation)localStorage.setItem('fu7_pending_mutation',JSON.stringify(CLOUD.pendingMutation));
+    else localStorage.removeItem('fu7_pending_mutation');
+  }catch(e){console.warn('[SYNC] Bekleyen değişiklik saklanamadı',e);}
+}
+function loadPending(){
+  try{
+    var s=localStorage.getItem('fu7_pending_mutation');
+    if(!s)return null;
+    var m=JSON.parse(s);
+    if(!m||!m.id||typeof m.expectedRevision!=='number'||!m.payload)return null;
+    return m;
+  }catch(e){return null;}
+}
+
+/* Transaction. Callback SAF olmalidir: DOM/render/localStorage/yeni id YOK.
+   Firestore contention'da callback'i tekrar calistirabilir. */
+function commitMutation(m){
+  var ref=stateRef(CLOUD.uid),uid=CLOUD.uid,dev=deviceId();
+  return CLOUD.db.runTransaction(function(t){
+    return t.get(ref).then(function(doc){
+      var d=doc.exists?(doc.data()||{}):null;
+      var serverRev=d?Number(d.revision||0):0;
+      // Ayni mutation zaten yazilmis: tekrar yazma, basarili say
+      if(d&&d.lastMutationId&&d.lastMutationId===m.id)return {status:'duplicate',revision:serverRev};
+      // schemaVersion 2 belgesinde revision yok -> 0 kabul edilir, geriye uyumlu
+      if(serverRev!==m.expectedRevision)return {status:'conflict',serverData:d,serverRevision:serverRev};
+      t.set(ref,{
+        payload:m.payload,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+        revision:serverRev+1,
+        updatedByUid:uid,
+        updatedByDeviceId:dev,
+        lastMutationId:m.id,
+        schemaVersion:SCHEMA_VERSION,
+        clientUpdatedAt:m.createdAt // debug amacli
+      },{merge:true});
+      return {status:'ok',revision:serverRev+1};
+    });
+  });
+}
+function scheduleRetry(ms){
+  clearTimeout(CLOUD.retryTimer);
+  CLOUD.retryTimer=setTimeout(flushPending,ms||8000);
+}
+function flushPending(){
+  if(CLOUD.flushing||!CLOUD.pendingMutation)return;
+  if(!CLOUD.ready||!CLOUD.db||!CLOUD.uid)return;
+  if(CLOUD.conflict){setSync('conflict');return;}
+  if(!navigator.onLine){setSync('offline');scheduleRetry();return;} // offline'da transaction zorlanmaz
+  CLOUD.flushing=true;
+  var m=CLOUD.pendingMutation;
+  commitMutation(m).then(function(res){
+    CLOUD.flushing=false;
+    if(res.status==='conflict'){
+      console.warn('[SYNC] Çakışma: sunucu revision',res.serverRevision,'beklenen',m.expectedRevision);
+      enterConflict(res.serverData,m);
+      return;
+    }
+    CLOUD.revision=Number(res.revision||0);
+    localStorage.setItem('fu7_rev',String(CLOUD.revision));
+    // Commit sirasinda yeni kullanici degisikligi geldiyse pending'i silme
+    if(CLOUD.pendingMutation&&CLOUD.pendingMutation.id===m.id){CLOUD.pendingMutation=null;savePending();}
+    else savePending();
+    console.log('[SYNC] Commit '+res.status+'. revision:',CLOUD.revision);
+    setSync('ok');
+    if(CLOUD.pendingMutation)flushPending(); // birikmis yeni degisiklik varsa devam et
+  }).catch(function(e){
+    CLOUD.flushing=false;CLOUD.lastError=e;
+    console.error('[FIRESTORE] Transaction hatası',e);
+    setSync(navigator.onLine?'error':'offline');
+    scheduleRetry();
+  });
 }
 function queueCloudSave(){
   if(!CLOUD.ready||!CLOUD.db||!CLOUD.uid)return;
-  if(CLOUD.applyingRemote)return; // uzak veri uygulanirken geri yazma yok
+  if(CLOUD.applyingRemote)return;         // uzak veri uygulanirken geri yazma yok
+  if(CLOUD.conflict){setSync('conflict');return;} // cakisma varken yeni bulut yazmasi bloke
+  // Tek pending mutation: varsa yalniz payload tazelenir, expectedRevision KORUNUR
+  if(CLOUD.pendingMutation)CLOUD.pendingMutation.payload=JSON.parse(JSON.stringify(D));
+  else CLOUD.pendingMutation=newPendingMutation();
+  savePending();
   clearTimeout(CLOUD.timer);
   setSync('saving');
-  CLOUD.timer=setTimeout(function(){
-    uploadCurrentState(stateRef(CLOUD.uid)).then(function(){
-      setSync('ok');
-    }).catch(function(e){
-      CLOUD.lastError=e;
-      console.error('[FIRESTORE] Kayıt hatası',e);
-      setSync(navigator.onLine?'error':'offline');
-    });
-  },500);
+  CLOUD.timer=setTimeout(flushPending,500);
 }
 function save(){writeLocal(Date.now());queueCloudSave();}
 
@@ -669,7 +733,77 @@ function onRemoteSnapshot(snap){
     setSync('ok');return;
   }
   if(remoteRev<=(CLOUD.revision||0)){setSync('ok');return;} // eski/ilk snapshot yereli ezmez
+  if(CLOUD.conflict)return;                 // kullanici karar veriyor, uzerine yazma
+  // Bekleyen yerel degisiklik varken uzak veri KORLEMESINE uygulanmaz
+  if(CLOUD.pendingMutation){enterConflict(data,CLOUD.pendingMutation);return;}
   applyRemoteState(data);
+}
+
+/* ── Cakisma yonetimi ─────────────────────────────────────────────────────── */
+function enterConflict(serverData,m){
+  CLOUD.conflict={serverData:serverData||null,mutation:m};
+  clearTimeout(CLOUD.timer);clearTimeout(CLOUD.retryTimer);
+  console.warn('[SYNC] Çakışma bulundu. Kullanıcı kararı bekleniyor.');
+  setSync('conflict');
+  showConflictUI();
+}
+function conflictLoadRemote(){
+  if(!CLOUD.conflict)return;
+  var srv=CLOUD.conflict.serverData;
+  if(!srv||!srv.payload){console.warn('[SYNC] Sunucu sürümü okunamadı');return;}
+  // Ezmeden once yerel state'in guvenli kopyasi
+  try{localStorage.setItem('fu7_conflict_backup',JSON.stringify({at:Date.now(),payload:D}));}catch(e){}
+  CLOUD.applyingRemote=true;
+  try{
+    mergeRemotePayload(srv.payload);
+    CLOUD.revision=Number(srv.revision||0);
+    CLOUD.pendingMutation=null;savePending();
+    writeLocal(Date.now());
+    CLOUD.conflict=null;hideConflictUI();
+    render();                               // tek render, geri yazma yok
+    console.log('[SYNC] Buluttaki sürüm yüklendi. revision:',CLOUD.revision);
+    setSync('ok');
+  }catch(e){
+    CLOUD.lastError=e;console.error('[SYNC] Sunucu sürümü uygulanamadı',e);setSync('error');
+  }finally{CLOUD.applyingRemote=false;}
+}
+function conflictKeepLocal(){
+  if(!CLOUD.conflict)return;
+  var srv=CLOUD.conflict.serverData,m=CLOUD.conflict.mutation;
+  // Yeni sunucu revision'i baz alinarak yeniden dene. Ayni mutationId korunur.
+  m.expectedRevision=srv?Number(srv.revision||0):0;
+  m.payload=JSON.parse(JSON.stringify(D));
+  CLOUD.pendingMutation=m;savePending();
+  CLOUD.conflict=null;hideConflictUI();
+  console.log('[SYNC] Yerel değişiklik yeniden deneniyor. expectedRevision:',m.expectedRevision);
+  setSync('saving');
+  flushPending();                           // tekrar cakisirsa yine uyari cikar
+}
+window.conflictLoadRemote=conflictLoadRemote;
+window.conflictKeepLocal=conflictKeepLocal;
+
+function showConflictUI(){
+  if(document.getElementById('sync-conflict'))return;
+  var w=document.createElement('div');w.id='sync-conflict';
+  w.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);display:flex;'
+    +'align-items:center;justify-content:center;padding:16px';
+  var b=document.createElement('div');
+  b.style.cssText='background:var(--s);color:var(--t);border:1px solid var(--bd);border-radius:14px;'
+    +'max-width:440px;width:100%;max-height:85vh;overflow-y:auto;padding:22px;'
+    +'box-shadow:0 18px 50px rgba(0,0,0,.28);font:400 13px/1.6 system-ui';
+  b.innerHTML='<p style="font-size:15px;font-weight:700;margin-bottom:8px">Başka bir cihazda daha yeni değişiklik bulundu.</p>'
+    +'<p style="color:var(--t2);margin-bottom:18px">Değişiklikleriniz bu cihazda korunuyor. '
+    +'Buluttaki son sürümü inceleyip yeniden deneyin.</p>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+    +'<button type="button" class="btn btn-s" onclick="conflictLoadRemote()" style="flex:1;min-width:150px">Buluttaki sürümü yükle</button>'
+    +'<button type="button" class="btn btn-s" onclick="conflictKeepLocal()" style="flex:1;min-width:150px">Bu cihazdaki değişikliği koru</button>'
+    +'</div>';
+  w.appendChild(b);
+  document.body.appendChild(w);
+}
+function hideConflictUI(){
+  var el=document.getElementById('sync-conflict');
+  if(el&&el.parentNode)el.parentNode.removeChild(el);
 }
 function applyRemoteState(data){
   CLOUD.applyingRemote=true;
@@ -692,12 +826,29 @@ function applyRemoteState(data){
 async function bootstrapUser(user){
   CLOUD.ready=false;
   CLOUD.revision=localRevision();
+  CLOUD.pendingMutation=loadPending(); // sayfa yenilemesinde korunan bekleyen degisiklik
   var ref=stateRef(user.uid);
   var snap=await ref.get();
   var remote=snap.exists?snap.data():null;
+  var remoteRev=remote?Number(remote.revision||0):0;
+
+  // Bekleyen degisiklik varsa yerel state onun payload'idir; buluta korlemesine devretme.
+  if(CLOUD.pendingMutation&&remote&&remote.payload){
+    CLOUD.ready=true;
+    if(remoteRev===CLOUD.pendingMutation.expectedRevision){
+      CLOUD.revision=remoteRev;
+      console.log('[SYNC] Bekleyen değişiklik geri yüklendi, gönderiliyor.');
+      if(!user.isAnonymous)startDocListener(user.uid);
+      flushPending();
+      return;
+    }
+    CLOUD.revision=remoteRev;
+    if(!user.isAnonymous)startDocListener(user.uid);
+    enterConflict(remote,CLOUD.pendingMutation); // sunucu ilerlemis
+    return;
+  }
 
   if(remote&&remote.payload){
-    var remoteRev=Number(remote.revision||0);
     var takeRemote;
     if(remoteRev>0){
       takeRemote=remoteRev>CLOUD.revision;
@@ -716,13 +867,22 @@ async function bootstrapUser(user){
       }finally{CLOUD.applyingRemote=false;}
       console.log('[SYNC] Açılışta bulut verisi alındı. revision:',CLOUD.revision);
     }else{
-      CLOUD.revision=Math.max(CLOUD.revision,remoteRev);
+      // Yerel daha yeni: transaction ile yukselt
+      CLOUD.revision=remoteRev;
       CLOUD.ready=true;
-      await uploadCurrentState(ref); // yerel daha yeni, revision artirilarak yukselt
+      CLOUD.pendingMutation=newPendingMutation();savePending();
+      if(!user.isAnonymous)startDocListener(user.uid);
+      flushPending();
+      return;
     }
   }else{
+    // Belge yok: ilk kurulum, expectedRevision 0
+    CLOUD.revision=0;
     CLOUD.ready=true;
-    await uploadCurrentState(ref); // belge yok, ilk kurulum
+    CLOUD.pendingMutation=newPendingMutation();savePending();
+    if(!user.isAnonymous)startDocListener(user.uid);
+    flushPending();
+    return;
   }
 
   CLOUD.ready=true;
@@ -820,7 +980,11 @@ async function initCloud(){
 
 // Ag durumu yalnizca yardimci gostergedir; otorite Firestore metadata'sidir.
 window.addEventListener('offline',function(){if(CLOUD.ready)setSync('offline');});
-window.addEventListener('online',function(){if(CLOUD.ready)setSync('ok');});
+window.addEventListener('online',function(){
+  if(!CLOUD.ready)return;
+  setSync('ok');
+  if(CLOUD.pendingMutation&&!CLOUD.conflict)flushPending(); // bekleyen degisikligi yeniden dene
+});
 window.addEventListener('beforeunload',function(){stopDocListener();});
 function log(m){D.logs=[{time:U.ts(),action:m}].concat(D.logs||[]).slice(0,100);}
 function xp(amt,why){D.stats.xp=(D.stats.xp||0)+amt;D.stats.level=Math.floor(D.stats.xp/500)+1;log('+'+amt+' XP: '+why);save();}
