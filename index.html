@@ -1423,7 +1423,10 @@ async function verifyBackup(backupId,options){
     // kanonik yeniden uretim: serilestirme kararliligini dogrular
     r.canonicalStable=canonicalStringify(parsed)===text;
     var recount=countRecords(parsed);
-    r.countsMismatch=JSON.stringify(recount)!==JSON.stringify(m.counts||{});
+    // Firestore map alanlarinin anahtar sirasini KORUMAZ. JSON.stringify siraya
+    // duyarli oldugu icin ayni degerleri farkli sirada gelince yanlis uyusmazlik
+    // uretiyordu. Kanonik karsilastirma sira bagimsizdir.
+    r.countsMismatch=canonicalStringify(recount)!==canonicalStringify(m.counts||{});
     r.counts=recount;
     r.plausible=recount.totalRecords>0&&!r.countsMismatch;
   }catch(e){
