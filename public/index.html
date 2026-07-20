@@ -44,6 +44,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 #hamburger{display:none;width:34px;height:34px;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;color:var(--t);border-radius:8px;flex-shrink:0}
 #hamburger:hover{background:var(--s2)}
 #nav-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150}
+.rt p{margin:0 0 6px}.rt p:last-child{margin-bottom:0}.rt ul,.rt ol{margin:4px 0 6px;padding-left:20px}.rt li{margin:2px 0}.rt a{color:var(--blue);text-decoration:underline;word-break:break-word}.rt strong{font-weight:700}
 @media(max-width:820px){
   #hamburger{display:flex}
   #sidebar{position:fixed;left:0;top:0;bottom:0;z-index:200;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 46px rgba(0,0,0,.35);width:260px}
@@ -2359,6 +2360,115 @@ function suggestGoalRewrite(g){
   return {original:g.title||'',suggested:suggested,missingFields:missing,confidence:conf};
 }
 
+/* ══ FAZ-3: AKSIYON ADIMLARI (dual-read, string-guvenli ID) ══ */
+var _stepSeq=0;
+/* Cakismaya dayanikli step ID (yalniz Date.now degil). */
+function newStepId(){return 's'+Date.now().toString(36)+'-'+(_stepSeq++).toString(36);}
+/* Eski string veya {id,t/text,done} -> kanonik {id,t,done,order}. Payload MUTE edilmez. */
+function normalizeGoalSteps(g){
+  var arr=(g&&g.steps)||[];
+  return arr.map(function(s,i){
+    if(typeof s==='string')return {id:'s-legacy-'+i,t:s,done:false,order:i};
+    var t=(s&&s.t!==undefined)?s.t:((s&&s.text!==undefined)?s.text:'');
+    return {id:(s&&s.id!=null&&s.id!=='')?s.id:('s-legacy-'+i),t:String(t),done:!!(s&&s.done),order:i};
+  });
+}
+/* Kaydedilecek forma cevir (dizi konumu = sira). */
+function serializeGoalSteps(steps){
+  return (steps||[]).map(function(s,i){return {id:s.id,t:String(s.t||''),done:!!s.done,order:i};});
+}
+/* Adim dogrulama: bos/bosluk/noktalama/rakam/tekrar/500+/duplicate. */
+function validateGoalStep(text,existingSteps,selfId){
+  var t=String(text==null?'':text).trim();
+  if(!t)return {ok:false,reason:'Adım boş olamaz.'};
+  if(t.length>500)return {ok:false,reason:'Adım 500 karakteri geçemez.'};
+  if(isJunkText(t))return {ok:false,reason:'Daha anlamlı bir adım yaz.'};
+  var dup=(existingSteps||[]).some(function(s){return String(s.id)!==String(selfId)&&
+    String((s&&s.t!==undefined?s.t:s)||'').trim().toLowerCase()===t.toLowerCase();});
+  if(dup)return {ok:false,reason:'Bu adım zaten var.'};
+  return {ok:true};
+}
+/* Kaydetmede: bos/junk/500+/duplicate ayikla. Saf ve test edilebilir. */
+function collectValidSteps(rawSteps){
+  var out=[],seen={},dropped=0,dups=0;
+  (rawSteps||[]).forEach(function(s){
+    var t=String((s&&s.t!==undefined?s.t:s)||'').trim();
+    if(!t){dropped++;return;}
+    if(t.length>500)t=t.slice(0,500);
+    if(isJunkText(t)){dropped++;return;}
+    var key=t.toLowerCase();
+    if(seen[key]){dups++;dropped++;return;}
+    seen[key]=1;out.push({id:(s&&s.id)||newStepId(),t:t,done:!!(s&&s.done)});
+  });
+  return {steps:out,dropped:dropped,dups:dups};
+}
+
+/* ══ FAZ-3: GUVENLI ZENGIN METIN (markdown-string modeli) ══
+   Ham HTML SAKLANMAZ. renderRichText once her seyi escape eder, yalniz allowlist
+   tag'leri (p,br,strong,em,u,ul,ol,li,a) URETIR. script/onerror/javascript: literal metin olur. */
+var RICH_ALLOW=['p','br','strong','em','u','ul','ol','li','a'];
+function _rtEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function normalizeRichText(v){return String(v==null?'':v);}
+/* Saklamadan once: string'e cevir, uzunluk sinirla. Guvenlik render'da (escape-all). */
+function sanitizeRichText(v){return normalizeRichText(v).replace(/\r\n?/g,'\n').slice(0,5000);}
+function isRichTextEmpty(v){return richTextToPlainText(v).trim()==='';}
+function _rtInline(line){
+  var s=_rtEsc(line);
+  // Yalniz http(s) autolink (javascript:/data: ASLA eslesmez cunku sema kontrollu)
+  s=s.replace(/https?:\/\/[^\s<]+/g,function(u){
+    var core=u.replace(/[.,;:!?)]+$/,''),tail=u.slice(core.length);
+    if(!/^https?:\/\//i.test(core))return u;
+    return '<a href="'+core+'" rel="noopener noreferrer" target="_blank">'+core+'</a>'+tail;
+  });
+  s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\*([^*\n]+)\*/g,'<em>$1</em>');
+  s=s.replace(/__([^_\n]+)__/g,'<u>$1</u>');
+  return s;
+}
+function renderRichText(value){
+  var v=normalizeRichText(value).replace(/\r\n?/g,'\n');
+  if(!v.trim())return '';
+  var lines=v.split('\n'),html='',i=0;
+  var isCheck=function(l){return /^\s*\[( |x|X)\]\s+/.test(l);};
+  var isBullet=function(l){return /^\s*[-*]\s+/.test(l)&&!isCheck(l);};
+  var isNum=function(l){return /^\s*\d+[.)]\s+/.test(l);};
+  while(i<lines.length){
+    var line=lines[i];
+    if(/^\s*$/.test(line)){i++;continue;}
+    if(isCheck(line)){
+      html+='<ul>';
+      while(i<lines.length&&isCheck(lines[i])){
+        var mc=lines[i].match(/^\s*\[( |x|X)\]\s+(.*)$/),dn=mc[1].toLowerCase()==='x';
+        html+='<li>'+(dn?'<strong>[x]</strong> ':'[ ] ')+_rtInline(mc[2])+'</li>';i++;
+      }
+      html+='</ul>';continue;
+    }
+    if(isBullet(line)){
+      html+='<ul>';
+      while(i<lines.length&&isBullet(lines[i])){html+='<li>'+_rtInline(lines[i].replace(/^\s*[-*]\s+/,''))+'</li>';i++;}
+      html+='</ul>';continue;
+    }
+    if(isNum(line)){
+      html+='<ol>';
+      while(i<lines.length&&isNum(lines[i])){html+='<li>'+_rtInline(lines[i].replace(/^\s*\d+[.)]\s+/,''))+'</li>';i++;}
+      html+='</ol>';continue;
+    }
+    var para=[];
+    while(i<lines.length&&!/^\s*$/.test(lines[i])&&!isBullet(lines[i])&&!isNum(lines[i])&&!isCheck(lines[i])){
+      para.push(_rtInline(lines[i]));i++;
+    }
+    html+='<p>'+para.join('<br>')+'</p>';
+  }
+  return html;
+}
+/* Quality/Coach icin duz metin karsiligi. */
+function richTextToPlainText(value){
+  return normalizeRichText(value).replace(/\r\n?/g,'\n')
+    .replace(/^\s*\[( |x|X)\]\s+/gm,'').replace(/^\s*[-*]\s+/gm,'').replace(/^\s*\d+[.)]\s+/gm,'')
+    .replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*\n]+)\*/g,'$1').replace(/__([^_\n]+)__/g,'$1')
+    .replace(/\n+/g,' ').trim();
+}
+
 /* Sayisal ilerleme (metric) — yon farkindali. */
 function metricPct(g){
   var m=readMetric(g);if(!m.structured||m.target===m.start)return null;
@@ -2810,6 +2920,7 @@ function renderGoals(){
 function openGoalForm(editId){
   var g=editId?((D.goals||[]).find(function(x){return x.id===editId;})||{}):{};
   var m=g.metric||{};
+  gfStepsInit(g);
   var v=function(x){return U.esc(x||'');};
   var catOpts=GOAL_CATS.map(function(c){return '<option value="'+c+'"'+((g.cat||'')===c?' selected':'')+'>'+c+'</option>';}).join('');
   var qOpts=['Q1','Q2','Q3','Q4'].map(function(q){return '<option'+((g.quarter||'')===q?' selected':'')+'>'+q+'</option>';}).join('');
@@ -2830,17 +2941,68 @@ function openGoalForm(editId){
   h+='<select class="inp" id="gf_mdir"><option value="up"'+(dirUp?' selected':'')+'>Artan</option><option value="down"'+(!dirUp?' selected':'')+'>Azalan</option></select>';
   h+='</div><p style="font-size:10.5px;color:var(--t3);margin-top:4px">Örn: Hedef 100000, Mevcut 37500, Birim USD → otomatik %37</p></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Başarı Kriteri (opsiyonel metin)</p><input class="inp" id="gf_m" oninput="goalFormLive()" placeholder="orn: IELTS 7.5, 100K TL, 10kg" value="'+v(g.measurable)+'"></div>';
-  h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Neden önemli?</p><textarea class="inp" id="gf_desc" rows="2" oninput="goalFormLive()" placeholder="Zorlandığında seni ayakta tutacak sebep...">'+v(g.desc)+'</textarea></div>';
-  if(!editId)h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">İlk Adım</p><input class="inp" id="gf_step" oninput="goalFormLive()" placeholder="Hemen yapabileceğim ilk somut adım..."></div>';
+  h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Neden önemli?</p>'+rtBar('gf_desc')+'<textarea class="inp" id="gf_desc" rows="3" oninput="goalFormLive()" placeholder="Zorlandığında seni ayakta tutacak sebep... (**kalın**, *italik*, - liste)">'+v(g.desc)+'</textarea></div>';
+  h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Aksiyon Adımları</p><div id="gf_steps"></div></div>';
   h+='<div style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:10px 12px;background:var(--rl);border-radius:9px"><input type="checkbox" class="cb" id="gf_frog"'+(g.frog?' checked':'')+'> <span style="font-size:13px;font-weight:500">&#128056; En kritik hedefim (Kurbağa)</span></label></div>';
   h+='</div></div>';
   var action=editId?('submitGoalEdit('+editId+')'):'submitGoalForm()';
   h+='<div class="mf"><button class="btn btn-s" style="flex:1" onclick="closeModal()">İptal</button><button class="btn btn-p" style="flex:2" onclick="'+action+'">'+ic('chk',13)+' Kaydet</button></div>';
   showModal(h);
+  gfStepsRender();
   goalFormLive();
 }
 window.openGoalForm=openGoalForm;
 window.openGoalEdit=function(id){openGoalForm(id);};
+
+/* ── FAZ-3: Form step editoru (calisma kopyasi; payload'a save'e kadar dokunmaz) ── */
+var gfSteps=[];
+function gfStepsInit(g){gfSteps=normalizeGoalSteps(g||{}).map(function(s){return {id:s.id,t:s.t,done:s.done};});}
+function gfStepIdx(sid){for(var i=0;i<gfSteps.length;i++)if(String(gfSteps[i].id)===String(sid))return i;return -1;}
+function gfStepText(sid,val){var i=gfStepIdx(sid);if(i>=0){gfSteps[i].t=String(val).slice(0,500);goalFormLive();}}
+function gfStepDone(sid){var i=gfStepIdx(sid);if(i>=0){gfSteps[i].done=!gfSteps[i].done;goalFormLive();}}
+function gfStepDel(sid){var i=gfStepIdx(sid);if(i>=0){gfSteps.splice(i,1);gfStepsRender();goalFormLive();}}
+function gfStepMove(sid,dir){var i=gfStepIdx(sid),j=i+dir;if(i>=0&&j>=0&&j<gfSteps.length){var t=gfSteps[i];gfSteps[i]=gfSteps[j];gfSteps[j]=t;gfStepsRender();}}
+function gfStepAdd(){gfSteps.push({id:newStepId(),t:'',done:false});gfStepsRender();var el=ge('gf_steps');if(el){var ins=el.querySelectorAll('input.inp');if(ins.length)ins[ins.length-1].focus();}}
+window.gfStepText=gfStepText;window.gfStepDone=gfStepDone;window.gfStepDel=gfStepDel;window.gfStepMove=gfStepMove;window.gfStepAdd=gfStepAdd;
+function gfStepsRender(){
+  var box=ge('gf_steps');if(!box)return;var h='';
+  if(!gfSteps.length){h+='<div style="padding:11px;border:2px dashed var(--s3);border-radius:9px;text-align:center;color:var(--t3);font-size:12px">İlk aksiyon adımını ekle</div>';}
+  else{gfSteps.forEach(function(s,i){var sid=U.esc(String(s.id));
+    h+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">';
+    h+='<input type="checkbox" class="cb" '+(s.done?'checked':'')+' data-sid="'+sid+'" onchange="gfStepDone(this.dataset.sid)" aria-label="Tamamlandı">';
+    h+='<input class="inp" style="flex:1;padding:7px 9px;font-size:12.5px" value="'+U.esc(s.t)+'" data-sid="'+sid+'" oninput="gfStepText(this.dataset.sid,this.value)" placeholder="Aksiyon adımı...">';
+    h+='<button type="button" class="btn btn-g btn-ic" style="width:24px;height:24px" data-sid="'+sid+'" onclick="gfStepMove(this.dataset.sid,-1)"'+(i===0?' disabled':'')+' aria-label="Yukarı taşı">&#8593;</button>';
+    h+='<button type="button" class="btn btn-g btn-ic" style="width:24px;height:24px" data-sid="'+sid+'" onclick="gfStepMove(this.dataset.sid,1)"'+(i===gfSteps.length-1?' disabled':'')+' aria-label="Aşağı taşı">&#8595;</button>';
+    h+='<button type="button" class="btn btn-g btn-ic" style="width:24px;height:24px" data-sid="'+sid+'" onclick="gfStepDel(this.dataset.sid)" aria-label="Sil">'+ic('x',11,'var(--t3)')+'</button>';
+    h+='</div>';});}
+  h+='<button type="button" class="btn btn-s btn-sm" style="margin-top:3px" onclick="gfStepAdd()">'+ic('plus',11)+' Adım Ekle</button>';
+  box.innerHTML=h;
+}
+window.gfStepsRender=gfStepsRender;
+
+/* ── FAZ-3: Zengin metin toolbar (textarea'ya markdown ekler; contenteditable yok) ── */
+function rtInsert(taId,before,after,linePrefix){
+  var ta=ge(taId);if(!ta)return;
+  var s=ta.selectionStart,e=ta.selectionEnd,val=ta.value;
+  if(linePrefix){
+    var ls=val.lastIndexOf('\n',s-1)+1;
+    ta.value=val.slice(0,ls)+linePrefix+val.slice(ls);
+    ta.focus();ta.selectionStart=ta.selectionEnd=s+linePrefix.length;
+  }else{
+    var sel=val.slice(s,e)||'metin';
+    ta.value=val.slice(0,s)+before+sel+after+val.slice(e);
+    ta.focus();ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;
+  }
+  if(taId==='gf_desc')goalFormLive();
+  var pv=ge(taId+'_prev');if(pv)pv.innerHTML=renderRichText(ta.value);
+}
+window.rtInsert=rtInsert;
+function rtBar(taId){
+  var b=function(vis,aria,bef,aft,lp,st){return '<button type="button" class="btn btn-g btn-sm" style="padding:3px 8px;'+(st||'')+'" aria-label="'+aria+'" title="'+aria+'" onclick="rtInsert(\''+taId+'\',\''+bef+'\',\''+aft+'\','+(lp?'\''+lp+'\'':'null')+')">'+vis+'</button>';};
+  return '<div style="display:flex;gap:3px;margin-bottom:4px;flex-wrap:wrap">'+
+    b('B','Kalın','**','**',null,'font-weight:800')+b('I','İtalik','*','*',null,'font-style:italic')+
+    b('&bull; Liste','Madde listesi','','','- ')+b('1. Liste','Numaralı liste','','','1. ')+b('[ ] Liste','Yapılacak listesi','','','[ ] ')+'</div>';
+}
 
 /* Formdan gecici bir hedef nesnesi kur (canli analiz + kaydetme icin ortak). */
 function goalFromForm(existing){
@@ -2861,7 +3023,7 @@ function goalFromForm(existing){
     measurable:(ge('gf_m')&&ge('gf_m').value)||'',
     frog:!!(ge('gf_frog')&&ge('gf_frog').checked),
     metric:metric,
-    steps:(existing&&existing.steps)||[]};
+    steps:collectValidSteps(gfSteps).steps};
 }
 /* Canli Goal Coach + Quality Index formda gosterir. */
 function goalFormLive(){
@@ -2883,10 +3045,8 @@ window.goalFormLive=goalFormLive;
 function submitGoalForm(){
   var d=goalFromForm();
   if(!d.title){alert('Hedef başlığı zorunlu!');return;}
-  var step1=ge('gf_step')&&ge('gf_step').value.trim();
   snap();
-  var goal=Object.assign({id:Date.now(),notes:'',status:'active',createdAt:U.today()},d,
-    {steps:step1?[{id:Date.now()+1,t:step1,done:false}]:[]});
+  var goal=Object.assign({id:Date.now(),notes:'',status:'active',createdAt:U.today()},d);
   if(!goal.metric)delete goal.metric;
   D.goals=[goal].concat(D.goals||[]);
   xp(25,'Yeni hedef');save();closeModal();renderPage();
@@ -2902,7 +3062,7 @@ function submitGoalEdit(goalId){
   D.goals=D.goals.map(function(g){
     if(g.id!==goalId)return g;
     var upd=Object.assign({},g,{title:d.title,desc:d.desc,cat:d.cat,quarter:d.quarter,
-      deadline:d.deadline,measurable:d.measurable,frog:d.frog});
+      deadline:d.deadline,measurable:d.measurable,frog:d.frog,steps:d.steps});
     if(d.metric)upd.metric=d.metric;else delete upd.metric;
     return upd;
   });
@@ -2952,26 +3112,27 @@ function openGoalDetail(goalId){
     h+='<p style="font-size:11.5px;color:var(--green);font-weight:600;margin-top:9px">Hedef güçlü görünüyor.</p>';
   }
   h+='</div>';
-  if(g.desc)h+='<div style="padding:10px 12px;background:var(--s2);border-radius:9px;border-left:3px solid '+cc5+'"><p style="font-size:13px;color:var(--t2);line-height:1.6">'+U.esc(g.desc)+'</p></div>';
+  if(g.desc&&!isRichTextEmpty(g.desc))h+='<div class="rt" style="padding:10px 12px;background:var(--s2);border-radius:9px;border-left:3px solid '+cc5+';font-size:13px;color:var(--t2);line-height:1.6">'+renderRichText(g.desc)+'</div>';
   /* Sayisal ilerleme (metric) */
   if(mm.structured){var mp=metricPct(g);
     h+='<div style="padding:10px 12px;background:var(--bl);border-radius:9px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font-size:12.5px;font-weight:600">'+ic('kpi',13,'var(--blue)')+' '+mm.current+' / '+mm.target+' '+U.esc(mm.unit)+'</span><span style="font-size:13px;font-weight:800;color:var(--blue)">%'+mp+'</span></div>'+progBar(mp)+'</div>';}
   else if(g.measurable)h+='<div style="display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--bl);border-radius:9px">'+ic('kpi',14,'var(--blue)')+'<span style="font-size:12.5px"><strong>Başarı:</strong> '+U.esc(g.measurable)+'</span></div>';
-  /* Steps */
-  h+='<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><p style="font-weight:700;font-size:13px">Aksiyon Plani</p><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openAddStep(+this.dataset.gid)">'+ic('plus',12)+' Adım</button></div>';
-  if(!g.steps.length)h+='<div style="padding:14px;border:2px dashed var(--s3);border-radius:9px;text-align:center;color:var(--t3);font-size:12px">Adım eklenmedi</div>';
+  /* Steps — normalize ile dual-read + string-guvenli ID. Duzenleme icin "Düzenle" (edit formu). */
+  var dsteps=normalizeGoalSteps(g);
+  h+='<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><p style="font-weight:700;font-size:13px">Aksiyon Planı</p><div style="display:flex;gap:5px"><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openGoalEdit(+this.dataset.gid)">'+ic('edit',11)+' Adımları Düzenle</button><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openAddStep(+this.dataset.gid)">'+ic('plus',12)+' Adım</button></div></div>';
+  if(!dsteps.length)h+='<div style="padding:14px;border:2px dashed var(--s3);border-radius:9px;text-align:center;color:var(--t3);font-size:12px">Adım eklenmedi</div>';
   else{
     h+='<div style="display:flex;flex-direction:column;gap:4px">';
-    g.steps.forEach(function(s4){
+    dsteps.forEach(function(s4){var sid=U.esc(String(s4.id));
       h+='<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;background:'+(s4.done?'var(--gl)':'var(--s2)')+'">';
-      h+='<input type="checkbox" class="cb" '+(s4.done?'checked':'')+' data-gid="'+g.id+'" data-sid="'+s4.id+'" onchange="toggleStep(+this.dataset.gid,+this.dataset.sid)">';
+      h+='<input type="checkbox" class="cb" '+(s4.done?'checked':'')+' data-gid="'+g.id+'" data-sid="'+sid+'" onchange="toggleStep(+this.dataset.gid,this.dataset.sid)">';
       h+='<span style="font-size:12.5px;font-weight:500;text-decoration:'+(s4.done?'line-through':'none')+';color:'+(s4.done?'var(--t3)':'var(--t)')+';flex:1">'+U.esc(s4.t)+'</span>';
-      h+='<button class="btn btn-g btn-ic" style="width:22px;height:22px;opacity:.5" data-gid="'+g.id+'" data-sid="'+s4.id+'" onclick="delStep(+this.dataset.gid,+this.dataset.sid)">'+ic('x',10,'var(--t3)')+'</button></div>';
+      h+='<button class="btn btn-g btn-ic" style="width:22px;height:22px;opacity:.5" data-gid="'+g.id+'" data-sid="'+sid+'" onclick="delStep(+this.dataset.gid,this.dataset.sid)">'+ic('x',10,'var(--t3)')+'</button></div>';
     });
     h+='</div>';
   }
   h+='</div>';
-  h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:7px">Notlar</p><textarea class="inp" id="gnotes_'+g.id+'" rows="3" placeholder="Notlar..." data-gid="'+g.id+'" onchange="saveGoalNote(+this.dataset.gid)">'+U.esc(g.notes||'')+'</textarea></div>';
+  h+='<div><p style="font-weight:700;font-size:13px;margin-bottom:7px">Notlar <span style="font-size:10px;color:var(--t3);font-weight:500">(ilerlemeyi etkilemez)</span></p>'+rtBar('gnotes_'+g.id)+'<textarea class="inp" id="gnotes_'+g.id+'" rows="3" placeholder="Notlar... (**kalın**, - liste, [ ] yapılacak)" data-gid="'+g.id+'" onchange="saveGoalNote(+this.dataset.gid)">'+U.esc(g.notes||'')+'</textarea></div>';
   h+='</div><div style="padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:8px">';
   if(g.status!=='done')h+='<button class="btn btn-p" style="flex:2;justify-content:center;background:var(--green)" data-gid="'+g.id+'" onclick="markGoalDone(+this.dataset.gid)">'+ic('chk',13)+' Tamamla (+100 XP)</button>';
   else h+='<button class="btn btn-s" style="flex:2;justify-content:center" data-gid="'+g.id+'" onclick="markGoalActive(+this.dataset.gid)">Tekrar Aktif</button>';
@@ -2990,25 +3151,29 @@ window.openAddStep=openAddStep;
 
 function submitAddStep(goalId){
   var inp=ge('step_inp');if(!inp||!inp.value.trim()){alert('Adım adi zorunlu!');return;}
-  snap();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.concat([{id:Date.now(),t:inp.value.trim(),done:false}])}):g;});
+  var chk=validateGoalStep(inp.value,(((D.goals||[]).find(function(x){return x.id===goalId;})||{}).steps)||[]);
+  if(!chk.ok){alert(chk.reason);return;}
+  snap();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.concat([{id:newStepId(),t:inp.value.trim(),done:false}])}):g;});
   save();closeModal();openGoalDetail(goalId);
 }
 window.submitAddStep=submitAddStep;
 
 function toggleStep(goalId,stepId){
+  var sid=String(stepId);
   snap();
   D.goals=D.goals.map(function(g){
     if(g.id!==goalId)return g;
-    var wasDone=(g.steps.find(function(s){return s.id===stepId;})||{}).done;
+    var wasDone=(g.steps.find(function(s){return String(s&&s.id)===sid;})||{}).done;
     if(!wasDone)xp(10,'Adım tamamlandı');
-    return Object.assign({},g,{steps:g.steps.map(function(s){return s.id===stepId?Object.assign({},s,{done:!s.done}):s;})});
+    return Object.assign({},g,{steps:g.steps.map(function(s){return String(s&&s.id)===sid?Object.assign({},s,{done:!s.done}):s;})});
   });
   save();if(openGId===goalId)openGoalDetail(goalId);else renderPage();
 }
 window.toggleStep=toggleStep;
 
 function delStep(goalId,stepId){
-  snap();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.filter(function(s){return s.id!==stepId;})}):g;});
+  var sid=String(stepId);
+  snap();D.goals=D.goals.map(function(g){return g.id===goalId?Object.assign({},g,{steps:g.steps.filter(function(s){return String(s&&s.id)!==sid;})}):g;});
   save();if(openGId===goalId)openGoalDetail(goalId);else renderPage();
 }
 window.delStep=delStep;
