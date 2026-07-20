@@ -910,6 +910,7 @@ function stopDocListener(){
     CLOUD.unsubDoc();
   }
   CLOUD.unsubDoc=null;CLOUD.listenerUid=null;
+  if(typeof renderAdminSystemStatusBar==='function')renderAdminSystemStatusBar(); // FAZ-5B.1: listener durdu -> cubugu aninda guncelle
 }
 function startDocListener(uid){
   if(CLOUD.listenerUid===uid&&CLOUD.unsubDoc)return; // tekrar kurulum yok
@@ -921,6 +922,7 @@ function startDocListener(uid){
     console.error('[SYNC] Listener hatası',e);
     setSync('error');
   });
+  if(typeof renderAdminSystemStatusBar==='function')renderAdminSystemStatusBar(); // FAZ-5B.1: listener baglandi -> cubugu aninda guncelle
 }
 function onRemoteSnapshot(snap){
   var md=snap.metadata;
