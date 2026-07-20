@@ -1131,11 +1131,13 @@ function handleAuthChange(user){
     console.log('[AUTH] Oturum yok');
     if(RESTORE.state!=='IDLE'){failRestoreSession(new Error('Oturum kapandı'));resetRestoreSession();}
     stopDocListener();
+    if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: logout'ta taslak temizle
     CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
     updateAuthButton(null);
     return;
   }
   if(CLOUD.uid===user.uid){CLOUD.user=user;updateAuthButton(user);return;} // ayni kullanici
+  if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: UID degisiminde taslak baska hesaba tasinmaz
   console.log('[AUTH] Kullanıcı değişti:',user.uid,user.isAnonymous?'(anonim)':'(google)');
   if(RESTORE.state!=='IDLE'){failRestoreSession(new Error('Kullanıcı değişti'));resetRestoreSession();}
   stopDocListener(); // UID degistiyse eski listener mutlaka kapanir
@@ -2557,7 +2559,12 @@ function showModal(html){
   var ov=ge('ov');
   if(ov)ov.addEventListener('click',function(e){if(e.target.id==='ov')closeModal();});
 }
-function closeModal(){sh('modal-root','');}
+function closeModal(){
+  /* FAZ-4.1: dirty not taslaginda kapatma korumasi (Kapat butonu + scrim). */
+  if(typeof noteDraftDirty==='function'&&noteDraftDirty()&&!confirm('Kaydedilmemiş not değişiklikleri var. Kapatılsın mı?'))return;
+  if(typeof clearNoteDraft==='function')clearNoteDraft();noteEditGid=null;
+  sh('modal-root','');
+}
 window.closeModal=closeModal;
 
 var FDEFS={
@@ -2919,6 +2926,7 @@ function renderGoals(){
 
 /* Form hem OLUSTURMA hem DUZENLEME icin. editId verilirse mevcut hedef doldurulur. */
 function openGoalForm(editId){
+  if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: form modali not editorunu degistirir
   var g=editId?((D.goals||[]).find(function(x){return x.id===editId;})||{}):{};
   var m=g.metric||{};
   gfStepsInit(g);
@@ -3073,6 +3081,11 @@ function submitGoalEdit(goalId){
 window.submitGoalEdit=submitGoalEdit;
 
 function openGoalDetail(goalId){
+  /* FAZ-4.1: baska hedefe gecerken dirty not taslagi korumasi (ayni hedef re-render'da uyari YOK). */
+  if(NOTE_DRAFT.goalId!==null&&NOTE_DRAFT.goalId!==goalId&&NOTE_DRAFT.dirty){
+    if(!confirm('Kaydedilmemiş not değişiklikleri var. Bu hedefe geçilsin mi?'))return;
+    clearNoteDraft();
+  }
   openGId=goalId;
   var g=(D.goals||[]).find(function(x){return x.id===goalId;});if(!g)return;
   var p6=goalProgress(g),pc4=p6>=100?'var(--green)':p6>=60?'var(--blue)':p6>=30?'var(--orange)':'var(--red)';
@@ -3139,7 +3152,10 @@ function openGoalDetail(goalId){
   else h+='<button class="btn btn-s" style="flex:2;justify-content:center" data-gid="'+g.id+'" onclick="markGoalActive(+this.dataset.gid)">Tekrar Aktif</button>';
   h+='<button class="btn btn-s" onclick="closeModal()">Kapat</button></div></div>';
   showModal(h);
-  noteEditGid=null;noteExpanded=false;renderGoalNotesInto(g.id);
+  /* FAZ-4.1: ayni hedef icin aktif taslak varsa edit modunu + taslagi KORU (re-render dayanikli). */
+  if(NOTE_DRAFT.goalId===goalId){noteEditGid=goalId;}
+  else{noteEditGid=null;noteExpanded=false;clearNoteDraft();}
+  renderGoalNotesInto(g.id);
 }
 window.openGoalDetail=openGoalDetail;
 
@@ -3184,12 +3200,31 @@ window.delStep=delStep;
    Gorunum modu (rich onizleme + expand) <-> inline edit (toolbar+textarea+Kaydet/Iptal).
    Autosave YOK; acik Kaydet = 1 write. Iptal'de dirty uyarisi. FAZ-3 rich altyapisi yeniden kullanilir. */
 var noteEditGid=null, noteExpanded=false;
+/* FAZ-4.1: yeniden-render sirasinda taslak korumasi — YALNIZ bellekte, Firestore/localStorage YOK. */
+var NOTE_DRAFT={goalId:null,value:'',originalValue:'',selectionStart:null,selectionEnd:null,dirty:false,updatedAt:0};
+function noteDraftDirty(){return NOTE_DRAFT.goalId!==null&&NOTE_DRAFT.dirty;}
+function captureNoteDraft(){
+  var ta=ge('gnote_ta');if(!ta||NOTE_DRAFT.goalId===null)return;
+  NOTE_DRAFT.value=ta.value;
+  try{NOTE_DRAFT.selectionStart=ta.selectionStart;NOTE_DRAFT.selectionEnd=ta.selectionEnd;}catch(e){}
+  NOTE_DRAFT.dirty=(ta.value!==NOTE_DRAFT.originalValue);NOTE_DRAFT.updatedAt=Date.now();
+  var st=ge('gnote_status');if(st)st.textContent=NOTE_DRAFT.dirty?'Kaydedilmemiş değişiklik · Taslak korunuyor':'';
+}
+function restoreNoteDraft(){
+  var ta=ge('gnote_ta');if(!ta||NOTE_DRAFT.goalId===null)return;
+  ta.value=NOTE_DRAFT.value;
+  try{ta.focus();var s=NOTE_DRAFT.selectionStart,e=NOTE_DRAFT.selectionEnd;
+    if(s===null){s=e=ta.value.length;}
+    ta.selectionStart=Math.min(s,ta.value.length);ta.selectionEnd=Math.min(e,ta.value.length);}catch(err){}
+}
+function clearNoteDraft(){NOTE_DRAFT={goalId:null,value:'',originalValue:'',selectionStart:null,selectionEnd:null,dirty:false,updatedAt:0};}
+window.captureNoteDraft=captureNoteDraft;window.clearNoteDraft=clearNoteDraft;
 function noteIsLong(notes){var pt=richTextToPlainText(notes);return pt.length>220||((notes||'').match(/\n/g)||[]).length>=6;}
 function renderGoalNotesInto(goalId){
   var box=ge('gnotes_box');if(!box)return;
   var g=(D.goals||[]).find(function(x){return x.id===goalId;});if(!g)return;
   box.innerHTML=(noteEditGid===goalId)?noteEditHtml(g):noteViewHtml(g);
-  if(noteEditGid===goalId){var ta=ge('gnote_ta');if(ta){ta.focus();ta.selectionStart=ta.selectionEnd=ta.value.length;}}
+  if(noteEditGid===goalId)restoreNoteDraft();
 }
 window.renderGoalNotesInto=renderGoalNotesInto;
 function noteViewHtml(g){
@@ -3211,29 +3246,33 @@ function noteEditHtml(g){
   var h='<div style="margin-top:2px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">';
   h+='<p style="font-weight:700;font-size:13px">Notu Düzenle <span style="font-size:10px;color:var(--t3);font-weight:500">(ilerlemeyi etkilemez)</span></p></div>';
   h+=rtBar('gnote_ta');
-  h+='<textarea class="inp" id="gnote_ta" rows="5" placeholder="Notlar... (**kalın**, *italik*, - liste, 1. numaralı, [ ] yapılacak)">'+U.esc(g.notes||'')+'</textarea>';
-  h+='<p style="font-size:10px;color:var(--t3);margin:4px 0 6px">Not içindeki checklist, hedef ilerlemesini etkilemez.</p>';
+  var draftVal=(NOTE_DRAFT.goalId===g.id)?NOTE_DRAFT.value:(g.notes||'');
+  h+='<textarea class="inp" id="gnote_ta" rows="5" oninput="captureNoteDraft()" placeholder="Notlar... (**kalın**, *italik*, - liste, 1. numaralı, [ ] yapılacak)">'+U.esc(draftVal)+'</textarea>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 6px;gap:8px"><span style="font-size:10px;color:var(--t3)">Not içindeki checklist, hedef ilerlemesini etkilemez.</span><span id="gnote_status" style="font-size:10px;color:var(--orange);font-weight:600">'+(NOTE_DRAFT.goalId===g.id&&NOTE_DRAFT.dirty?'Kaydedilmemiş değişiklik · Taslak korunuyor':'')+'</span></div>';
   h+='<div style="display:flex;gap:7px"><button class="btn btn-s btn-sm" style="flex:1" data-gid="'+g.id+'" onclick="noteCancel(+this.dataset.gid)">İptal</button>';
   h+='<button class="btn btn-p btn-sm" style="flex:2" data-gid="'+g.id+'" onclick="noteSave(+this.dataset.gid)">'+ic('chk',12)+' Kaydet</button></div></div>';
   return h;
 }
-function noteEdit(goalId){noteEditGid=goalId;renderGoalNotesInto(goalId);}          /* write YOK */
+function noteEdit(goalId){
+  var g=(D.goals||[]).find(function(x){return x.id===goalId;});var cur=(g&&g.notes)||'';
+  NOTE_DRAFT={goalId:goalId,value:cur,originalValue:cur,selectionStart:null,selectionEnd:null,dirty:false,updatedAt:0};
+  noteEditGid=goalId;renderGoalNotesInto(goalId);                                     /* write YOK */
+}
 function noteToggleExpand(goalId){noteExpanded=!noteExpanded;renderGoalNotesInto(goalId);}
 function noteDirty(g){var ta=ge('gnote_ta');return ta?(ta.value!==(g.notes||'')):false;}
 function noteCancel(goalId){
-  var g=(D.goals||[]).find(function(x){return x.id===goalId;});
-  if(g&&noteDirty(g)&&!confirm('Kaydedilmemiş değişiklikler var. Yine de kapatılsın mı?'))return;
-  noteEditGid=null;renderGoalNotesInto(goalId);                                       /* write YOK */
+  if(noteDraftDirty()&&!confirm('Kaydedilmemiş değişiklikler var. Yine de kapatılsın mı?'))return;
+  clearNoteDraft();noteEditGid=null;renderGoalNotesInto(goalId);                       /* write YOK */
 }
 function noteSave(goalId){
   var ta=ge('gnote_ta');if(!ta)return;
   var val=isRichTextEmpty(ta.value)?'':sanitizeRichText(ta.value);
   var g=(D.goals||[]).find(function(x){return x.id===goalId;});
-  if(g&&(g.notes||'')===val){noteEditGid=null;renderGoalNotesInto(goalId);return;}     /* degisiklik yok -> write yok */
+  if(g&&(g.notes||'')===val){clearNoteDraft();noteEditGid=null;renderGoalNotesInto(goalId);return;} /* degisiklik yok -> write yok */
   snap();
   D.goals=D.goals.map(function(x){return x.id===goalId?Object.assign({},x,{notes:val,notesMeta:{updatedAt:U.today()}}):x;});
-  save();
-  noteEditGid=null;renderGoalNotesInto(goalId);
+  save();                                                                              /* yalniz 1 write */
+  clearNoteDraft();noteEditGid=null;renderGoalNotesInto(goalId);
 }
 window.noteEdit=noteEdit;window.noteToggleExpand=noteToggleExpand;window.noteCancel=noteCancel;window.noteSave=noteSave;
 
