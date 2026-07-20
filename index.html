@@ -2121,6 +2121,41 @@ var VAGUE_WORDS=['daha iyi','daha mutlu','daha başarılı','daha çok','daha fa
 var GRANDIOSE=['milyarder','trilyon','dünyanın en','en zengin','milyoner','imparatorluk'];
 var ACTION_VERBS=['al','bitir','yayınla','ulaş','kazan','koş','oku','yaz','tamamla','kur',
   'öğren','sertifika','geç','düş','artır','azalt','başla','sat','üret','indir','çık'];
+/* Anlamsiz "neden" dolgu kaliplari — yalnizca dolu oldugu icin puan almamali. */
+var WEAK_WHY=['önemli','iyi olur','iyi olsun','lazım','gerekli','hedefim','olsun',
+  'istiyorum','faydalı','güzel olur','iyi bir şey','yapmalıyım'];
+
+/* Anlamsiz/filler metin: cok kisa, yalniz rakam/noktalama, harfsiz, tek tekrar karakter. */
+function isJunkText(t){
+  t=String(t==null?'':t).trim();
+  if(t.length<4)return true;                          // cok kisa
+  if(/^[\d\s.,:;/_\-]+$/.test(t))return true;         // yalniz rakam/noktalama
+  if(!/[a-zçğıöşüâîû]/i.test(t))return true;          // hic harf yok (sadece sembol)
+  if(/^(.)\1{2,}$/.test(t.replace(/\s+/g,'')))return true; // aaaa / 1111 tek karakter tekrari
+  return false;
+}
+/* Bir adim gecerli (anlamli) aksiyon mu? */
+function isValidStep(s){return !isJunkText(s&&s.t!==undefined?s.t:s);}
+function validStepCount(g){return ((g&&g.steps)||[]).filter(isValidStep).length;}
+/* Neden gucu: 0=yok/cok kisa, 1=zayif/dolgu, 2=anlamli. */
+function whyStrength(why){
+  why=String(why||'').trim();
+  if(why.length<12)return 0;
+  var lw=why.toLowerCase();
+  var onlyWeak=why.length<24&&WEAK_WHY.some(function(w){return lw.indexOf(w)>=0;});
+  if(onlyWeak)return 1;
+  return why.length>=28?2:1;
+}
+/* Clarity: uzunluk tek basina yetmez; somut fiil/nesne + belirsiz/test/filler cezasi. */
+function clarityScore(title){
+  title=String(title||'').trim();
+  if(title.length<10||hasVague(title)||isJunkText(title))return 0;
+  if(/\btest\b/i.test(title))return 2;                // test/filler basligi cezali
+  var hv=hasActionVerb(title), hn=/\d/.test(title);
+  if(hv&&hn)return 8;
+  if(hv||hn)return 6;
+  return title.length>=15?4:2;
+}
 
 /* measurable string veya goal.metric objesinden sayisal olcum cikar (dual-read) */
 function readMetric(g){
@@ -2163,11 +2198,11 @@ function smartAnalyze(g){
   else if(du!==null&&du<0)R.T={pass:false,reason:'Tarih geçmişte',suggestion:'Deadline geçmiş. Gerçekçi bir tarih seç.'};
   else R.T={pass:true,reason:'Zamanlı',suggestion:''};
   // A — Ulasilabilir: buyukluk/sure orani + parcalama
-  var steps=(g.steps||[]).length;
+  var steps=validStepCount(g);
   if(isGrandiose(title)&&(du===null||du<180))
     R.A={pass:false,reason:'Süreye göre çok iddialı',suggestion:'Aşamalandır veya süreyi gerçekçileştir.'};
   else if(steps===0&&!(g.metric&&g.metric.checkpoints&&g.metric.checkpoints.length))
-    R.A={pass:false,reason:'Aksiyon planı yok',suggestion:'İlk 1-3 somut adımı ekle; hedefi böl.'};
+    R.A={pass:false,reason:'Geçerli aksiyon planı yok',suggestion:'İlk 1-3 somut, anlamlı adımı ekle; hedefi böl.'};
   else R.A={pass:true,reason:'Ulaşılabilir görünüyor',suggestion:''};
   // R — Anlamli: gercek bir neden
   if(!why||why.length<12)R.R={pass:false,reason:'Neden zayıf/yok',suggestion:'Bu hedef neden **senin için** önemli? Yaz.'};
@@ -2178,25 +2213,36 @@ function smartAnalyze(g){
 /* Eski imza korunur ama artik ICERIK-FARKINDA (0-5). Tum cagiranlar calisir. */
 function smartScore(g){return smartAnalyze(g).passCount;}
 
-/* Goal Quality Index 0-100 — 14 boyut. */
+/* Goal Quality Index 0-100 — 14 boyut. Kalibrasyon: cop icerik taban puan almaz. */
 function qualityIndex(g){
   g=g||{};var sa=smartAnalyze(g),mm=readMetric(g),title=g.title||'',why=(g.desc||g.notes||'');
+  var vsteps=validStepCount(g),ws=whyStrength(why);
+  var hasCheck=!!(g.metric&&g.metric.checkpoints&&g.metric.checkpoints.length);
   var p={};
   p.Specific=sa.S.pass?10:0;
   p.Measurable=sa.M.pass?(mm.structured?10:6):0;
   p.Achievable=sa.A.pass?10:0;
-  p.Relevant=sa.R.pass?10:0;
+  p.Relevant=ws>=2?10:(ws===1?4:0);                        // neden kalitesine gore kademeli
   p.Time=sa.T.pass?10:0;
-  p.Clarity=(title.length>=15&&!hasVague(title))?8:(title.length>=10?4:0);
+  p.Clarity=clarityScore(title);                           // uzunluk degil icerik
   p.Difficulty=mm.structured?6:(mm.hasNumber?3:0);
   p.Leverage=g.frog?6:0;                                    // kritik hedef = kaldirac
   p.OpportunityCost=4;                                      // notr (cross-goal analiz sonraki faz)
   p.Identity=/kimlik|biri olmak|insan olmak|karakter|değer/i.test(why)?6:0;
   p.Risk=(g.intel&&g.intel.risk)?6:0;
   p.SecondOrder=(g.intel&&g.intel.secondOrder)?4:0;
-  p.Compound=((g.steps&&g.steps.length)||(g.metric&&g.metric.checkpoints&&g.metric.checkpoints.length))?4:0;
-  p.ExecutionReadiness=(g.steps&&g.steps.length>0)?6:0;
+  p.Compound=(vsteps>0||hasCheck)?4:0;                      // gecerli adim/checkpoint
+  p.ExecutionReadiness=vsteps>0?6:0;                        // gecerli adim varsa
   var score=Object.keys(p).reduce(function(a,k){return a+p[k];},0);
+  // Kritik tavan: temel SMART sinyalleri eksikse yuksek puan verilmez.
+  var crit=0;
+  if(!sa.S.pass)crit++;
+  if(!sa.M.pass)crit++;
+  if(!sa.T.pass)crit++;
+  if(vsteps===0&&!hasCheck)crit++;                         // gecerli aksiyon yok
+  if(ws<1)crit++;                                           // gercek neden yok
+  if(crit>=3)score=Math.min(score,39);
+  else if(crit>=2)score=Math.min(score,49);
   score=Math.max(0,Math.min(100,score));
   var band=score>=85?'Mükemmel':score>=70?'Güçlü':score>=50?'Orta':score>=30?'Zayıf':'Çok Zayıf';
   return {score:score,band:band,parts:p};
@@ -2649,6 +2695,9 @@ function renderGoals(){
         h+=g.steps.slice(0,3).map(function(s){return '<div style="display:flex;align-items:center;gap:8px;padding:4px 0"><input type="checkbox" class="cb" style="pointer-events:none" '+(s.done?'checked':'')+'><span style="font-size:12px;text-decoration:'+(s.done?'line-through':'none')+';color:'+(s.done?'var(--t3)':'var(--t)')+'">'+U.esc(s.t)+'</span></div>';}).join('');
         if(g.steps.length>3)h+='<p style="font-size:11px;color:var(--t3);padding-left:24px">+ '+(g.steps.length-3)+' daha</p>';
         h+='<div style="display:flex;justify-content:space-between;margin:7px 0 4px;font-size:12px"><span style="color:var(--t2)">'+doneS+'/'+g.steps.length+'</span><span style="font-weight:700;color:'+pc3+'">'+p5+'%</span></div>'+progBar(p5);
+      }else{
+        var mmG=readMetric(g);
+        if(mmG.structured)h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin:2px 0 4px;font-size:12px"><span style="color:var(--t2)">'+mmG.current+' / '+mmG.target+' '+U.esc(mmG.unit)+'</span><span style="font-weight:700;color:'+pc3+'">'+p5+'%</span></div>'+progBar(p5);
       }
       if(dl2!==null)h+='<div style="display:flex;align-items:center;gap:5px;padding-top:5px;border-top:1px solid rgba(0,0,0,.05)"><span style="font-size:11px;color:'+dlc2+';font-weight:500">'+(dl2<0?'Deadline gecti!':dl2===0?'Bugün son gun!':dl2+' gun kaldi')+'</span></div>';
       h+='</div></div>';
