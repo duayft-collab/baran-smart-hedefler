@@ -2248,17 +2248,115 @@ function qualityIndex(g){
   return {score:score,band:band,parts:p};
 }
 
-/* Goal Coach — SMART eksiklerinden ve dusuk boyutlardan oneri uretir (en fazla 4). */
-function goalCoach(g){
-  var sa=smartAnalyze(g),out=[];
-  ['M','S','T','A','R'].forEach(function(k){if(!sa[k].pass&&sa[k].suggestion)out.push(sa[k].suggestion);});
-  var mm=readMetric(g);
-  if(mm.structured&&mm.target&&Math.abs(mm.target-mm.start)>0){
-    var pct=metricPct(g);
-    if(pct===0)out.push('İlk ölçümünü gir — mevcut değeri güncelle.');
+/* ══ GOAL COACH P1 — deterministik teshis motoru ══
+   goalDiagnose(g): yapilandirilmis teshis listesi (salt hesap; payload'a yazilmaz).
+   goalCoach(g): geriye-uyumlu string[] (mevcut UI korunur). */
+
+/* metric.current alani GERCEKTEN eksik mi? 0 gecerli bir degerdir. */
+function metricCurrentMissing(g){
+  if(!g||!g.metric||typeof g.metric.target!=='number')return false;
+  var c=g.metric.current;
+  if(c===undefined||c===null||c==='')return true;
+  if(typeof c==='number')return isNaN(c);
+  return isNaN(parseFloat(c));
+}
+/* Birlesik (coklu) hedef mi? Salt uzunluk DEGIL — bagimsiz sonuclar. */
+function isMultiGoal(title){
+  var t=(title||'').toLowerCase();
+  if(/\bhem\b[^]*\bhem\b/.test(t))return true;                 // "hem ... hem ..."
+  var parts=t.split(/\s+ve\s+|\s+ayrıca\s+|\s+bir de\s+/);
+  if(parts.length>=2){
+    var withNum=parts.filter(function(p){return /\d/.test(p);});
+    if(withNum.length>=2)return true;                          // iki tarafta da sayisal sonuc
+    var acted=parts.filter(function(p){return hasActionVerb(p)&&p.trim().length>=8;});
+    if(acted.length>=2)return true;                            // iki bagimsiz eylem-cumlesi
   }
-  if((g.title||'').length>40)out.push('Hedef çok geniş olabilir — ikiye bölmeyi düşün.');
-  return out.slice(0,4);
+  return false;
+}
+
+/* Kural kaydi — tek otorite. when() smartAnalyze/qualityIndex ile TUTARLI. */
+function coachRules(){
+  return [
+  {code:'junk_goal',dim:'S',severity:'high',priority:100,field:'title',
+    when:function(g,x){return /\btest\b/i.test(g.title||'')||isJunkText(g.title||'');},
+    title:'Taslak hedef',message:'Bu bir deneme/taslak gibi görünüyor.',action:'Gerçek, somut bir hedef yaz.'},
+  {code:'vague_title',dim:'S',severity:'high',priority:92,field:'title',
+    when:function(g,x){return !x.sa.S.pass&&hasVague(g.title||'');},
+    title:'Belirsiz başlık',message:'Başlık belirsiz.',action:'Somut bir sonuç yaz: neyi, ne kadar?'},
+  {code:'no_specificity',dim:'S',severity:'high',priority:90,field:'title',
+    when:function(g,x){return !x.sa.S.pass&&!hasVague(g.title||'')&&!/\btest\b/i.test(g.title||'')&&!isJunkText(g.title||'');},
+    title:'Somut değil',message:'Hedef yeterince somut değil.',action:'Bir eylem fiili ve net sonuç ekle.'},
+  {code:'missing_metric',dim:'M',severity:'high',priority:88,field:'metric',
+    when:function(g,x){return !x.sa.M.pass;},
+    title:'Ölçüm eksik',message:'İlerlemeyi ölçemeyiz.',action:'Bir hedef değer ve birim ekle.'},
+  {code:'missing_deadline',dim:'T',severity:'high',priority:82,field:'deadline',
+    when:function(g,x){return !g.deadline;},
+    title:'Tarih yok',message:'Bitiş tarihi yok.',action:'Gerçekçi bir bitiş tarihi seç.'},
+  {code:'past_deadline',dim:'T',severity:'high',priority:82,field:'deadline',
+    when:function(g,x){return !!g.deadline&&x.du!==null&&x.du<0;},
+    title:'Tarih geçmiş',message:'Bitiş tarihi geçmişte.',action:'İleri bir tarih seç.'},
+  {code:'unrealistic_scope',dim:'A',severity:'high',priority:78,field:'title',
+    when:function(g,x){return !x.sa.A.pass&&isGrandiose(g.title||'');},
+    title:'Gerçekçi değil',message:'Süreye göre çok iddialı.',action:'Aşamalandır veya süreyi gerçekçileştir.'},
+  {code:'missing_valid_step',dim:'A',severity:'med',priority:74,field:'steps',
+    when:function(g,x){return !x.sa.A.pass&&!isGrandiose(g.title||'');},
+    title:'Uygulama planı yok',message:'Geçerli bir aksiyon adımı yok.',action:'İlk uygulanabilir adımı belirt.'},
+  {code:'weak_why',dim:'R',severity:'med',priority:60,field:'desc',
+    when:function(g,x){return !x.sa.R.pass;},
+    title:'Neden zayıf',message:'Bu hedefin neden önemli olduğu belirsiz.',action:'Bu hedef senin için neden önemli, somutlaştır.'},
+  {code:'weak_metric',dim:'M',severity:'low',priority:50,field:'metric',
+    when:function(g,x){return x.sa.M.pass&&!x.mm.structured;},
+    title:'Ölçüm yapısal değil',message:'Ölçüt metin içinde.',action:'Hedef/mevcut değeri sayısal gir (otomatik %).'},
+  {code:'missing_start_value',dim:'M',severity:'low',priority:46,field:'metric',
+    when:function(g,x){return x.mm.structured&&metricCurrentMissing(g);},
+    title:'Mevcut değer eksik',message:'Başlangıç/mevcut değer girilmemiş.',action:'Mevcut değeri gir (0 da geçerlidir).'},
+  {code:'multi_goal',dim:'S',severity:'low',priority:40,field:'title',
+    when:function(g,x){return isMultiGoal(g.title||'');},
+    title:'Birden fazla hedef',message:'Birden fazla bağımsız hedef birleşmiş.',action:'Ayrı hedeflere böl.'}
+  ];
+}
+/* Yapilandirilmis teshis: oncelikli, deduped, banda gore capli. */
+function goalDiagnose(g){
+  g=g||{};
+  var x={sa:smartAnalyze(g),qi:qualityIndex(g),mm:readMetric(g),du:daysUntil(g.deadline)};
+  var out=[],seen={};
+  coachRules().forEach(function(r){
+    if(seen[r.code])return;
+    var ok=false;try{ok=r.when(g,x);}catch(e){ok=false;}
+    if(!ok)return;
+    seen[r.code]=1;
+    out.push({code:r.code,dimension:r.dim,severity:r.severity,priority:r.priority,
+      title:r.title,message:r.message,action:r.action,field:r.field});
+  });
+  out.sort(function(a,b){return b.priority-a.priority;});
+  var cap=x.qi.score>=70?1:x.qi.score>=50?3:4;                 // guclu:1, orta:3, kritik:4
+  out=out.slice(0,cap);
+  if(out.length===0&&x.qi.score>=70)
+    out.push({code:'strong_goal',dimension:null,severity:'ok',priority:0,
+      title:'Hedef güçlü',message:'Hedef güçlü görünüyor.',action:'',field:null});
+  return out;
+}
+/* Geriye uyumlu string[] — mevcut UI (form/detay/SMART) korunur. */
+function goalCoach(g){
+  return goalDiagnose(g).filter(function(d){return d.code!=='strong_goal';})
+    .map(function(d){return d.action||d.message;});
+}
+/* Kural tabanli, deterministik yeniden yazim onerisi. Uydurmaz; placeholder kullanir. Payload'i degistirmez. */
+function suggestGoalRewrite(g){
+  g=g||{};var mm=readMetric(g),du=daysUntil(g.deadline),missing=[];
+  var core=String(g.title||'').trim();
+  VAGUE_WORDS.forEach(function(w){core=core.replace(new RegExp(w,'gi'),'').trim();});
+  if(!core)core='[hedefin]';
+  var datePart;
+  if(g.deadline&&du!==null&&du>=0){datePart=g.deadline+' tarihine kadar';}
+  else{datePart='[tarih] tarihine kadar';missing.push('deadline');}
+  var metricPart;
+  if(mm.structured){metricPart=mm.target+' '+(mm.unit||'[birim]');if(!mm.unit)missing.push('metric');}
+  else if(mm.hasNumber){metricPart=mm.raw;}
+  else{metricPart='[hedef değer] [birim]';missing.push('metric');}
+  var suggested=datePart+' '+core+' — '+metricPart+' seviyesine ulaş.';
+  var conf=missing.length===0?'high':missing.length===1?'medium':'low';
+  return {original:g.title||'',suggested:suggested,missingFields:missing,confidence:conf};
 }
 
 /* Sayisal ilerleme (metric) — yon farkindali. */
@@ -2842,10 +2940,17 @@ function openGoalDetail(goalId){
   h+='<div style="padding:12px 14px;background:var(--s2);border-radius:11px">';
   h+='<div style="display:flex;align-items:center;gap:11px"><div style="width:46px;height:46px;border-radius:11px;background:'+qbc+';display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:17px;font-weight:800;color:#fff;line-height:1">'+qi.score+'</span><span style="font-size:8px;color:rgba(255,255,255,.85)">/100</span></div>';
   h+='<div style="flex:1"><p style="font-size:11px;color:var(--t3);font-weight:600">Kalite İndeksi</p><p style="font-size:14px;font-weight:800;color:'+qbc+'">'+qi.band+'</p></div>';
-  h+='<button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openGoalEdit(+this.dataset.gid)">'+ic('edit',12)+' Düzenle</button></div>';
-  if(tips.length){h+='<div style="margin-top:9px;display:flex;flex-direction:column;gap:5px">';
+  h+='<button class="btn '+(tips.length?'btn-p':'btn-s')+' btn-sm" data-gid="'+g.id+'" onclick="openGoalEdit(+this.dataset.gid)">'+ic('edit',12)+(tips.length?' Geliştir':' Düzenle')+'</button></div>';
+  if(tips.length){
+    h+='<p style="font-size:11px;font-weight:700;color:var(--t2);margin-top:9px">Bu hedefi güçlendirmek için '+tips.length+' öneri</p>';
+    h+='<div style="margin-top:5px;display:flex;flex-direction:column;gap:5px">';
     tips.forEach(function(t){h+='<div style="display:flex;gap:6px;align-items:flex-start"><span style="color:var(--blue);font-size:11px;font-weight:800;margin-top:1px">&rsaquo;</span><span style="font-size:11.5px;color:var(--t2);line-height:1.45">'+U.esc(t)+'</span></div>';});
-    h+='</div>';}
+    h+='</div>';
+    var rw=suggestGoalRewrite(g);
+    h+='<div style="margin-top:9px;padding:8px 10px;background:var(--bl);border-radius:8px"><p style="font-size:10px;color:var(--t3);font-weight:600;margin-bottom:2px">Önerilen yazım</p><p style="font-size:11.5px;color:var(--t2);line-height:1.45;font-style:italic">'+U.esc(rw.suggested)+'</p></div>';
+  }else if(qi.score>=70){
+    h+='<p style="font-size:11.5px;color:var(--green);font-weight:600;margin-top:9px">Hedef güçlü görünüyor.</p>';
+  }
   h+='</div>';
   if(g.desc)h+='<div style="padding:10px 12px;background:var(--s2);border-radius:9px;border-left:3px solid '+cc5+'"><p style="font-size:13px;color:var(--t2);line-height:1.6">'+U.esc(g.desc)+'</p></div>';
   /* Sayisal ilerleme (metric) */
