@@ -2926,7 +2926,8 @@ function renderGoals(){
 
 /* Form hem OLUSTURMA hem DUZENLEME icin. editId verilirse mevcut hedef doldurulur. */
 function openGoalForm(editId){
-  if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: form modali not editorunu degistirir
+  // FAZ-4.2: dirty not taslagi varsa ONCE onay — confirm alinmadan HICBIR state/modal mutasyonu YOK.
+  if(typeof confirmDiscardNoteDraft==='function'&&!confirmDiscardNoteDraft())return;
   var g=editId?((D.goals||[]).find(function(x){return x.id===editId;})||{}):{};
   var m=g.metric||{};
   gfStepsInit(g);
@@ -3203,6 +3204,14 @@ var noteEditGid=null, noteExpanded=false;
 /* FAZ-4.1: yeniden-render sirasinda taslak korumasi — YALNIZ bellekte, Firestore/localStorage YOK. */
 var NOTE_DRAFT={goalId:null,value:'',originalValue:'',selectionStart:null,selectionEnd:null,dirty:false,updatedAt:0};
 function noteDraftDirty(){return NOTE_DRAFT.goalId!==null&&NOTE_DRAFT.dirty;}
+/* FAZ-4.2: ortak taslak-atma onayi. dirty degilse true; dirty ise confirm (vazgec=false, onay=temizle+true).
+   Cagiran ONCE bunu kontrol etmeli — hicbir state degismeden. */
+function confirmDiscardNoteDraft(){
+  if(!noteDraftDirty())return true;
+  if(!confirm('Kaydedilmemiş not değişiklikleri var. Devam edilsin mi?'))return false;
+  clearNoteDraft();noteEditGid=null;return true;
+}
+window.confirmDiscardNoteDraft=confirmDiscardNoteDraft;
 function captureNoteDraft(){
   var ta=ge('gnote_ta');if(!ta||NOTE_DRAFT.goalId===null)return;
   NOTE_DRAFT.value=ta.value;
