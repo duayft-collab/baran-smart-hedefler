@@ -235,6 +235,8 @@ var INIT={
     selectedCategories:[],selectedLanguages:[],position:'hero',animation:'fade',
     showAuthor:true,showCategory:true,showProgress:false,pinMode:'rotate',pinnedQuoteId:null,
     contextAware:false,respectPriority:true,avoidRecentlyShown:true},
+  /* D10.5.1 — İlkelerim yönetim ekranı ayarları (gösterim/rotasyon ayarı DEĞİL; D10.5.2'ye ait alanlar burada YOK) */
+  principleSettings:{defaultSort:'priority',showArchived:false,compactView:false},
   compat:{mode:'individual',answers:{},partnerAnswers:{}},
   savedResources:{},
   logs:[],scratch:'',

@@ -8,6 +8,7 @@ function loadData(){
         stats:Object.assign({},INIT.stats,p.stats||{}),
         compat:Object.assign({},INIT.compat,p.compat||{}),
         wisdomSettings:Object.assign({},INIT.wisdomSettings,p.wisdomSettings||{}), // D10.2: yeni ayar alanları varsayılanlarla dolar (buildStateFromPayload'a EKLENMEZ)
+        principleSettings:Object.assign({},INIT.principleSettings,p.principleSettings||{}), // D10.5.1: aynı desen (buildStateFromPayload'a EKLENMEZ)
       });
     }
   }catch(e){}

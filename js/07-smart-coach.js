@@ -23,7 +23,7 @@ function fil(list,keys){
 
 function del(id,type){
   if(!confirm(L('confirm')))return;
-  var km={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges',mybook:'mybooks',sop:'sops',habit:'habits',gtd:'gtdInbox'};
+  var km={goal:'goals',todo:'todos',kpi:'kpis',quote:'quotes',journal:'journal',coaching:'coaching',question:'questions',vault:'vault',challenge:'challenges',mybook:'mybooks',sop:'sops',habit:'habits',gtd:'gtdInbox'};
   var key=km[type];
   if(!key||!D[key])return;
   snap();D[key]=D[key].filter(function(i){return i.id!==id;});

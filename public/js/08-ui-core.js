@@ -20,7 +20,7 @@ var NAV=[
   {sec:'secMethod',items:[{id:'smart',l:'SMART Hedef Motoru',i:'tgt'},{id:'onething',l:'ONE Thing',i:'zap'},{id:'frog',l:'Eat That Frog',i:'flame'},{id:'timeblock',l:'Zaman Bloklama',i:'ci'},{id:'weeklyreview',l:'Haftalık Review',i:'ref'},{id:'gtd',l:'GTD Inbox',i:'arc'}]},
   {sec:'secProd',items:[{id:'goals',l:'Hedefler',i:'tgt'},{id:'todos',l:'Yapılacaklar',i:'csq'},{id:'habits',l:'Alışkanlıklar',i:'star'},{id:'routines',l:'Rutinler',i:'ref'}]},
   {sec:'secBook',items:[{id:'library',l:'Kitap Kütüphanesi',i:'bk'},{id:'mybooks',l:'Okuma Listesi',i:'layers'},{id:'readingplan',l:'Okuma Planları',i:'bk'}]},
-  {sec:'secKnow',items:[{id:'wisdom',l:'Özlü Sözler',i:'qt'},{id:'generalnotes',l:'Genel Notlar',i:'pen'},{id:'restore',l:'Yedekler / Geri Yükleme',i:'arc'},{id:'quotes',l:'Öz Sözler',i:'qt'},{id:'journal',l:'Günlük',i:'pen'},{id:'principles',l:'Prensipler',i:'sh'},{id:'coaching',l:'Koçluk',i:'us'},{id:'vault',l:'Bilgi Kasası',i:'arc'}]},
+  {sec:'secKnow',items:[{id:'wisdom',l:'Özlü Sözler',i:'qt'},{id:'generalnotes',l:'Genel Notlar',i:'pen'},{id:'restore',l:'Yedekler / Geri Yükleme',i:'arc'},{id:'quotes',l:'Öz Sözler',i:'qt'},{id:'journal',l:'Günlük',i:'pen'},{id:'principles',l:'İlkelerim',i:'sh'},{id:'coaching',l:'Koçluk',i:'us'},{id:'vault',l:'Bilgi Kasası',i:'arc'}]},
   {sec:'secSys',items:[{id:'deepwork',l:'Derin Çalışma',i:'brain'},{id:'sop',l:'SOP Şablonları',i:'layers'},{id:'tools',l:'Odak Araçları',i:'hp'}]},
 ];
 
@@ -53,9 +53,12 @@ function closeModal(){
   if(typeof wqDraftDirty==='function'&&wqDraftDirty()&&!confirm('Kaydedilmemiş söz değişiklikleri var. Kapatılsın mı?'))return; // D10.1
   if(typeof gnCaptureDraft==='function')gnCaptureDraft();
   if(typeof gnDraftDirty==='function'&&gnDraftDirty()&&!confirm('Kaydedilmemiş not değişiklikleri var. Kapatılsın mı?'))return;
+  if(typeof pCaptureDraft==='function')pCaptureDraft(); // D10.5.1
+  if(typeof pDraftDirty==='function'&&pDraftDirty()&&!confirm('Kaydedilmemiş ilke değişiklikleri var. Kapatılsın mı?'))return;
   if(typeof noteDraftDirty==='function'&&noteDraftDirty()&&!confirm('Kaydedilmemiş not değişiklikleri var. Kapatılsın mı?'))return;
   if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1
   if(typeof gnClearDraft==='function')gnClearDraft();
+  if(typeof pClearDraft==='function')pClearDraft(); // D10.5.1
   if(typeof clearNoteDraft==='function')clearNoteDraft();noteEditGid=null;
   sh('modal-root','');
 }
@@ -68,7 +71,6 @@ var FDEFS={
   habit:['name:Alışkanlık adi:text:1','color:Renk:sel:0:blue|green|orange|purple|red'],
   quote:['text:Söz:ta:1','author:Kaynak:text:0','cat:Kategori:text:0'],
   journal:['cat:Kategori:text:0','text:İçerik:ta:1'],
-  principle:['type:Tur:text:0','text:İçerik:ta:1'],
   coaching:['title:Başlık:text:1','cat:Kategori:text:0','text:İçerik:ta:1'],
   vault:['title:Başlık:text:1','cat:Kategori:text:0','text:İçerik:ta:1'],
   question:['text:Soru:ta:1'],
@@ -76,7 +78,7 @@ var FDEFS={
   routine:['t:Rutin adi:text:1','period:Periyot:sel:0:daily|weekly|monthly|quarterly|yearly'],
   gtd:['text:Fikir/Görev:ta:1'],
 };
-var FTITLES={goal:'Hedef',todo:'Görev',kpi:'KPI',habit:'Alışkanlık',quote:'Söz',journal:'Günlük',principle:'Prensip',coaching:'Koçluk',vault:'Not',question:'Soru',sop:'SOP',routine:'Rutin',gtd:'GTD Notu'};
+var FTITLES={goal:'Hedef',todo:'Görev',kpi:'KPI',habit:'Alışkanlık',quote:'Söz',journal:'Günlük',coaching:'Koçluk',vault:'Not',question:'Soru',sop:'SOP',routine:'Rutin',gtd:'GTD Notu'};
 
 function openForm(type){
   var defs=FDEFS[type]||[];
@@ -113,7 +115,7 @@ function submitForm(type){
   }
   if(type==='sop'){D.sops=[{id:id,title:vals.title,steps:[]}].concat(D.sops||[]);log('SOP eklendi');closeModal();renderPage();return;}
   if(type==='gtd'){D.gtdInbox=[{id:id,text:vals.text,status:'inbox',addedAt:U.today()}].concat(D.gtdInbox||[]);log('GTD eklendi');closeModal();renderPage();return;}
-  var km={goal:'goals',todo:'todos',kpi:'kpis',habit:'habits',quote:'quotes',journal:'journal',principle:'principles',coaching:'coaching',vault:'vault',question:'questions'};
+  var km={goal:'goals',todo:'todos',kpi:'kpis',habit:'habits',quote:'quotes',journal:'journal',coaching:'coaching',vault:'vault',question:'questions'};
   var item=Object.assign({id:id},vals);
   if(type==='goal'){item.frog=false;item.steps=[];item.notes='';item.status='active';item.createdAt=U.today();}
   if(type==='todo')item.done=false;

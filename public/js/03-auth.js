@@ -98,6 +98,7 @@ function handleAuthChange(user){
     if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: logout'ta taslak temizle
     if(typeof gnClearDraft==='function')gnClearDraft(); // FAZ-6: logout'ta genel not taslagi temizle
     if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1: logout'ta söz taslagi temizle
+    if(typeof pClearDraft==='function')pClearDraft(); // D10.5.1: logout'ta ilke taslagi temizle
     CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
     updateAuthButton(null);
     if(typeof resetAdminUI==='function')resetAdminUI(); // FAZ-5B: logout'ta admin cubugu kaldir
@@ -108,6 +109,7 @@ function handleAuthChange(user){
   if(typeof resetAdminUI==='function')resetAdminUI(); // FAZ-5B: UID degisti -> onceki admin durumunu sifirla (yeni UID icin yeniden coz)
   if(typeof gnClearDraft==='function')gnClearDraft(); // FAZ-6: UID degisiminde genel not taslagi temizle
   if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1: UID degisiminde söz taslagi temizle
+  if(typeof pClearDraft==='function')pClearDraft(); // D10.5.1: UID degisiminde ilke taslagi temizle
   console.log('[AUTH] Kullanıcı değişti:',user.uid,user.isAnonymous?'(anonim)':'(google)');
   if(RESTORE.state!=='IDLE'){failRestoreSession(new Error('Kullanıcı değişti'));resetRestoreSession();}
   if(typeof RS!=='undefined')RS=null; // D6: UID degisiminde aktif restore oturumunu temizler
@@ -203,7 +205,7 @@ window.addEventListener('beforeunload',function(){stopDocListener();stopRestoreW
    Yollar: users/{uid}/backups/{id}  ve  users/{uid}/backups/{id}/blob/data
    Restore ve UI bu turda YOK.
    ══════════════════════════════════════════════════════════════════════════ */
-var APP_VERSION='2026.07-d10-3-1';   // uygulamada onceden surum sabiti yoktu; proje ici acik surum
+var APP_VERSION='2026.07-d10-5-1';   // uygulamada onceden surum sabiti yoktu; proje ici acik surum
 var BACKUP_VERSION=1;           // yedek zarf formati surumu (sharding'e gecis icin)
 var BACKUP_REASONS=['manual','before_restore','before_conflict_overwrite','before_import',
   'before_migration','before_bulk_delete','daily','migration'];
