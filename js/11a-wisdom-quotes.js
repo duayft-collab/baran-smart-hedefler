@@ -196,7 +196,8 @@ window.wqSetQuery=wqSetQuery;window.wqSetFilter=wqSetFilter;window.wqSetCat=wqSe
 function renderWisdomQuotes(){
   var st=wqStats();
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Özlü Sözler</h1><p class="sh-sub">Kişisel özlü söz kütüphanen. Hedeflerden ve notlardan bağımsız.</p></div>';
-  h+='<button class="btn btn-p" onclick="openWqForm()">'+ic('plus',13)+' Yeni Söz</button></div>';
+  h+='<button class="btn btn-p" onclick="openWqForm()">'+ic('plus',13)+' Yeni Söz</button>';
+  h+=(typeof wisdomIoButtonsHtml==='function'?wisdomIoButtonsHtml():'')+'</div>'; // D10.3: içe/dışa aktarma butonları (additive)
   // istatistik
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
   [['Toplam',st.total],['Favori',st.favorites],['Aktif',st.active],['Pasif',st.passive],['Sabit',st.pinned],['Beni düşündüren',st.reflected]].forEach(function(x){
