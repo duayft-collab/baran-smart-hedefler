@@ -229,6 +229,7 @@ var INIT={
   coaching:[{id:101,title:'OKR Sistemi',text:'Objective + Key Results. Her çeyrek 1 büyük hedef.',cat:'Yontem'}],
   vault:[],questions:[{id:1,text:'Korkmasaydim bugün ne yapardim?'}],
   generalNotes:[],
+  wisdomQuotes:[],
   compat:{mode:'individual',answers:{},partnerAnswers:{}},
   savedResources:{},
   logs:[],scratch:'',

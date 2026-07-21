@@ -470,6 +470,7 @@ var DIFF_SCHEMA={
     {field:'challenges',identity:'id'},
     {field:'vault',identity:'id'},
     {field:'generalNotes',identity:'id'},
+    {field:'wisdomQuotes',identity:'id'},
     {field:'logs',identity:'content'}
   ],
   objects:['routines','timeblocks','weeklyReview','oneThing','compat','savedResources','stats'],

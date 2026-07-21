@@ -97,6 +97,7 @@ function handleAuthChange(user){
     stopDocListener();
     if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: logout'ta taslak temizle
     if(typeof gnClearDraft==='function')gnClearDraft(); // FAZ-6: logout'ta genel not taslagi temizle
+    if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1: logout'ta söz taslagi temizle
     CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
     updateAuthButton(null);
     if(typeof resetAdminUI==='function')resetAdminUI(); // FAZ-5B: logout'ta admin cubugu kaldir
@@ -106,6 +107,7 @@ function handleAuthChange(user){
   if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: UID degisiminde taslak baska hesaba tasinmaz
   if(typeof resetAdminUI==='function')resetAdminUI(); // FAZ-5B: UID degisti -> onceki admin durumunu sifirla (yeni UID icin yeniden coz)
   if(typeof gnClearDraft==='function')gnClearDraft(); // FAZ-6: UID degisiminde genel not taslagi temizle
+  if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1: UID degisiminde söz taslagi temizle
   console.log('[AUTH] Kullanıcı değişti:',user.uid,user.isAnonymous?'(anonim)':'(google)');
   if(RESTORE.state!=='IDLE'){failRestoreSession(new Error('Kullanıcı değişti'));resetRestoreSession();}
   if(typeof RS!=='undefined')RS=null; // D6: UID degisiminde aktif restore oturumunu temizler

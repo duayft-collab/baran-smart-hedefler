@@ -9,6 +9,7 @@ function renderPage(){
     tools:renderTools,history:renderHistory,
     generalnotes:renderGeneralNotes,
     restore:renderRestore,
+    wisdom:renderWisdomQuotes,
     quotes:function(){renderGenericList('quotes');},
     journal:function(){renderGenericList('journal');},
     principles:function(){renderGenericList('principles');},
