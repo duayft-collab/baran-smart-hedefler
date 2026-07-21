@@ -40,3 +40,8 @@ body.admin-bar-on #shell{height:calc(100vh - 30px - env(safe-area-inset-bottom,0
 #nav-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:150}
 .rt p{margin:0 0 6px}.rt p:last-child{margin-bottom:0}.rt ul,.rt ol{margin:4px 0 6px;padding-left:20px}.rt li{margin:2px 0}.rt a{color:var(--blue);text-decoration:underline;word-break:break-word}.rt strong{font-weight:700}
 .note-clamp{max-height:118px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent)}
+.wd-anim{animation:wdFade .4s ease}
+.wd-anim-slide{animation:wdSlide .4s ease}
+.wd-anim-crossfade{animation:wdFade .55s ease}
+@keyframes wdFade{from{opacity:0}to{opacity:1}}
+@keyframes wdSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}

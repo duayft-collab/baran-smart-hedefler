@@ -131,6 +131,7 @@ applyTheme();
 updateClock();
 render();
 initCloud();
+if(typeof wdBoot==='function')wdBoot(); // D10.2: Bilgelik gösterim motoru + tek timer + Visibility API
 // Dil butonu senkronizasyonu
 (function(){
   document.querySelectorAll('.lang-sw button').forEach(function(b){

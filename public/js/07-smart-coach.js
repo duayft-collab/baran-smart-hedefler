@@ -12,7 +12,7 @@ function sh(id,html){var e=ge(id);if(e)e.innerHTML=html;}
 function toggleNav(){var s=document.getElementById('shell');if(s)s.classList.toggle('nav-open');}
 function closeNav(){var s=document.getElementById('shell');if(s)s.classList.remove('nav-open');}
 window.toggleNav=toggleNav;
-function gotoTab(id){tab=id;renderNav();renderPage();closeNav();}
+function gotoTab(id){tab=id;renderNav();renderPage();closeNav();if(typeof wdTick==='function')wdTick();} // D10.2: gezinmede Bilgelik kartı (bellekten, Firestore okumaz)
 window.gotoTab=gotoTab;
 
 function fil(list,keys){

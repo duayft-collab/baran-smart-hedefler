@@ -7,6 +7,7 @@ function loadData(){
         routines:Object.assign({},INIT.routines,p.routines||{}),
         stats:Object.assign({},INIT.stats,p.stats||{}),
         compat:Object.assign({},INIT.compat,p.compat||{}),
+        wisdomSettings:Object.assign({},INIT.wisdomSettings,p.wisdomSettings||{}), // D10.2: yeni ayar alanları varsayılanlarla dolar (buildStateFromPayload'a EKLENMEZ)
       });
     }
   }catch(e){}

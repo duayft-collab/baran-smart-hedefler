@@ -230,6 +230,11 @@ var INIT={
   vault:[],questions:[{id:1,text:'Korkmasaydim bugün ne yapardim?'}],
   generalNotes:[],
   wisdomQuotes:[],
+  /* D10.2 — Bilgelik gösterim/rotasyon ayarları (additive; D10.1 modeline dokunmaz) */
+  wisdomSettings:{enabled:false,displayMode:'card',rotationMode:'pageopen',favoritesOnly:false,
+    selectedCategories:[],selectedLanguages:[],position:'hero',animation:'fade',
+    showAuthor:true,showCategory:true,showProgress:false,pinMode:'rotate',pinnedQuoteId:null,
+    contextAware:false,respectPriority:true,avoidRecentlyShown:true},
   compat:{mode:'individual',answers:{},partnerAnswers:{}},
   savedResources:{},
   logs:[],scratch:'',

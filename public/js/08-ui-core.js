@@ -213,6 +213,7 @@ function renderDashboard(){
   var rq=D.quotes.length?D.quotes[Math.floor(Math.random()*D.quotes.length)]:null;
 
   var h='<div class="fade">';
+  if(typeof wisdomHeroHtml==='function')h+=wisdomHeroHtml(); // D10.2: pozisyon 'hero' ise Bilgelik kartı (additive)
 
   /* System status bar */
   var sysItems=[
