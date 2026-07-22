@@ -241,6 +241,8 @@ var INIT={
   contentDisplaySettings:{enabled:false,sourceMode:'mixed',principleWeight:70,wisdomWeight:30,position:'hero',animation:'fade',dayPartAware:true,pinnedSource:null,pinnedItemId:null},
   /* D10.5.2 — İlke gösterim filtreleri (İlkelere özel) */
   principleDisplaySettings:{selectedLifeAreas:[],selectedTypes:[],selectedStatuses:['active','seasonal'],defaultFrequency:'daily',defaultDayPart:'any',respectPriority:true,avoidRecentlyShown:true},
+  /* D10.6.1 — Migration marker'ları (additive; loadData-only merge, buildStateFromPayload'a EKLENMEZ) */
+  migrations:{},
   compat:{mode:'individual',answers:{},partnerAnswers:{}},
   savedResources:{},
   logs:[],scratch:'',

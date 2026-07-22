@@ -14,6 +14,7 @@ function loadData(){
           (!p.contentDisplaySettings)?{sourceMode:'wisdom',enabled:!!(p.wisdomSettings&&p.wisdomSettings.enabled),position:(p.wisdomSettings&&p.wisdomSettings.position)||'hero',animation:(p.wisdomSettings&&p.wisdomSettings.animation)||'fade'}:{},
           p.contentDisplaySettings||{}),
         principleDisplaySettings:Object.assign({},INIT.principleDisplaySettings,p.principleDisplaySettings||{}), // D10.5.2
+        migrations:Object.assign({},INIT.migrations,p.migrations||{}), // D10.6.1: migration marker'ları (payload korunur; buildStateFromPayload'a EKLENMEZ — fix2)
       });
     }
   }catch(e){}
