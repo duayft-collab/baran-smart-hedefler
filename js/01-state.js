@@ -9,6 +9,11 @@ function loadData(){
         compat:Object.assign({},INIT.compat,p.compat||{}),
         wisdomSettings:Object.assign({},INIT.wisdomSettings,p.wisdomSettings||{}), // D10.2: yeni ayar alanları varsayılanlarla dolar (buildStateFromPayload'a EKLENMEZ)
         principleSettings:Object.assign({},INIT.principleSettings,p.principleSettings||{}), // D10.5.1: aynı desen (buildStateFromPayload'a EKLENMEZ)
+        contentDisplaySettings:Object.assign({},INIT.contentDisplaySettings,
+          /* D10.5.2 geriye-uyum: mevcut kullanıcı (kayıtlı state var, contentDisplaySettings yok) → sourceMode='wisdom' (D10.2 davranışı BİREBİR korunur; mixed opt-in). Yeni kurulum → INIT 'mixed'. Sessiz cloud write YOK. */
+          (!p.contentDisplaySettings)?{sourceMode:'wisdom',enabled:!!(p.wisdomSettings&&p.wisdomSettings.enabled),position:(p.wisdomSettings&&p.wisdomSettings.position)||'hero',animation:(p.wisdomSettings&&p.wisdomSettings.animation)||'fade'}:{},
+          p.contentDisplaySettings||{}),
+        principleDisplaySettings:Object.assign({},INIT.principleDisplaySettings,p.principleDisplaySettings||{}), // D10.5.2
       });
     }
   }catch(e){}

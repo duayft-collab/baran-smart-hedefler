@@ -56,6 +56,9 @@ function normalizePrinciple(p,i){
     source:(p.source!=null&&String(p.source).trim())?String(p.source).slice(0,P_LIMITS.source):'Kendi İlkem',
     notes:String(p.notes||'').slice(0,P_LIMITS.notes),
     pinned:!!p.pinned, reflected:!!p.reflected,
+    /* D10.5.2 — gösterim alanları (additive; legacy'de yoksa varsayılan, otomatik migration write YOK) */
+    frequency:(['pageopen','1h','3h','6h','12h','daily','every3days','weekly','monthly','manual'].indexOf(p.frequency)>=0)?p.frequency:'daily',
+    dayPart:(['any','morning','afternoon','evening','night'].indexOf(p.dayPart)>=0)?p.dayPart:'any',
     createdAt:p.createdAt?String(p.createdAt):_pNow(),
     updatedAt:p.updatedAt?String(p.updatedAt):(p.createdAt?String(p.createdAt):_pNow()),
     /* internalizedAt: yalnız gerçek değeri geçir; icat etme (write katmanı set eder). status değişse de tarih korunur. */
@@ -149,6 +152,8 @@ function renderPrinciples(){
   [['Toplam',st.total],['Aktif',st.active],['Karakterime Yerleşti',st.internalized],['Arşiv',st.archived]].forEach(function(x){
     h+='<div class="card" style="padding:8px 12px;flex:1;min-width:100px"><p style="font-size:10px;color:var(--t3)">'+x[0]+'</p><p style="font-size:18px;font-weight:800">'+x[1]+'</p></div>';});
   h+='</div>';
+  if(typeof cdPanelHtml==='function')h+=cdPanelHtml(); // D10.5.2: ortak gösterim motoru paneli
+  if(typeof principleDisplayPanelHtml==='function')h+=principleDisplayPanelHtml(); // D10.5.2: ilke gösterim filtreleri
   // arama + status filtresi
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">';
   h+='<input class="inp" id="p_search" style="max-width:280px" placeholder="İlkelerde ara..." value="'+U.esc(pQuery)+'" oninput="pSetQuery(this.value)">';

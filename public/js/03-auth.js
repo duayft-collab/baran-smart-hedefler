@@ -205,7 +205,7 @@ window.addEventListener('beforeunload',function(){stopDocListener();stopRestoreW
    Yollar: users/{uid}/backups/{id}  ve  users/{uid}/backups/{id}/blob/data
    Restore ve UI bu turda YOK.
    ══════════════════════════════════════════════════════════════════════════ */
-var APP_VERSION='2026.07-d10-5-1';   // uygulamada onceden surum sabiti yoktu; proje ici acik surum
+var APP_VERSION='2026.07-d10-5-2';   // uygulamada onceden surum sabiti yoktu; proje ici acik surum
 var BACKUP_VERSION=1;           // yedek zarf formati surumu (sharding'e gecis icin)
 var BACKUP_REASONS=['manual','before_restore','before_conflict_overwrite','before_import',
   'before_migration','before_bulk_delete','daily','migration'];

@@ -235,8 +235,12 @@ var INIT={
     selectedCategories:[],selectedLanguages:[],position:'hero',animation:'fade',
     showAuthor:true,showCategory:true,showProgress:false,pinMode:'rotate',pinnedQuoteId:null,
     contextAware:false,respectPriority:true,avoidRecentlyShown:true},
-  /* D10.5.1 — İlkelerim yönetim ekranı ayarları (gösterim/rotasyon ayarı DEĞİL; D10.5.2'ye ait alanlar burada YOK) */
+  /* D10.5.1 — İlkelerim yönetim ekranı ayarları (gösterim/rotasyon ayarı DEĞİL) */
   principleSettings:{defaultSort:'priority',showArchived:false,compactView:false},
+  /* D10.5.2 — ORTAK gösterim/kaynak ayarı (wisdom+principles tek kart). Wisdom'a özel alanlar wisdomSettings'te KALIR. */
+  contentDisplaySettings:{enabled:false,sourceMode:'mixed',principleWeight:70,wisdomWeight:30,position:'hero',animation:'fade',dayPartAware:true,pinnedSource:null,pinnedItemId:null},
+  /* D10.5.2 — İlke gösterim filtreleri (İlkelere özel) */
+  principleDisplaySettings:{selectedLifeAreas:[],selectedTypes:[],selectedStatuses:['active','seasonal'],defaultFrequency:'daily',defaultDayPart:'any',respectPriority:true,avoidRecentlyShown:true},
   compat:{mode:'individual',answers:{},partnerAnswers:{}},
   savedResources:{},
   logs:[],scratch:'',

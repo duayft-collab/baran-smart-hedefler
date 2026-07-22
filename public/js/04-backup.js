@@ -473,7 +473,7 @@ var DIFF_SCHEMA={
     {field:'wisdomQuotes',identity:'id'},
     {field:'logs',identity:'content'}
   ],
-  objects:['routines','timeblocks','weeklyReview','oneThing','compat','savedResources','stats','wisdomSettings','principleSettings'],
+  objects:['routines','timeblocks','weeklyReview','oneThing','compat','savedResources','stats','wisdomSettings','principleSettings','contentDisplaySettings','principleDisplaySettings'],
   scalars:['readingPlan','scratch','vol','activeSound','deepWorkSessions']
 };
 var DIFF_LIMITS={detailLimit:100, previewMax:120, missingLow:5};
