@@ -257,7 +257,7 @@ function buildRestorePreview(currentPayload,backupPayload,opts){
   var impact;
   if(totals.added===0&&totals.removed===0&&totals.changed===0)impact='none';
   else if(criticalHit)impact='critical';
-  else if(removedPct>IMPACT_RULES.highDeletePct)impact='high';
+  else if(removedPct>=IMPACT_RULES.highDeletePct)impact='high';
   else if(totals.removed===0&&totals.changed===0)impact='low';
   else impact='medium';
 

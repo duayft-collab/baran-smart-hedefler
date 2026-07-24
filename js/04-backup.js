@@ -81,7 +81,8 @@ function countRecords(p){
   var n=function(k){var v=p[k];
     return Array.isArray(v)?v.length:(v&&typeof v==='object'?Object.keys(v).length:0);};
   var c={goals:n('goals'),todos:n('todos'),habits:n('habits'),journal:n('journal'),
-    quotes:n('quotes'),routines:n('routines'),kpis:n('kpis'),logs:n('logs')};
+    quotes:n('quotes'),routines:n('routines'),kpis:n('kpis'),logs:n('logs'),
+    wisdomQuotes:n('wisdomQuotes'),principles:n('principles'),generalNotes:n('generalNotes')};
   var t=0;Object.keys(p).forEach(function(k){
     var v=p[k];
     if(Array.isArray(v))t+=v.length;
@@ -89,6 +90,12 @@ function countRecords(p){
   });
   c.totalRecords=t;
   return c;
+}
+/* RESTORE-UX-P0: eski yedeklerde henuz sayilmamis bir modul icin 0 yerine
+   "bilinmiyor" (null) dondurur; alan gercekten var ve 0 ise gercek 0 dondurur. */
+function backupModuleCount(counts,field){
+  if(!counts||!Object.prototype.hasOwnProperty.call(counts,field))return null;
+  return counts[field];
 }
 /* Yedek zaman damgasi oturum icinde KESIN ARTAN olmalidir. Ayni milisaniyede iki
    yedek olusursa hem Firestore hem yerel siralama esitligi belge kimligiyle bozar;
@@ -477,6 +484,6 @@ var DIFF_SCHEMA={
   scalars:['readingPlan','scratch','vol','activeSound','deepWorkSessions']
 };
 var DIFF_LIMITS={detailLimit:100, previewMax:120, missingLow:5};
-var IMPACT_RULES={highDeletePct:0.20, criticalModules:['goals','todos','habits'],
+var IMPACT_RULES={highDeletePct:0.20, criticalModules:['goals','todos','habits','wisdomQuotes','principles','generalNotes'],
   criticalDropPct:0.5};
 

@@ -139,7 +139,8 @@ window.renderGeneralNotesList=renderGeneralNotesList;
    ══════════════════════════════════════════════════════════════════════════ */
 var RESTORE_UI={backups:[],query:'',filter:'all',loading:false,loadError:false,loaded:false,
   opId:null,backupId:null,preview:null,suspect:null,warnings:[],view:'list',
-  stage:null,progressTimer:null,report:null,busy:false,accepted:false,error:null};
+  stage:null,progressTimer:null,report:null,busy:false,accepted:false,error:null,
+  confirmText:''};                                    // RESTORE-UX-P0: typed-confirm girdisi
 var RESTORE_ERR_TR={AUTH_REQUIRED:'Oturum gerekli.',WRONG_USER:'Bu yedek bu hesaba ait değil.',
   RESTORE_BUSY:'Zaten bir geri yükleme sürüyor.',CONFLICT_ACTIVE:'Aktif veri çakışması var; önce çözün.',
   PENDING_MUTATION:'Bekleyen kaydedilmemiş değişiklik var.',OFFLINE:'Çevrimdışısınız.',

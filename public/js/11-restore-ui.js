@@ -65,7 +65,7 @@ async function rstOpenPreview(backupId){
   if(RESTORE_UI.busy)return;
   // Aktif oturum varsa once guvenle iptal (yeni preview icin)
   if(RESTORE_UI.opId){try{cancelRestore(RESTORE_UI.opId);}catch(e){}RESTORE_UI.opId=null;}
-  RESTORE_UI.busy=true;RESTORE_UI.view='loading';RESTORE_UI.backupId=backupId;RESTORE_UI.accepted=false;RESTORE_UI.error=null;
+  RESTORE_UI.busy=true;RESTORE_UI.view='loading';RESTORE_UI.backupId=backupId;rstResetConfirmState();RESTORE_UI.error=null;
   showModal('<div style="padding:34px;text-align:center;color:var(--t3)">Önizleme hazırlanıyor…</div>');
   var pr=await prepareRestore(backupId);
   RESTORE_UI.busy=false;
@@ -76,10 +76,29 @@ async function rstOpenPreview(backupId){
   RESTORE_UI.view='preview';renderRestoreModal();
 }
 window.rstOpenPreview=rstOpenPreview;
+/* RESTORE-UX-P0: goruntulenecek modul sirasi + Turkce etiketler (motor DEGISMEDI,
+   yalniz buildRestorePreview'in zaten hesapladigi perModule verisi yuzeye cikariliyor). */
+/* RESTORE-UX-P0 revizyon: alfabetik değil, kullanıcının değer sırasına göre 4 katman:
+   kritik kişisel içerik > diğer kişisel kayıtlar > operasyonel > geri kalan. */
+var RST_MODULE_ORDER=[
+  'wisdomQuotes','principles','goals',      // en değerli / kritik
+  'generalNotes','journal','logs',
+  'todos','habits','routines',
+  'quotes','kpis'                            // diğerleri
+];
+var RST_MODULE_TIER_BREAKS={'generalNotes':1,'todos':1};   // bu alandan önce görsel ayraç
+var RST_MODULE_LABELS={goals:'Hedefler',todos:'Görevler',habits:'Alışkanlıklar',journal:'Günlük',
+  quotes:'Öz Sözler (Legacy)',wisdomQuotes:'Özlü Sözler',principles:'İlkeler',generalNotes:'Genel Notlar',
+  logs:'Kayıtlar',kpis:'KPI',routines:'Rutinler'};
+/* Sifir-fark modul de gizlenmez ("Degisiklik yok" olarak isaretlenir) — RESTORE-UX-P0 madde 2. */
 function rstModuleRow(pv,field,label){
   var d=pv.perModule&&pv.perModule[field];if(!d)return '';
-  if(!d.added&&!d.removed&&!d.changed)return '';
-  return '<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0"><span style="color:var(--t2)">'+label+'</span><span style="color:var(--t3)">+'+d.added+' / −'+d.removed+' / ~'+d.changed+'</span></div>';
+  var cur=(d.unchanged||0)+(d.changed||0)+(d.removed||0), tgt=(d.unchanged||0)+(d.changed||0)+(d.added||0);
+  var noChange=!d.added&&!d.removed&&!d.changed;
+  var right=noChange
+    ? '<span style="color:var(--t3)">Değişiklik yok ('+cur+')</span>'
+    : '<span style="color:var(--t3)">'+cur+' → '+tgt+' &nbsp;(+'+d.added+' / −'+d.removed+' / ~'+d.changed+')</span>';
+  return '<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0"><span style="color:var(--t2)">'+label+'</span>'+right+'</div>';
 }
 function renderRestoreModal(){
   var v=RESTORE_UI.view,h='';
@@ -93,14 +112,39 @@ function renderRestoreModal(){
     h+='<div class="card" style="padding:9px 12px;flex:1;min-width:100px"><p style="font-size:10px;color:var(--t3)">Etkilenen modül</p><p style="font-size:18px;font-weight:800">'+affected.length+'</p></div>';
     h+='<div class="card" style="padding:9px 12px;flex:1;min-width:100px"><p style="font-size:10px;color:var(--t3)">Eklenecek/Silinecek/Değişecek</p><p style="font-size:14px;font-weight:800">+'+(totals.added||0)+' / −'+(totals.removed||0)+' / ~'+(totals.changed||0)+'</p></div>';
     h+='</div>';
-    var modRows=rstModuleRow(pv,'goals','Hedefler')+rstModuleRow(pv,'generalNotes','Genel Notlar')+rstModuleRow(pv,'todos','Görevler')+rstModuleRow(pv,'habits','Alışkanlıklar');
-    if(modRows)h+='<div class="card" style="padding:8px 12px;margin-bottom:12px"><p style="font-size:10px;color:var(--t3);margin-bottom:4px">Modül değişiklikleri (+ekle / −sil / ~değiş)</p>'+modRows+'</div>';
+    /* RESTORE-UX-P0 madde 1: Yumuşak uyarı — genel silinme oranı yüksekse (impact high/critical). */
+    if(pv.destructiveImpact==='high'||pv.destructiveImpact==='critical'){
+      h+='<div style="padding:8px 12px;border-radius:8px;background:var(--bl);border-left:3px solid var(--orange);margin-bottom:12px"><p style="font-size:12px;color:var(--t2);line-height:1.6">Bu restore mevcut verilerin önemli bir bölümünü kaldıracak.<br>Silinecek toplam kayıt: '+(totals.removed||0)+'<br>Değişecek kayıt: '+(totals.changed||0)+'</p></div>';
+    }
+    var modRows=RST_MODULE_ORDER.map(function(f){
+      var row=rstModuleRow(pv,f,RST_MODULE_LABELS[f]);
+      if(row&&RST_MODULE_TIER_BREAKS[f])row='<div style="border-top:1px solid var(--s2);margin-top:4px;padding-top:4px"></div>'+row;
+      return row;
+    }).join('');
+    if(modRows)h+='<div class="card" style="padding:8px 12px;margin-bottom:12px"><p style="font-size:10px;color:var(--t3);margin-bottom:4px">Modül değişiklikleri</p>'+modRows+'</div>';
     if(affected.length)h+='<p style="font-size:11px;color:var(--t2);margin-bottom:10px"><b>Etkilenen:</b> '+affected.map(function(m){return U.esc(m);}).join(', ')+'</p>';
     var warns=(RESTORE_UI.warnings||[]).concat((sus&&sus.reasons)||[]);
     var uniqW=warns.filter(function(w,i){return warns.indexOf(w)===i;});
     if(uniqW.length){h+='<div style="padding:8px 12px;border-radius:8px;background:var(--bl);border-left:3px solid var(--orange);margin-bottom:12px"><p style="font-size:11px;font-weight:700;color:var(--orange);margin-bottom:3px">'+ic('ci',11,'var(--orange)')+' Uyarılar</p>';uniqW.forEach(function(w){h+='<p style="font-size:11px;color:var(--t2);line-height:1.5">• '+U.esc(w)+'</p>';});h+='</div>';}
+    /* RESTORE-UX-P0 madde 4 (RESTORE-GUARD-01): kritik modüllerden biri criticalDropPct'i aşınca sert kapı. */
+    var hardGate=(pv.destructiveImpact==='critical');
+    if(hardGate){
+      var critLines=(IMPACT_RULES.criticalModules||[]).map(function(m){
+        var d=pv.perModule&&pv.perModule[m];if(!d||!d.removed)return null;
+        var cur=(d.unchanged||0)+(d.changed||0)+(d.removed||0), tgt=(d.unchanged||0)+(d.changed||0)+(d.added||0);
+        return {m:m,cur:cur,tgt:tgt};
+      }).filter(Boolean);
+      h+='<div style="padding:10px 12px;border-radius:8px;background:var(--bl);border-left:3px solid var(--red);margin-bottom:12px">';
+      h+='<p style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px">Bu işlem geri alınabilir ancak önemli veri kaybına neden olabilir.</p>';
+      critLines.forEach(function(c){h+='<p style="font-size:12px;color:var(--t2)">'+U.esc(RST_MODULE_LABELS[c.m]||c.m)+': '+c.cur+' → '+c.tgt+'</p>';});
+      h+='<p style="font-size:11px;color:var(--t3);margin-top:8px">Devam etmek için aşağıya <b>RESTORE ONAY</b> yazın:</p>';
+      h+='<input class="inp" id="rst_confirm_text" placeholder="RESTORE ONAY" value="'+U.esc(RESTORE_UI.confirmText||'')+'" oninput="rstSetConfirmText(this.value)" style="margin-top:6px;width:100%">';
+      h+='</div>';
+    }
     h+='<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:10px;border-radius:8px;background:var(--s2);margin-bottom:12px"><input type="checkbox" id="rst_accept" '+(RESTORE_UI.accepted?'checked':'')+' onchange="rstToggleAccept(this.checked)" style="margin-top:2px"><span style="font-size:12px;color:var(--t2)">Bu geri yüklemenin mevcut verimin üzerine yazacağını anlıyorum. İşlem öncesi otomatik <b>güvenlik yedeği</b> alınacak. <b>Kabul ediyorum.</b></span></label>';
-    h+='<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-g" onclick="rstCancel()">Vazgeç</button><button class="btn btn-p" id="rst_go" '+(RESTORE_UI.accepted?'':'disabled style="opacity:.5;pointer-events:none"')+' onclick="rstConfirmExecute()">'+ic('arc',13)+' Geri Yükle</button></div>';
+    var confirmOk=!hardGate||rstConfirmTextOk(RESTORE_UI.confirmText);
+    var goEnabled=!!(RESTORE_UI.accepted&&confirmOk);
+    h+='<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-g" onclick="rstCancel()">Vazgeç</button><button class="btn btn-p" id="rst_go" '+(goEnabled?'':'disabled style="opacity:.5;pointer-events:none"')+' onclick="rstConfirmExecute()">'+ic('arc',13)+' Geri Yükle</button></div>';
     showModal(h);return;
   }
   if(v==='progress'){
@@ -142,8 +186,24 @@ function renderRestoreModal(){
   }
 }
 window.renderRestoreModal=renderRestoreModal;
-function rstToggleAccept(ch){RESTORE_UI.accepted=!!ch;var b=ge('rst_go');if(b){if(ch){b.disabled=false;b.style.opacity='';b.style.pointerEvents='';}else{b.disabled=true;b.style.opacity='.5';b.style.pointerEvents='none';}}}
-window.rstToggleAccept=rstToggleAccept;
+/* RESTORE-UX-P0 revizyon: typed-confirm case-insensitive (CAPS LOCK yüzünden gereksiz
+   sürtünme olmasın); yalnız baş/son boşluk kırpılır + Türkçe-güvenli küçük harfe çevrilir. */
+function rstConfirmTextOk(v){ return String(v||'').trim().toLocaleLowerCase('tr')==='restore onay'; }
+/* RESTORE-UX-P0 revizyon: "Geri Yükle" butonu iki bağımsız koşula bağlı — checkbox onayı VE
+   (yalnız hard-gate tetiklendiyse) doğru yazılmış "RESTORE ONAY" metni. Tek yerden hesaplanır. */
+function rstUpdateGoButton(){
+  var pv=RESTORE_UI.preview||{};
+  var hardGate=pv.destructiveImpact==='critical';
+  var confirmOk=!hardGate||rstConfirmTextOk(RESTORE_UI.confirmText);
+  var enabled=!!(RESTORE_UI.accepted&&confirmOk);
+  var b=ge('rst_go');
+  if(b){if(enabled){b.disabled=false;b.style.opacity='';b.style.pointerEvents='';}else{b.disabled=true;b.style.opacity='.5';b.style.pointerEvents='none';}}
+}
+function rstToggleAccept(ch){RESTORE_UI.accepted=!!ch;rstUpdateGoButton();}
+function rstSetConfirmText(v){RESTORE_UI.confirmText=v;rstUpdateGoButton();}
+/* Önizleme her yenilendiğinde veya modal kapandığında eski onay/typed-confirm geçersiz olmalı. */
+function rstResetConfirmState(){RESTORE_UI.accepted=false;RESTORE_UI.confirmText='';}
+window.rstToggleAccept=rstToggleAccept;window.rstSetConfirmText=rstSetConfirmText;window.rstResetConfirmState=rstResetConfirmState;
 function rstStartProgress(){rstStopProgress();RESTORE_UI.progressTimer=setInterval(function(){if(RESTORE_UI.stage!==RESTORE.state){RESTORE_UI.stage=RESTORE.state;if(RESTORE_UI.view==='progress')renderRestoreModal();}},120);}
 function rstStopProgress(){if(RESTORE_UI.progressTimer){clearInterval(RESTORE_UI.progressTimer);RESTORE_UI.progressTimer=null;}}
 async function rstConfirmExecute(){
@@ -169,12 +229,12 @@ async function rstConfirmExecute(){
 window.rstConfirmExecute=rstConfirmExecute;
 function rstCancel(){
   if(RESTORE_UI.opId){try{cancelRestore(RESTORE_UI.opId);}catch(e){}RESTORE_UI.opId=null;}
-  rstStopProgress();RESTORE_UI.view='list';RESTORE_UI.busy=false;RESTORE_UI.accepted=false;
+  rstStopProgress();RESTORE_UI.view='list';RESTORE_UI.busy=false;rstResetConfirmState();
   sh('modal-root','');
 }
 window.rstCancel=rstCancel;
 function rstFinishModal(){
-  rstStopProgress();RESTORE_UI.view='list';RESTORE_UI.opId=null;RESTORE_UI.busy=false;RESTORE_UI.accepted=false;
+  rstStopProgress();RESTORE_UI.view='list';RESTORE_UI.opId=null;RESTORE_UI.busy=false;rstResetConfirmState();
   sh('modal-root','');
   rstLoadList();                                    // yeni before_restore yedegi listeye gelsin
 }
