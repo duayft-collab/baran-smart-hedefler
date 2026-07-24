@@ -45,7 +45,7 @@ function renderRestoreList(){
     h+='<div class="card" style="padding:14px 16px">';
     h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">';
     h+='<div style="flex:1;min-width:0">';
-    h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'+rstReasonPill(m.reason)+(m.suspect?'<span class="pill p-orange" style="font-size:9px">Şüpheli</span>':'')+'<p style="font-weight:700;font-size:13.5px;word-break:break-word">'+U.esc(m.label||_gnDate(m.createdAtClient))+'</p></div>';
+    h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'+rstReasonPill(m.reason)+rstHealthBadge(m)+(m.suspect?'<span class="pill p-orange" style="font-size:9px">Şüpheli</span>':'')+'<p style="font-weight:700;font-size:13.5px;word-break:break-word">'+U.esc(m.label||_gnDate(m.createdAtClient))+'</p></div>';
     h+='<p style="font-size:11px;color:var(--t3)">'+ic('clock',10,'var(--t3)')+' '+U.esc(_gnDate(m.createdAtClient))+'</p>';
     h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--t2)">';
     h+='<span>Sürüm: <b>'+Number(m.sourceRevision||0)+'</b></span><span>Boyut: <b>'+rstFmtBytes(m.plainBytes)+'</b></span><span>Kayıt: <b>'+recs+'</b></span>';
@@ -108,10 +108,32 @@ function renderRestoreModal(){
     var affected=pv.affectedModules||[],totals=pv.totals||{};
     h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px"><h2 style="font-size:17px;font-weight:800">Geri Yükleme Önizlemesi</h2><button class="btn btn-g btn-ic" style="width:30px;height:30px" onclick="rstCancel()">'+ic('x',14)+'</button></div>';
     h+='<div style="padding:10px 12px;border-radius:10px;background:'+risk.bg+';color:#fff;margin-bottom:12px"><b style="font-size:13px">'+risk.label+'</b><div style="font-size:11px;opacity:.9;margin-top:2px">Yıkıcı etki: '+(pv.destructiveImpact||'?')+' · Güven: '+(pv.confidence||'?')+'</div></div>';
+    /* RESTORE-UX-P1 madde 3: revizyon karşılaştırması — veri buildRestorePreview'da zaten vardı, hiç render edilmiyordu. */
+    if(pv.sourceRevision!=null||pv.targetRevision!=null){
+      h+='<p style="font-size:11px;color:var(--t2);margin-bottom:8px">Mevcut Revizyon: <b>'+(pv.sourceRevision!=null?pv.sourceRevision:'?')+'</b> &nbsp;→&nbsp; Restore Revizyonu: <b>'+(pv.targetRevision!=null?pv.targetRevision:'?')+'</b></p>';
+    }
     h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">';
     h+='<div class="card" style="padding:9px 12px;flex:1;min-width:100px"><p style="font-size:10px;color:var(--t3)">Etkilenen modül</p><p style="font-size:18px;font-weight:800">'+affected.length+'</p></div>';
     h+='<div class="card" style="padding:9px 12px;flex:1;min-width:100px"><p style="font-size:10px;color:var(--t3)">Eklenecek/Silinecek/Değişecek</p><p style="font-size:14px;font-weight:800">+'+(totals.added||0)+' / −'+(totals.removed||0)+' / ~'+(totals.changed||0)+'</p></div>';
     h+='</div>';
+    /* RESTORE-UX-P1 madde 2: kritik modüller için mutlak sayı karşılaştırması ("Şu an X → Restore Y").
+       Yalnız delta (+/-/~) yetersizdi; en değerli koleksiyonlar için ayrı, göz ardı edilemez bir blok. */
+    var critCompare=(IMPACT_RULES.criticalModules||[]).map(function(m){
+      var d=pv.perModule&&pv.perModule[m];if(!d||(!d.added&&!d.removed&&!d.changed))return null;
+      var cur=(d.unchanged||0)+(d.changed||0)+(d.removed||0), tgt=(d.unchanged||0)+(d.changed||0)+(d.added||0);
+      return {m:m,cur:cur,tgt:tgt};
+    }).filter(Boolean);
+    if(critCompare.length){
+      h+='<div class="card" style="padding:9px 12px;margin-bottom:12px">';
+      h+='<p style="font-size:10px;color:var(--t3);margin-bottom:6px">Karşılaştırma</p>';
+      critCompare.forEach(function(c){
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--s2)">';
+        h+='<span style="font-size:12px;color:var(--t2)">'+U.esc(RST_MODULE_LABELS[c.m]||c.m)+'</span>';
+        h+='<span style="font-size:12px"><span style="color:var(--t3)">Şu an: </span><b>'+c.cur+'</b> &nbsp;→&nbsp; <span style="color:var(--t3)">Restore: </span><b>'+c.tgt+'</b></span>';
+        h+='</div>';
+      });
+      h+='</div>';
+    }
     /* RESTORE-UX-P0 madde 1: Yumuşak uyarı — genel silinme oranı yüksekse (impact high/critical). */
     if(pv.destructiveImpact==='high'||pv.destructiveImpact==='critical'){
       h+='<div style="padding:8px 12px;border-radius:8px;background:var(--bl);border-left:3px solid var(--orange);margin-bottom:12px"><p style="font-size:12px;color:var(--t2);line-height:1.6">Bu restore mevcut verilerin önemli bir bölümünü kaldıracak.<br>Silinecek toplam kayıt: '+(totals.removed||0)+'<br>Değişecek kayıt: '+(totals.changed||0)+'</p></div>';
@@ -174,7 +196,11 @@ function renderRestoreModal(){
     if(dur!=null)h+=row('Süre',dur+' sn');
     h+=row('Doğrulandı',r.commitVerified?'Evet ✓':'—');
     h+='</div>';
-    h+='<div style="display:flex;justify-content:flex-end"><button class="btn btn-p" onclick="rstFinishModal()">Tamam</button></div>';
+    h+='<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">';
+    /* RESTORE-UX-P1 madde 1: tek-tık geri al — restore öncesi otomatik alınan safeguard
+       yedeğini, kullanıcı yedek listesine gitmeden, doğrudan aynı önizleme akışına sokar. */
+    if(ok&&r.safeguardBackupId)h+='<button class="btn btn-g" onclick="rstUndoLastRestore()">'+ic('arc',13)+' Bu Restore\'u Geri Al</button>';
+    h+='<button class="btn btn-p" onclick="rstFinishModal()">Tamam</button></div>';
     showModal(h);return;
   }
   if(v==='error'){
@@ -239,6 +265,15 @@ function rstFinishModal(){
   rstLoadList();                                    // yeni before_restore yedegi listeye gelsin
 }
 window.rstFinishModal=rstFinishModal;
+/* RESTORE-UX-P1 madde 1: mevcut, zaten güvenli preview→confirm akışını safeguard yedeğine
+   yönlendirir — yeni bir "onaysız anında geri al" mekanizması İCAT EDİLMEDİ, yalnız
+   kullanıcının backup listesinde doğru ID'yi kendisi aramasına gerek kalmıyor. */
+function rstUndoLastRestore(){
+  var id=RESTORE_UI.report&&RESTORE_UI.report.safeguardBackupId;
+  if(!id)return;
+  rstOpenPreview(id);
+}
+window.rstUndoLastRestore=rstUndoLastRestore;
 /* closeModal (scrim) restore oturumunu guvenle iptal etsin (yalniz iptal edilebilir asamada). */
 function rstMaybeCancelSession(){
   if(RESTORE_UI.opId&&['PREPARING','VERIFYING','PREVIEW','AWAITING_CONFIRM'].indexOf(RESTORE.state)>=0){

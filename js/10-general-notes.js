@@ -157,6 +157,22 @@ function rstErrMsg(code){return RESTORE_ERR_TR[code]||'Beklenmeyen bir sorun olu
 function rstReasonLabel(r){return r==='manual'?'Manuel':(r==='daily'?'Otomatik':(String(r||'').indexOf('before_')===0?'Güvenlik':'Diğer'));}
 function rstReasonPill(r){var c=r==='manual'?'p-blue':(r==='daily'?'p-green':(String(r||'').indexOf('before_')===0?'p-orange':''));return '<span class="pill '+c+'" style="font-size:9px">'+rstReasonLabel(r)+'</span>';}
 function rstFmtBytes(b){b=Number(b||0);return b<1024?b+' B':(b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB');}
+/* RESTORE-UX-P1 madde 4: sağlık rozeti — YENİ bir verifyBackup/network çağrısı tetiklemez,
+   yalnız listBackups() ile zaten çekilmiş metadata'daki önbelleklenmiş healthStatus'u gösterir.
+   Hiç doğrulanmamış yedekler için "Doğrulanmadı" (sessizce 0 veya yanlış bir durum uydurulmaz). */
+function rstHealthBadge(m){
+  m=m||{};
+  if(!m.plainSha256||!m.blobSha256)
+    return '<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t2)">Legacy</span>';
+  var st=m.healthStatus;
+  if(!st)return '<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t3)">Doğrulanmadı</span>';
+  if(st==='Healthy')return '<span class="pill p-green" style="font-size:9px">Healthy</span>';
+  if(st==='Verified')return '<span class="pill p-blue" style="font-size:9px">Verified</span>';
+  if(st==='Suspect'||st==='Migration Required')return '<span class="pill p-orange" style="font-size:9px">'+U.esc(st)+'</span>';
+  if(st==='Legacy')return '<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t2)">Legacy</span>';
+  return '<span class="pill" style="font-size:9px;background:var(--red);color:#fff">'+U.esc(st)+'</span>';
+}
+window.rstHealthBadge=rstHealthBadge;
 function rstRisk(pv){
   var imp=pv&&pv.destructiveImpact, conf=pv&&pv.confidence, warns=(pv&&pv.warnings&&pv.warnings.length)||0;
   if(imp==='critical')return {key:'red',bg:'var(--red)',label:'Yüksek Riskli (yıkıcı)'};

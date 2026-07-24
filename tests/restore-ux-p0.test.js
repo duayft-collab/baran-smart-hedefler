@@ -205,15 +205,18 @@ describe('Restore Önizleme', () => {
 
   test('19b. Modül sırası: kritikler (wisdomQuotes, principles, goals) en üstte (revizyon)', () => {
     const sbx = createSandbox();
+    // Yalnız wisdomQuotes/principles kritik eşiği aşacak şekilde değiştirildi; goals/todos/
+    // habits/generalNotes/journal/logs SABİT (sıfır fark) tutuldu — aksi halde P1'in
+    // "Karşılaştırma" bloğu araya girip saf modül-sırası testini bozar (o ayrı test edildi).
     const current = basePayload({
       wisdomQuotes: arr(5, 'w'), principles: arr(5, 'p'), goals: arr(5, 'g'),
       generalNotes: arr(5, 'n'), journal: arr(5, 'j'), logs: arr(5, 'l'),
       todos: arr(5, 't'), habits: arr(5, 'h')
     });
     const backup = basePayload({
-      wisdomQuotes: arr(1, 'w'), principles: arr(1, 'p'), goals: arr(1, 'g'),
-      generalNotes: arr(1, 'n'), journal: arr(1, 'j'), logs: arr(1, 'l'),
-      todos: arr(1, 't'), habits: arr(1, 'h')
+      wisdomQuotes: arr(1, 'w'), principles: arr(1, 'p'), goals: arr(5, 'g'),
+      generalNotes: arr(5, 'n'), journal: arr(5, 'j'), logs: arr(5, 'l'),
+      todos: arr(5, 't'), habits: arr(5, 'h')
     });
     const pv = preview(sbx, current, backup);
     const html = renderPreviewHtml(sbx, pv);
