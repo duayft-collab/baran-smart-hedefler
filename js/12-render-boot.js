@@ -10,10 +10,12 @@ function renderPage(){
     generalnotes:renderGeneralNotes,
     restore:renderRestore,
     wisdom:renderWisdomQuotes,
-    quotes:function(){renderGenericList('quotes');},
     journal:function(){renderGenericList('journal');},
     principles:renderPrinciples, /* D10.5.1: eski generic liste emekli → İlkelerim (11d) */
     decisions:renderDecisions, /* P0-3: Karar Günlüğü */
+    /* QUOTES-CONSOLIDATION-P1 Step 4: legacy "Öz Sözler" ekranı kaldırıldı; eski/stale
+       'quotes' route'u güvenle Özlü Sözler'e (wisdom) yönlendirilir — boş sayfa yok. */
+    quotes:function(){ if(typeof gotoTab==='function'){gotoTab('wisdom');} else if(typeof renderWisdomQuotes==='function'){tab='wisdom';renderWisdomQuotes();} },
     coaching:function(){renderGenericList('coaching');},
     vault:function(){renderGenericList('vault');},
     questions:function(){renderGenericList('questions');},

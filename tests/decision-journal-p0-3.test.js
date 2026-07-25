@@ -370,7 +370,17 @@ describe('Regresyon', () => {
     assert.equal(sbx.D.principles.length, before + 1);
     assert.equal(sbx.D.principles[0].statement, 'Bağımsız ilke kaydı.');
   });
-  test('41. Goals UI dosyası dokunulmadı', () => {
-    assertUnchanged(['js/09-goals.js', 'public/js/09-goals.js']);
+  test('41. Goals render mantığı (goal/todo/habit/routine) davranışsal olarak korunur', () => {
+    // 09-goals.js QUOTES-CONSOLIDATION-P1 Step 4'te BİLİNÇLİ değişti: renderGenericList'in
+    // legacy 'quotes' dalı kaldırıldı (Goals'un kendi hedef/görev/alışkanlık mantığı DEĞİL).
+    // Bu değişikliğin kapsamı legacy-quotes-removal-p1-step4.test.js'te doğrulanıyor (diğer
+    // generic listeler + hedef render'ı korunur). Burada yalnız hedef mantığı fonksiyonlarının
+    // hâlâ tanımlı olduğunu statik doğrularız.
+    const fs = require('node:fs');
+    const src = fs.readFileSync(__dirname + '/../js/09-goals.js', 'utf8');
+    ['function openGoalDetail(', 'function renderTodos(', 'function renderHabits(',
+     'function renderRoutines(', 'function renderGenericList('].forEach(function(sig){
+      assert.ok(src.indexOf(sig) >= 0, 'goal-logic function lost: ' + sig);
+    });
   });
 });

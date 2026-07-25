@@ -93,6 +93,7 @@ function createSandbox() {
   run(src('js/06-restore-engine.js'), '06-restore-engine.js');
   run(src('js/11a-wisdom-quotes.js'), '11a-wisdom-quotes.js');
   run(src('js/11d-principles.js'), '11d-principles.js');
+  run(src('js/11g-wisdom-migration.js'), '11g-wisdom-migration.js');
   run(src('js/11h-relations.js'), '11h-relations.js');
   run(src('js/11i-decision-journal.js'), '11i-decision-journal.js');
   run(src('js/11j-decision-journal-ui.js'), '11j-decision-journal-ui.js');

@@ -512,8 +512,10 @@ function checkChallenge(id){
 window.openChallengeModal=openChallengeModal;window.startChallenge=startChallenge;window.checkChallenge=checkChallenge;
 
 function renderGenericList(type){
-  var cfg={quotes:{t:'Öz Sözler',i:'qt',keys:['text','author'],cardFn:function(i){return '<p style="font-size:13.5px;font-style:italic;line-height:1.7">&ldquo;'+U.esc(i.text)+'&rdquo;</p>'+(i.author?'<p style="font-size:11px;font-weight:700;color:var(--blue);margin-top:5px">&mdash; '+U.esc(i.author)+'</p>':'')+('<div style="display:flex;gap:5px;margin-top:8px">'+(i.cat?'<span class="pill p-blue" style="font-size:10px">'+U.esc(i.cat)+'</span>':'')+'<button class="btn btn-g btn-ic" style="width:22px;height:22px;margin-left:auto" data-qid="'+i.id+'" data-dtype="quote" onclick="del(+this.dataset.qid,this.dataset.dtype)">'+ic('trash',10,'var(--t3)')+'</button></div>');}},
-  journal:{t:'Günlük',i:'pen',keys:['text','cat'],cardFn:function(i){return '<p style="font-size:10.5px;color:var(--t3);margin-bottom:5px">'+U.esc(i.date||'')+(i.cat?' &bull; '+U.esc(i.cat):'')+'</p><p style="font-size:13px;line-height:1.6;color:var(--t)">'+U.esc(i.text)+'</p>'+'<div style="margin-top:8px"><button class="btn btn-g btn-ic" style="width:22px;height:22px" data-jid="'+i.id+'" data-dtype="journal" onclick="del(+this.dataset.jid,this.dataset.dtype)">'+ic('trash',10,'var(--t3)')+'</button></div>';}},
+  /* QUOTES-CONSOLIDATION-P1 Step 4: legacy 'quotes' generic-list branch removed (Öz Sözler
+     ekranı emekli → Özlü Sözler). Diğer generic listeler (journal/coaching/vault/questions)
+     aynen korunur. */
+  var cfg={journal:{t:'Günlük',i:'pen',keys:['text','cat'],cardFn:function(i){return '<p style="font-size:10.5px;color:var(--t3);margin-bottom:5px">'+U.esc(i.date||'')+(i.cat?' &bull; '+U.esc(i.cat):'')+'</p><p style="font-size:13px;line-height:1.6;color:var(--t)">'+U.esc(i.text)+'</p>'+'<div style="margin-top:8px"><button class="btn btn-g btn-ic" style="width:22px;height:22px" data-jid="'+i.id+'" data-dtype="journal" onclick="del(+this.dataset.jid,this.dataset.dtype)">'+ic('trash',10,'var(--t3)')+'</button></div>';}},
   coaching:{t:'Koçluk',i:'us',keys:['title','text','cat'],cardFn:function(i){return (i.cat?'<span class="pill p-green" style="font-size:10px;margin-bottom:6px;display:inline-flex">'+U.esc(i.cat)+'</span>':'')+'<p style="font-weight:700;font-size:13px;margin-bottom:4px">'+U.esc(i.title||'')+'</p><p style="font-size:12.5px;color:var(--t2);line-height:1.6">'+U.esc(i.text)+'</p>'+'<div style="margin-top:8px"><button class="btn btn-g btn-ic" style="width:22px;height:22px" data-cid="'+i.id+'" data-dtype="coaching" onclick="del(+this.dataset.cid,this.dataset.dtype)">'+ic('trash',10,'var(--t3)')+'</button></div>';}},
   vault:{t:'Bilgi Kasası',i:'arc',keys:['title','text','cat'],cardFn:function(i){return (i.cat?'<span class="pill p-orange" style="font-size:10px;margin-bottom:6px;display:inline-flex">'+U.esc(i.cat)+'</span>':'')+'<p style="font-weight:700;font-size:13px;margin-bottom:4px">'+U.esc(i.title||'')+'</p><p style="font-size:12.5px;color:var(--t2);line-height:1.6">'+U.esc(i.text)+'</p>'+'<div style="margin-top:8px"><button class="btn btn-g btn-ic" style="width:22px;height:22px" data-vid="'+i.id+'" data-dtype="vault" onclick="del(+this.dataset.vid,this.dataset.dtype)">'+ic('trash',10,'var(--t3)')+'</button></div>';}},
   questions:{t:'Soru Kasası',i:'qt',keys:['text'],cardFn:function(i){return '<p style="font-size:14px;font-style:italic;line-height:1.7;color:var(--t)">&ldquo;'+U.esc(i.text)+'&rdquo;</p>'+'<div style="margin-top:8px"><button class="btn btn-g btn-ic" style="width:22px;height:22px" data-qsid="'+i.id+'" data-dtype="question" onclick="del(+this.dataset.qsid,this.dataset.dtype)">'+ic('trash',10,'var(--t3)')+'</button></div>';}},
@@ -521,21 +523,6 @@ function renderGenericList(type){
   var c=cfg[type];if(!c)return;
   var list=fil(D[type]||[],c.keys);
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">'+c.t+'</h1></div><button class="btn btn-p" data-type="'+type+'" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Ekle</button></div>';
-  /* Category filter for quotes */
-  if(type==='quotes'){
-    var cats=['Tumu','Odak','Disiplin','Hedef','Gelişim','Zaman','Liderlik','Başarı','Vizyon','Zihin','Cesaret','Üretkenlik','Yönetim'];
-    var activeCat=window._qcat||'Tumu';
-    h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">';
-    cats.forEach(function(ct){
-      var on=activeCat===ct;
-      h+='<button class="btn btn-sm" style="background:'+(on?'var(--blue)':'var(--s2)')+';color:'+(on?'#fff':'var(--t2)')+';font-size:11px" data-ct="'+ct+'" onclick="window._qcat=this.dataset.ct;renderPage()">'+ct+'</button>';
-    });
-    h+='</div>';
-    if(activeCat!=='Tumu') list=list.filter(function(q){return q.cat===activeCat;});
-    /* Random quote highlight */
-    var rq2=rndQuote(activeCat==='Tumu'?null:activeCat);
-    if(rq2) h+='<div style="padding:18px 20px;border-radius:14px;background:linear-gradient(135deg,var(--bl),rgba(175,82,222,.07));border:1px solid rgba(0,113,227,.15);margin-bottom:16px"><p style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">&#10024; Anin Sözu</p><p style="font-size:15px;font-style:italic;line-height:1.75">&ldquo;'+U.esc(rq2.text)+'&rdquo;</p>'+(rq2.author?'<p style="font-size:12px;font-weight:700;color:var(--blue);margin-top:8px">&mdash; '+U.esc(rq2.author)+'</p>':'')+'</div>';
-  }
   if(!list.length)h+='<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">'+ic(c.i,32,'var(--t3)')+'<p style="font-weight:700;font-size:16px">Henüz eklenmedi</p></div>';
   else{h+='<div class="ga">';list.forEach(function(i){h+='<div class="card cp">'+c.cardFn(i)+'</div>';});h+='</div>';}
   h+='</div>';sh('pinner',h);
