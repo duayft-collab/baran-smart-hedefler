@@ -13,6 +13,7 @@ function renderPage(){
     quotes:function(){renderGenericList('quotes');},
     journal:function(){renderGenericList('journal');},
     principles:renderPrinciples, /* D10.5.1: eski generic liste emekli → İlkelerim (11d) */
+    decisions:renderDecisions, /* P0-3: Karar Günlüğü */
     coaching:function(){renderGenericList('coaching');},
     vault:function(){renderGenericList('vault');},
     questions:function(){renderGenericList('questions');},

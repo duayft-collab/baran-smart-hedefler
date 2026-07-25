@@ -245,7 +245,7 @@ function openPrincipleForm(id){
   showModal(h);
   PRINCIPLE_DRAFT.open=true; PRINCIPLE_DRAFT.id=id||null; PRINCIPLE_DRAFT.original=_pFormSnapshot(); PRINCIPLE_DRAFT.current=PRINCIPLE_DRAFT.original; PRINCIPLE_DRAFT.dirty=false;
 }
-function pFormCancel(){ pClearDraft(); sh('modal-root',''); }
+function pFormCancel(){ pClearDraft(); window._pAfterSave=null; sh('modal-root',''); }
 
 function pFormSave(id){
   var g=function(k){var el=document.getElementById(k);return el?(el.type==='checkbox'?!!el.checked:el.value):'';};
@@ -279,6 +279,10 @@ function pFormSave(id){
   else { D.principles.unshift(norm); }
   pClearDraft();
   if(typeof save==='function')save();
+  /* P0-3: genel "kayıttan sonra" kancası — Decision Journal'ın "Yeni İlke Oluştur" akışı
+     kullanır (relation'ı yalnız gerçek kayıttan sonra kurmak için). Principles kendi
+     başına decisions'ı bilmez; bu tek satır jenerik bir extension point'tir. */
+  if(typeof window._pAfterSave==='function'){ var _cb=window._pAfterSave; window._pAfterSave=null; try{_cb(norm);}catch(e){} }
   sh('modal-root','');
   renderPrinciples();
 }

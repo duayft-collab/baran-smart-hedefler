@@ -9,6 +9,9 @@
 
 var DEC_STATUS=['open','resolved','archived'];
 var DEC_RESULT=['better_than_expected','as_expected','worse_than_expected','inconclusive'];
+/* P0-3: karar formunun istediği iki alan P0-2 şemasında yoktu (context, confidence) —
+   additive genişletme; mevcut kayıtlarda yoksa null kalır, decisionResolve/status'a dokunmaz. */
+var DEC_CONFIDENCE=['low','medium','high'];
 var DEC_DEFAULT_REVIEW_DAYS=30;
 
 function decList(){ if(!Array.isArray(D.decisions))D.decisions=[]; return D.decisions; }
@@ -51,6 +54,8 @@ function decisionCreate(input){
     id:newDecisionId(),
     title:input.title?String(input.title).slice(0,140):_decShortTitle(decision),
     decision:decision,
+    context:input.context!=null?String(input.context):'',
+    confidence:(input.confidence!=null&&DEC_CONFIDENCE.indexOf(input.confidence)>=0)?input.confidence:null,
     options:options,
     chosenOption:input.chosenOption!=null?String(input.chosenOption):'',
     status:'open',
@@ -76,9 +81,10 @@ function decisionUpdate(id,patch){
   var r=decisionById(id);
   if(!r)return {ok:false,error:'NOT_FOUND'};
   patch=patch||{};
-  ['title','decision','chosenOption','expectedOutcome','evidenceLink','evidenceNote','reviewAt'].forEach(function(k){
+  ['title','decision','context','chosenOption','expectedOutcome','evidenceLink','evidenceNote','reviewAt'].forEach(function(k){
     if(patch[k]!=null)r[k]=String(patch[k]);
   });
+  if(patch.confidence!=null&&DEC_CONFIDENCE.indexOf(patch.confidence)>=0)r.confidence=patch.confidence;
   if(Array.isArray(patch.options))r.options=patch.options;
   if(Array.isArray(patch.tags))r.tags=patch.tags.map(String);
   r.updatedAt=_decNow();
@@ -102,6 +108,18 @@ function decisionResolve(id,input){
   return {ok:true,decision:r};
 }
 
+/* P0-3: arşivleme decisionResolve/decisionUpdate'in kapsamı dışında (ikisi de status
+   değiştirmez/yalnız 'resolved' yapar) — yeni, dar kapsamlı fonksiyon. Kayıt/ilişkiler
+   KORUNUR (madde 10), yalnız status='archived' ve updatedAt değişir. */
+function decisionArchive(id){
+  var r=decisionById(id);
+  if(!r)return {ok:false,error:'NOT_FOUND'};
+  r.status='archived';
+  r.updatedAt=_decNow();
+  return {ok:true,decision:r};
+}
+window.decisionArchive=decisionArchive;
+
 function decisionDelete(id){
   var before=decList().length;
   D.decisions=decList().filter(function(x){return String(x.id)!==String(id);});
@@ -113,7 +131,7 @@ function decisionDelete(id){
 function decisionIsReviewDue(dec){ return dec.status==='open'&&!!dec.reviewAt&&dec.reviewAt<=_decNow(); }
 function decisionsReviewDue(){ return decList().filter(decisionIsReviewDue); }
 
-window.DEC_STATUS=DEC_STATUS; window.DEC_RESULT=DEC_RESULT;
+window.DEC_STATUS=DEC_STATUS; window.DEC_RESULT=DEC_RESULT; window.DEC_CONFIDENCE=DEC_CONFIDENCE;
 window.newDecisionId=newDecisionId;
 window.decisionCreate=decisionCreate; window.decisionUpdate=decisionUpdate;
 window.decisionDelete=decisionDelete; window.decisionResolve=decisionResolve;

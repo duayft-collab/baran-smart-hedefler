@@ -181,8 +181,11 @@ describe('Regresyon — dokunulmaması gereken dosyalar', () => {
   test('21. Restore Engine / Restore UI dokunulmadı', () => {
     assertUnchanged(['js/06-restore-engine.js', 'js/11-restore-ui.js', 'public/js/06-restore-engine.js', 'public/js/11-restore-ui.js']);
   });
-  test('22. General Notes / Wisdom / Principles UI dokunulmadı', () => {
-    assertUnchanged(['js/11a-wisdom-quotes.js', 'js/11b-wisdom-display.js', 'js/11c-wisdom-io.js', 'js/11d-principles.js', 'js/11f-principles-display.js', 'js/11g-wisdom-migration.js']);
+  test('22. General Notes / Wisdom UI dokunulmadı', () => {
+    // 11d-principles.js P0-3'te BİLİNÇLİ olarak dokunuldu (genel _pAfterSave kancası,
+    // 2 satır) — decision-journal-p0-3.test.js'in kendi regresyon/relations testleri
+    // bu değişikliğin davranışı bozmadığını doğruluyor (bkz. testler 30/31/40).
+    assertUnchanged(['js/11a-wisdom-quotes.js', 'js/11b-wisdom-display.js', 'js/11c-wisdom-io.js', 'js/11f-principles-display.js', 'js/11g-wisdom-migration.js']);
   });
   test('23. 11h-relations.js dokunulmadı (yeni resolver ayrı dosyada kaydedildi)', () => {
     assertUnchanged(['js/11h-relations.js', 'public/js/11h-relations.js']);

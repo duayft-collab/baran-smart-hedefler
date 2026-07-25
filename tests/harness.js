@@ -24,13 +24,30 @@ function createSandbox() {
   };
 
   const capturedModals = [];
+  const capturedAlerts = [];
+  // P0-3: lazily-created mutable stub elements, shared by ge()/document.getElementById()/sh(),
+  // so decision-journal-ui form functions (which read ge('field_id').value like real DOM code)
+  // can be driven from tests without a real DOM. Does not change behavior for any prior
+  // suite: none of them ever call ge()/getElementById() with an id expecting a real value.
+  const elements = {};
+  function getEl(id) {
+    if (!Object.prototype.hasOwnProperty.call(elements, id)) {
+      elements[id] = { id, value: '', checked: false, textContent: '', innerHTML: '', className: '',
+        dataset: {}, style: {}, classList: { add() {}, remove() {}, toggle() {} },
+        focus() {}, addEventListener() {}, appendChild() {}, querySelectorAll() { return []; } };
+    }
+    return elements[id];
+  }
+  let confirmReturn = true;
   const sandbox = {
     console,
     localStorage,
     navigator: { onLine: true },
+    confirm(msg) { return typeof sandbox.window.__confirmImpl === 'function' ? sandbox.window.__confirmImpl(msg) : confirmReturn; },
+    alert(msg) { capturedAlerts.push(msg); },
     document: {
       createElement() { return { style: {}, setAttribute() {}, appendChild() {}, addEventListener() {} }; },
-      getElementById() { return null; },
+      getElementById(id) { return getEl(id); },
       body: { appendChild() {}, removeChild() {} },
       addEventListener() {}
     },
@@ -49,8 +66,10 @@ function createSandbox() {
     setInterval,
     clearInterval,
     // UI stubs — production render functions call these; we capture what matters
-    ge() { return null; },
-    sh() {},
+    ge(id) { return getEl(id); },
+    sh(id, html) { const e = getEl(id); e.innerHTML = html; },
+    snap() {},
+    save() {},
     showModal(html) { capturedModals.push(html); sandbox.window.__lastModalHtml = html; },
     closeModal() {},
     render() {},
@@ -76,6 +95,7 @@ function createSandbox() {
   run(src('js/11d-principles.js'), '11d-principles.js');
   run(src('js/11h-relations.js'), '11h-relations.js');
   run(src('js/11i-decision-journal.js'), '11i-decision-journal.js');
+  run(src('js/11j-decision-journal-ui.js'), '11j-decision-journal-ui.js');
 
   // 10-general-notes.js: extract only the RESTORE_UI / rstRisk block (rest of the file
   // is unrelated "Genel Notlar" feature code with its own DOM-heavy dependencies).
@@ -96,6 +116,9 @@ function createSandbox() {
   run(src('js/11-restore-ui.js'), '11-restore-ui.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
+  sandbox.__getCapturedAlerts = () => capturedAlerts;
+  sandbox.__getElements = () => elements;
+  sandbox.__setConfirm = (fn) => { sandbox.window.__confirmImpl = fn; };
   return sandbox;
 }
 
