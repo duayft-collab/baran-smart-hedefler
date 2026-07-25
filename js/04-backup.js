@@ -83,7 +83,7 @@ function countRecords(p){
   var c={goals:n('goals'),todos:n('todos'),habits:n('habits'),journal:n('journal'),
     quotes:n('quotes'),routines:n('routines'),kpis:n('kpis'),logs:n('logs'),
     wisdomQuotes:n('wisdomQuotes'),principles:n('principles'),generalNotes:n('generalNotes'),
-    relations:n('relations')};
+    relations:n('relations'),decisions:n('decisions')};
   var t=0;Object.keys(p).forEach(function(k){
     var v=p[k];
     if(Array.isArray(v))t+=v.length;
@@ -480,6 +480,7 @@ var DIFF_SCHEMA={
     {field:'generalNotes',identity:'id'},
     {field:'wisdomQuotes',identity:'id'},
     {field:'relations',identity:'id'},
+    {field:'decisions',identity:'id'},
     {field:'logs',identity:'content'}
   ],
   objects:['routines','timeblocks','weeklyReview','oneThing','compat','savedResources','stats','wisdomSettings','principleSettings','contentDisplaySettings','principleDisplaySettings','migrations'],

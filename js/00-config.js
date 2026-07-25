@@ -106,6 +106,7 @@ var GOAL_CB={İş:'var(--bl)',Kişisel:'var(--pl)',Sağlık:'var(--gl)',Finans:'
 var INIT={
   goals:[{id:1,title:'Ingilizce C1 Sertifikasyonu',desc:'Uluslararasi projelerde liderlik.',cat:'Gelişim',quarter:'Q1',frog:true,deadline:'2026-12-31',measurable:'IELTS 7.5',steps:[{id:101,t:'Kursa kayit ol',done:true},{id:102,t:'Haftalık essay yaz',done:false}],notes:'',status:'active',createdAt:'2026-01-01'}],
   relations:[],                                       // PERSONAL-KNOWLEDGE-P0-1: koleksiyonlar arası ilişki tablosu (bilerek boş, INIT.goals gibi örnek veri YOK)
+  decisions:[],                                        // PERSONAL-KNOWLEDGE-P0-2: Decision Journal (bilerek boş)
   todos:[{id:11,text:'Raporu teslim et',priority:'urgent',category:'İş',end:'2026-04-15',done:false},{id:12,text:'Haftalık planlama',priority:'high',category:'İş',end:'',done:false}],
   kpis:[{id:201,name:'Haftalık Odak Saati',unit:'saat',target:40,current:28,cat:'İş',hist:[22,25,28]},{id:202,name:'Günlük Sayfa',unit:'sayfa',target:20,current:14,cat:'Gelişim',hist:[8,12,14]}],
   mybooks:[],
