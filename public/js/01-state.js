@@ -3,7 +3,14 @@ function loadData(){
     var s=localStorage.getItem('fu7');
     if(s){
       var p=JSON.parse(s);
-      return Object.assign({},INIT,p,{
+      /* STATE-CORE-ALIAS-01 fix: Object.assign({},INIT,p) shares INIT's array/object
+         REFERENCE for every field ABSENT from the payload (aliasing). When a deploy adds a
+         new field to INIT (while the saved payload predates it), D.field === INIT.field and
+         a user edit mutates the shared module-level INIT. Deep-cloning the result once
+         guarantees no field shares a reference with INIT (values stay identical; only the
+         shared reference is broken). loadData runs once at boot — the extra clone is
+         negligible. */
+      return JSON.parse(JSON.stringify(Object.assign({},INIT,p,{
         routines:Object.assign({},INIT.routines,p.routines||{}),
         stats:Object.assign({},INIT.stats,p.stats||{}),
         compat:Object.assign({},INIT.compat,p.compat||{}),
@@ -15,7 +22,7 @@ function loadData(){
           p.contentDisplaySettings||{}),
         principleDisplaySettings:Object.assign({},INIT.principleDisplaySettings,p.principleDisplaySettings||{}), // D10.5.2
         migrations:Object.assign({},INIT.migrations,p.migrations||{}), // D10.6.1: migration marker'ları (payload korunur; buildStateFromPayload'a EKLENMEZ — fix2)
-      });
+      })));
     }
   }catch(e){}
   return JSON.parse(JSON.stringify(INIT));
@@ -334,11 +341,15 @@ function writeLocal(ts){
    Karsilastirmada da kullanilir; boylece INIT ile birlesmeden dogan alan farki
    sahte tutarsizlik uretmez. */
 function buildStateFromPayload(payload){
-  return Object.assign({},INIT,payload||{}, {
+  /* STATE-CORE-ALIAS-01 fix: deep-clone so the returned state shares no reference with INIT
+     (removes the aliasing risk for fields absent from the payload). Values are preserved
+     exactly; canonicalStringify is unchanged, so samePayloadAsLocal comparison stays the
+     same. mergeRemotePayload assigns this to D, so the remote-apply path is safe too. */
+  return JSON.parse(JSON.stringify(Object.assign({},INIT,payload||{}, {
     routines:Object.assign({},INIT.routines,(payload&&payload.routines)||{}),
     stats:Object.assign({},INIT.stats,(payload&&payload.stats)||{}),
     compat:Object.assign({},INIT.compat,(payload&&payload.compat)||{})
-  });
+  })));
 }
 function mergeRemotePayload(payload){D=buildStateFromPayload(payload);}
 /* Uzak payload ile mevcut yerel state ayni mi? Anahtar sirasina duyarli
