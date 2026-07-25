@@ -1,11 +1,39 @@
+/* RESTORE-UX-P2 madde 2: gerçek BACKUP_REASONS (js/03-auth.js) değerlerine dayalı filtreler.
+   'migration' (bare, hiçbir kod yolu tarafından fiilen üretilmiyor) ve gelecekte çıkabilecek
+   herhangi bilinmeyen bir reason, isimlendirilmemiş oldukları için 'other' altına düşer —
+   gizlenmez, "Diğer" filtresinde görünür kalır. */
+var RST_FILTER_DEFS=[
+  {key:'all',label:'Tümü'},
+  {key:'manual',label:'Manuel',reason:'manual'},
+  {key:'daily',label:'Otomatik',reason:'daily'},
+  {key:'before_restore',label:'Restore Öncesi',reason:'before_restore'},
+  {key:'before_migration',label:'Migration Öncesi',reason:'before_migration'},
+  {key:'before_import',label:'Import Öncesi',reason:'before_import'},
+  {key:'before_conflict_overwrite',label:'Conflict Overwrite Öncesi',reason:'before_conflict_overwrite'},
+  {key:'emergency',label:'Acil',reason:'before_bulk_delete'},
+  {key:'other',label:'Diğer'}
+];
+var RST_NAMED_REASONS=RST_FILTER_DEFS.filter(function(f){return f.reason;}).map(function(f){return f.reason;});
+function rstMatchesFilter(m,key){
+  if(key==='all')return true;
+  if(key==='other')return RST_NAMED_REASONS.indexOf(m.reason)<0;
+  var def=RST_FILTER_DEFS.filter(function(f){return f.key===key;})[0];
+  return !!def&&m.reason===def.reason;
+}
+function rstFilterCounts(){
+  var backups=RESTORE_UI.backups||[],counts={};
+  RST_FILTER_DEFS.forEach(function(f){counts[f.key]=backups.filter(function(m){return rstMatchesFilter(m,f.key);}).length;});
+  return counts;
+}
 function renderRestore(){
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Yedekler / Geri Yükleme</h1><p class="sh-sub">Bir yedek seç, önizle ve güvenle geri yükle. Geri yükleme öncesi otomatik güvenlik yedeği alınır.</p></div>';
   h+='<button class="btn btn-g" onclick="rstLoadList()">'+ic('ci',13)+' Yenile</button></div>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">';
   h+='<input class="inp" id="rst_search" style="max-width:280px" placeholder="Yedeklerde ara (açıklama, tarih, tip)..." value="'+U.esc(RESTORE_UI.query)+'" oninput="rstSetQuery(this.value)">';
   h+='<div style="display:flex;gap:4px;flex-wrap:wrap">';
-  [['all','Tümü'],['manual','Manuel'],['daily','Otomatik'],['before_restore','Güvenlik']].forEach(function(f){var a=RESTORE_UI.filter===f[0];
-    h+='<button class="btn btn-sm" style="background:'+(a?'var(--blue)':'var(--s2)')+';color:'+(a?'#fff':'var(--t2)')+'" data-v="'+f[0]+'" onclick="rstSetFilter(this.dataset.v)">'+f[1]+'</button>';});
+  var counts=rstFilterCounts();
+  RST_FILTER_DEFS.forEach(function(f){var a=RESTORE_UI.filter===f.key;
+    h+='<button class="btn btn-sm" style="background:'+(a?'var(--blue)':'var(--s2)')+';color:'+(a?'#fff':'var(--t2)')+'" data-v="'+f.key+'" onclick="rstSetFilter(this.dataset.v)">'+f.label+' ('+(counts[f.key]||0)+')</button>';});
   h+='</div></div>';
   h+='<div id="rst_list"></div></div>';
   sh('pinner',h);
@@ -24,9 +52,7 @@ window.rstLoadList=rstLoadList;
 function rstFilteredBackups(){
   var q=RESTORE_UI.query.trim().toLocaleLowerCase('tr'),f=RESTORE_UI.filter;
   return RESTORE_UI.backups.filter(function(m){
-    if(f==='manual'&&m.reason!=='manual')return false;
-    if(f==='daily'&&m.reason!=='daily')return false;
-    if(f==='before_restore'&&m.reason!=='before_restore')return false;
+    if(!rstMatchesFilter(m,f))return false;
     if(!q)return true;
     var hay=((m.label||'')+' '+(m.reason||'')+' '+rstReasonLabel(m.reason)+' '+_gnDate(m.createdAtClient)).toLocaleLowerCase('tr');
     return hay.indexOf(q)>=0;
@@ -58,7 +84,13 @@ function renderRestoreList(){
 }
 window.renderRestoreList=renderRestoreList;
 function rstSetQuery(v){RESTORE_UI.query=v;renderRestoreList();}
-function rstSetFilter(v){RESTORE_UI.filter=v;renderRestore();}
+/* RESTORE-UX-P2: filtre değişimi açık bir onay/önizleme oturumunu YARIM bırakmaz — varsa
+   önce güvenle iptal edilir (cancelRestore, mevcut motor), sonra filtre değişir. Bu, "filtre
+   değişince seçili backup yanlışlıkla restore edilmez" kuralının doğrudan uygulanışı. */
+function rstSetFilter(v){
+  if(RESTORE_UI.opId){try{cancelRestore(RESTORE_UI.opId);}catch(e){}RESTORE_UI.opId=null;RESTORE_UI.preview=null;sh('modal-root','');rstResetConfirmState();}
+  RESTORE_UI.filter=v;renderRestore();
+}
 window.rstSetQuery=rstSetQuery;window.rstSetFilter=rstSetFilter;
 /* ── Önizleme + onay ── */
 async function rstOpenPreview(backupId){
@@ -90,16 +122,45 @@ var RST_MODULE_TIER_BREAKS={'generalNotes':1,'todos':1};   // bu alandan önce g
 var RST_MODULE_LABELS={goals:'Hedefler',todos:'Görevler',habits:'Alışkanlıklar',journal:'Günlük',
   quotes:'Öz Sözler (Legacy)',wisdomQuotes:'Özlü Sözler',principles:'İlkeler',generalNotes:'Genel Notlar',
   logs:'Kayıtlar',kpis:'KPI',routines:'Rutinler'};
+/* RESTORE-UX-P2: cur/tgt hesaplaması artık paylaşılan tek yerden (P0'da rstModuleRow'a
+   gömülüydü, P2'nin sonuç-özeti de aynı hesaba ihtiyaç duyunca çıkarıldı — motor DEĞİŞMEDİ,
+   yalnız zaten var olan perModule alanlarından türetilen saf aritmetik. */
+function rstModuleCurTgt(d){
+  return {cur:(d.unchanged||0)+(d.changed||0)+(d.removed||0), tgt:(d.unchanged||0)+(d.changed||0)+(d.added||0)};
+}
 /* Sifir-fark modul de gizlenmez ("Degisiklik yok" olarak isaretlenir) — RESTORE-UX-P0 madde 2. */
 function rstModuleRow(pv,field,label){
   var d=pv.perModule&&pv.perModule[field];if(!d)return '';
-  var cur=(d.unchanged||0)+(d.changed||0)+(d.removed||0), tgt=(d.unchanged||0)+(d.changed||0)+(d.added||0);
+  var ct=rstModuleCurTgt(d);
   var noChange=!d.added&&!d.removed&&!d.changed;
   var right=noChange
-    ? '<span style="color:var(--t3)">Değişiklik yok ('+cur+')</span>'
-    : '<span style="color:var(--t3)">'+cur+' → '+tgt+' &nbsp;(+'+d.added+' / −'+d.removed+' / ~'+d.changed+')</span>';
+    ? '<span style="color:var(--t3)">Değişiklik yok ('+ct.cur+')</span>'
+    : '<span style="color:var(--t3)">'+ct.cur+' → '+ct.tgt+' &nbsp;(+'+d.added+' / −'+d.removed+' / ~'+d.changed+')</span>';
   return '<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0"><span style="color:var(--t2)">'+label+'</span>'+right+'</div>';
 }
+/* RESTORE-UX-P2 madde 1: restore sonuç ekranı için modül-bazlı özet satırı (3 satırlı,
+   daha belirgin format). Yalnız RESTORE_UI.preview.perModule'ü (zaten hesaplanmış, motor
+   tarafından üretilmiş veri) okur — yeniden diff hesaplama YOK. */
+function rstResultModuleRow(field,label,d){
+  var ct=rstModuleCurTgt(d);
+  return '<div class="card" style="padding:8px 10px;margin-bottom:6px">'
+    +'<p style="font-size:11.5px;font-weight:700;color:var(--t2);margin-bottom:2px">'+U.esc(label)+'</p>'
+    +'<p style="font-size:13.5px;font-weight:800">'+ct.cur+' → '+ct.tgt+'</p>'
+    +'<p style="font-size:10.5px;color:var(--t3);margin-top:1px">+'+(d.added||0)+' / −'+(d.removed||0)+' / ~'+(d.changed||0)+'</p>'
+    +'</div>';
+}
+function rstResultModuleRows(perModule,showAll){
+  var rows='';
+  RST_MODULE_ORDER.forEach(function(f){
+    var d=perModule&&perModule[f];if(!d)return;
+    var changed=!!(d.added||d.removed||d.changed);
+    if(!showAll&&!changed)return;               // kompakt: yalnız gerçekten değişenler
+    rows+=rstResultModuleRow(f,RST_MODULE_LABELS[f]||f,d);
+  });
+  return rows;
+}
+function rstToggleResultShowAll(){ RESTORE_UI.resultShowAll=!RESTORE_UI.resultShowAll; renderRestoreModal(); }
+window.rstToggleResultShowAll=rstToggleResultShowAll;
 function renderRestoreModal(){
   var v=RESTORE_UI.view,h='';
   if(v==='loading'){showModal('<div style="padding:34px;text-align:center;color:var(--t3)">Önizleme hazırlanıyor…</div>');return;}
@@ -196,6 +257,17 @@ function renderRestoreModal(){
     if(dur!=null)h+=row('Süre',dur+' sn');
     h+=row('Doğrulandı',r.commitVerified?'Evet ✓':'—');
     h+='</div>';
+    /* RESTORE-UX-P2 madde 1: yalnız committed VE elimizde eşleşen bir preview varsa göster.
+       Preview yoksa (örn. sayfa yenilendi) sahte/eksik bir özet UYDURULMAZ. */
+    if(ok&&RESTORE_UI.preview&&RESTORE_UI.preview.perModule){
+      var showAll=!!RESTORE_UI.resultShowAll;
+      var resultRows=rstResultModuleRows(RESTORE_UI.preview.perModule,showAll);
+      if(resultRows){
+        h+='<p style="font-size:11px;font-weight:700;color:var(--t2);margin:12px 0 6px">Modül Değişiklikleri</p>';
+        h+=resultRows;
+        h+='<button class="btn btn-g btn-sm" onclick="rstToggleResultShowAll()" style="margin-bottom:12px">'+(showAll?'Yalnız değişenleri göster':'Tüm modülleri göster')+'</button>';
+      }
+    }
     h+='<div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap">';
     /* RESTORE-UX-P1 madde 1: tek-tık geri al — restore öncesi otomatik alınan safeguard
        yedeğini, kullanıcı yedek listesine gitmeden, doğrudan aynı önizleme akışına sokar. */
@@ -228,7 +300,7 @@ function rstUpdateGoButton(){
 function rstToggleAccept(ch){RESTORE_UI.accepted=!!ch;rstUpdateGoButton();}
 function rstSetConfirmText(v){RESTORE_UI.confirmText=v;rstUpdateGoButton();}
 /* Önizleme her yenilendiğinde veya modal kapandığında eski onay/typed-confirm geçersiz olmalı. */
-function rstResetConfirmState(){RESTORE_UI.accepted=false;RESTORE_UI.confirmText='';}
+function rstResetConfirmState(){RESTORE_UI.accepted=false;RESTORE_UI.confirmText='';RESTORE_UI.resultShowAll=false;}
 window.rstToggleAccept=rstToggleAccept;window.rstSetConfirmText=rstSetConfirmText;window.rstResetConfirmState=rstResetConfirmState;
 function rstStartProgress(){rstStopProgress();RESTORE_UI.progressTimer=setInterval(function(){if(RESTORE_UI.stage!==RESTORE.state){RESTORE_UI.stage=RESTORE.state;if(RESTORE_UI.view==='progress')renderRestoreModal();}},120);}
 function rstStopProgress(){if(RESTORE_UI.progressTimer){clearInterval(RESTORE_UI.progressTimer);RESTORE_UI.progressTimer=null;}}
