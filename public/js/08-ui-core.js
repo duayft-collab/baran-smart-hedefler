@@ -213,7 +213,7 @@ function renderDashboard(){
   var tbDone=D.timeblocks&&D.timeblocks[today]&&D.timeblocks[today].length>0;
   var rqDone=D.weeklyReview&&D.weeklyReview.updatedAt===today;
   var frog=urgentTodos[0]||D.todos.find(function(t){return !t.done;});
-  var rq=D.quotes.length?D.quotes[Math.floor(Math.random()*D.quotes.length)]:null;
+  var rq=rndQuote(); // QUOTES-CONSOLIDATION-P1: "Quote of the Day" now sources from wisdomQuotes (canonical adapter)
 
   var h='<div class="fade">';
   if(typeof wisdomHeroHtml==='function')h+=wisdomHeroHtml(); // D10.2: pozisyon 'hero' ise Bilgelik kartı (additive)

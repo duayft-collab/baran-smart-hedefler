@@ -29,19 +29,45 @@ function loadData(){
 }
 
 // ─── Quote helpers ───────────────────────────────────────────────────────────
-function rndQuote(cat){
-  var pool = cat ? D.quotes.filter(function(q){return q.cat===cat;}) : D.quotes;
-  if(!pool.length) pool = D.quotes;
+/* QUOTES-CONSOLIDATION-P1 Step 3: all runtime quote DISPLAY now sources from the canonical
+   D.wisdomQuotes collection. Legacy D.quotes is display-dead (kept only for backup/diff/
+   migration compatibility until Step 4). Single canonical adapter — no per-screen selection
+   logic, no dual-source fallback. */
+function getActiveWisdomQuotes(){
+  var list = Array.isArray(D.wisdomQuotes) ? D.wisdomQuotes : [];
+  return list.filter(function(w){ return w && w.active!==false && String(w.quote==null?'':w.quote).trim(); });
+}
+function getWisdomQuoteDisplayText(rec){ return rec ? String(rec.quote==null?'':rec.quote) : ''; }
+function getWisdomQuoteAuthor(rec){ return (rec && rec.author!=null) ? String(rec.author) : ''; }
+/* Random active wisdom quote, optionally filtered by category. Falls back to the full active
+   pool if the category has no match — never to D.quotes. Returns a raw wisdom record or null. */
+function getRandomWisdomQuote(cat){
+  var pool = getActiveWisdomQuotes();
+  if(cat){ var byCat = pool.filter(function(w){ return w.category===cat; }); if(byCat.length) pool = byCat; }
   return pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+}
+/* Back-compatible display shape {id,_source,text,author,cat} for existing callers that read
+   .text/.author/.cat. Sources ONLY from wisdomQuotes; null when the active pool is empty. */
+function rndQuote(cat){
+  var rec = getRandomWisdomQuote(cat);
+  if(!rec) return null;
+  return { id:rec.id, _source:'wisdomQuotes', text:getWisdomQuoteDisplayText(rec), author:getWisdomQuoteAuthor(rec), cat:rec.category||'' };
 }
 function quoteWidget(cat, accent){
   var q = rndQuote(cat);
-  if(!q) return '';
+  if(!q) return '';                                   // neutral empty state, no crash, no D.quotes fallback
   var ac = accent || 'var(--blue)';
   return '<div style="padding:14px 18px;border-radius:12px;background:var(--s2);border-left:3px solid '+ac+';margin-bottom:16px">'
     + '<p style="font-size:13px;font-style:italic;line-height:1.7;color:var(--t)">&ldquo;'+U.esc(q.text)+'&rdquo;</p>'
     + (q.author ? '<p style="font-size:11px;font-weight:700;color:'+ac+';margin-top:6px">&mdash; '+U.esc(q.author)+'</p>' : '')
-    + '<p style="font-size:10px;color:var(--t3);margin-top:3px">'+U.esc(q.cat)+'</p></div>';
+    + (q.cat ? '<p style="font-size:10px;color:var(--t3);margin-top:3px">'+U.esc(q.cat)+'</p>' : '') + '</div>';
+}
+if(typeof window!=='undefined'){
+  window.getActiveWisdomQuotes=getActiveWisdomQuotes;
+  window.getWisdomQuoteDisplayText=getWisdomQuoteDisplayText;
+  window.getWisdomQuoteAuthor=getWisdomQuoteAuthor;
+  window.getRandomWisdomQuote=getRandomWisdomQuote;
+  window.rndQuote=rndQuote; window.quoteWidget=quoteWidget;
 }
 var D=loadData();
 
