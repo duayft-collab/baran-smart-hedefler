@@ -117,7 +117,11 @@ window.wdCopy=wdCopy;window.wdShare=wdShare;
 function _wdCats(){ var s={}; (D.wisdomQuotes||[]).forEach(function(q){if(q.category)s[q.category]=1;}); return Object.keys(s).sort(function(a,b){return a.localeCompare(b,'tr');}); }
 function wisdomDisplayPanelHtml(){
   var s=wsGet(), cds=(typeof cdGet==='function')?cdGet():{};
-  var h='<div class="card" style="padding:12px 14px;margin-bottom:14px"><p style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:8px">'+ic('qt',12)+' Özlü Söz Gösterim Ayarları</p>';
+  /* QUOTES-CONSOLIDATION-P1 Step 5A: native <details> — varsayılan KAPALI. Rotasyon/gösterim
+     tercihleri + gösterim-kategori/dil filtreleri + türetilmiş istatistikler burada katlı
+     durur; katlanma/açılma native (0 JS, 0 write). Liste-kategori filtresi (renderWisdomQuotes)
+     ayrıdır ve her zaman görünür. */
+  var h='<details class="card" style="padding:12px 14px;margin-bottom:14px"><summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--t2);padding:2px 0">'+ic('qt',12)+' Özlü Söz Gösterim Ayarları <span style="font-weight:500;color:var(--t3);font-size:10px">· rotasyon/gösterim tercihleri</span></summary><div style="margin-top:8px">';
   h+='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">';
   h+='<span style="font-size:12px;color:var(--t2)">Sıklık: <select class="inp" style="width:auto;display:inline-block;height:28px;font-size:12px" onchange="wdSet(\'rotationMode\',this.value)">'+WD_ROTATIONS.map(function(x){return '<option value="'+x[0]+'"'+(s.rotationMode===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></span>';
   h+='<span style="font-size:11px;color:var(--t3)">(Kart konumu/kaynağı ortak "Gösterim Motoru" panelinden)</span>';
@@ -136,7 +140,7 @@ function wisdomDisplayPanelHtml(){
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">';
   [['Toplam gösterim',st.totalShows],['Hiç gösterilmeyen',st.never],['En çok',st.mostCount],['Favori oranı',st.favPct+'%'],['Düşündüren oranı',st.reflPct+'%']].forEach(function(x){
     h+='<div class="card" style="padding:6px 10px;flex:1;min-width:80px"><p style="font-size:9px;color:var(--t3)">'+x[0]+'</p><p style="font-size:15px;font-weight:800">'+x[1]+'</p></div>';});
-  h+='</div></div>';
+  h+='</div></div></details>';
   return h;
 }
 window.wisdomDisplayPanelHtml=wisdomDisplayPanelHtml;

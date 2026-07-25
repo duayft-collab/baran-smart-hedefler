@@ -201,7 +201,10 @@ function renderWisdomQuotes(){
   h+=(typeof wisdomMigrationButtonHtml==='function'?wisdomMigrationButtonHtml():'')+'</div>'; // D10.6.1: admin-only Öz Sözler→Özlü Sözler taşıma butonu (additive, non-admin='')
   // istatistik
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
-  [['Toplam',st.total],['Favori',st.favorites],['Aktif',st.active],['Pasif',st.passive],['Sabit',st.pinned],['Beni düşündüren',st.reflected]].forEach(function(x){
+  /* QUOTES-CONSOLIDATION-P1 Step 5A: birincil özet 4 kutu (Toplam/Favori/Aktif/Sabit).
+     Pasif ve Beni-düşündüren durum filtreleriyle erişilebilir; türetilmiş gösterim
+     istatistikleri katlı Gösterim Ayarları panelindedir. wqStats hesabı DEĞİŞMEDİ. */
+  [['Toplam',st.total],['Favori',st.favorites],['Aktif',st.active],['Sabit',st.pinned]].forEach(function(x){
     h+='<div class="card" style="padding:8px 12px;flex:1;min-width:90px"><p style="font-size:10px;color:var(--t3)">'+x[0]+'</p><p style="font-size:18px;font-weight:800">'+x[1]+'</p></div>';});
   h+='</div>';
   if(typeof wisdomDisplayPanelHtml==='function')h+=wisdomDisplayPanelHtml(); // D10.2: gösterim/rotasyon ayar paneli (additive)

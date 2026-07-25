@@ -358,8 +358,8 @@ describe('Regresyon', () => {
     assert.equal(sbx.decisionById(c.decision.id).id, c.decision.id);
   });
   test('39. Wisdom Quotes UI dosyaları dokunulmadı', () => {
-    assertUnchanged(['js/11a-wisdom-quotes.js', 'js/11b-wisdom-display.js', 'js/11c-wisdom-io.js',
-      'public/js/11a-wisdom-quotes.js', 'public/js/11b-wisdom-display.js', 'public/js/11c-wisdom-io.js']);
+    // 11a/11b QUOTES-CONSOLIDATION-P1 Step 5A'da BİLİNÇLİ değişti; 11c dokunulmadı.
+    assertUnchanged(['js/11c-wisdom-io.js', 'public/js/11c-wisdom-io.js']);
   });
   test('40. Principles UI bozulmaz (pFormSave hâlâ normal kayıt oluşturur, kanca yokken de)', () => {
     const sbx = createSandbox();
