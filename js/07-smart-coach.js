@@ -322,6 +322,54 @@ function collectValidSteps(rawSteps){
   return {steps:out,dropped:dropped,dups:dups};
 }
 
+/* ══ SMART-GOALS FAZ-1 P0 #1: MILESTONE (checkpoint) motoru ══
+   metric.checkpoints[] SMART Achievable + Quality Compound kredisinde ZATEN okunuyordu
+   (smartAnalyze A / qualityIndex.Compound) ama olusturulamiyordu. Bu saf katman
+   dogrulama/temizleme/ilerleme saglar. Additive: model {id,label,date?,targetValue?,done}.
+   Mevcut metric/adim ilerleme semantigi DEGISMEZ. */
+var _cpSeq=0;
+function newCheckpointId(){return 'cp'+Date.now().toString(36)+'-'+(_cpSeq++).toString(36);}
+/* Checkpoint dogrulama: bos/junk/200+/gecersiz-tarih/duplicate(label, self haric). */
+function validateCheckpoint(label,date,existing,selfId){
+  var t=String(label==null?'':label).trim();
+  if(!t)return {ok:false,reason:'Kilometre taşı adı boş olamaz.'};
+  if(t.length>200)return {ok:false,reason:'Kilometre taşı 200 karakteri geçemez.'};
+  if(isJunkText(t))return {ok:false,reason:'Daha anlamlı bir kilometre taşı yaz.'};
+  if(date&&isNaN(new Date(date).getTime()))return {ok:false,reason:'Geçersiz tarih.'};
+  var dup=(existing||[]).some(function(c){return String(c&&c.id)!==String(selfId||'')&&
+    String((c&&c.label)||'').trim().toLowerCase()===t.toLowerCase();});
+  if(dup)return {ok:false,reason:'Bu kilometre taşı zaten var.'};
+  return {ok:true};
+}
+/* Kaydetmede temizle: bos/junk ayikla, 200+ klip, duplicate at, gecersiz tarih temizle,
+   targetValue sayisallastir, tarihe gore sirala (tarihsizler sona). Saf. */
+function collectValidCheckpoints(raw){
+  var out=[],seen={},dropped=0;
+  (raw||[]).forEach(function(c){
+    var t=String((c&&c.label!==undefined?c.label:c)||'').trim();
+    if(!t){dropped++;return;}
+    if(t.length>200)t=t.slice(0,200);
+    if(isJunkText(t)){dropped++;return;}
+    var key=t.toLowerCase();
+    if(seen[key]){dropped++;return;}
+    seen[key]=1;
+    var o={id:(c&&c.id)||newCheckpointId(),label:t,done:!!(c&&c.done)};
+    var date=(c&&c.date)?String(c.date):'';
+    if(date&&!isNaN(new Date(date).getTime()))o.date=date;
+    var tvRaw=(c&&c.targetValue);
+    if(tvRaw!==undefined&&tvRaw!==null&&tvRaw!==''&&!isNaN(parseFloat(tvRaw)))o.targetValue=parseFloat(tvRaw);
+    out.push(o);
+  });
+  out.sort(function(a,b){if(!a.date&&!b.date)return 0;if(!a.date)return 1;if(!b.date)return -1;return new Date(a.date)-new Date(b.date);});
+  return {checkpoints:out,dropped:dropped};
+}
+/* Milestone tamamlanma yuzdesi. Checkpoint yoksa null (ana ilerlemeyi ETKILEMEZ). */
+function checkpointProgress(g){
+  var cs=(g&&g.metric&&g.metric.checkpoints)||[];
+  if(!cs.length)return null;
+  return Math.round(cs.filter(function(c){return c&&c.done;}).length/cs.length*100);
+}
+
 /* ══ FAZ-3: GUVENLI ZENGIN METIN (markdown-string modeli) ══
    Ham HTML SAKLANMAZ. renderRichText once her seyi escape eder, yalniz allowlist
    tag'leri (p,br,strong,em,u,ul,ol,li,a) URETIR. script/onerror/javascript: literal metin olur. */

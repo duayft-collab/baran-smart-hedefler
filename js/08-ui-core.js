@@ -427,7 +427,7 @@ function openGoalForm(editId){
   if(typeof confirmDiscardNoteDraft==='function'&&!confirmDiscardNoteDraft())return;
   var g=editId?((D.goals||[]).find(function(x){return x.id===editId;})||{}):{};
   var m=g.metric||{};
-  gfStepsInit(g);
+  gfStepsInit(g);gfCpInit(g);
   var v=function(x){return U.esc(x||'');};
   var catOpts=GOAL_CATS.map(function(c){return '<option value="'+c+'"'+((g.cat||'')===c?' selected':'')+'>'+c+'</option>';}).join('');
   var qOpts=['Q1','Q2','Q3','Q4'].map(function(q){return '<option'+((g.quarter||'')===q?' selected':'')+'>'+q+'</option>';}).join('');
@@ -448,6 +448,8 @@ function openGoalForm(editId){
   h+='<select class="inp" id="gf_mdir"><option value="up"'+(dirUp?' selected':'')+'>Artan</option><option value="down"'+(!dirUp?' selected':'')+'>Azalan</option></select>';
   h+='</div><p style="font-size:10.5px;color:var(--t3);margin-top:4px">Örn: Hedef 100000, Mevcut 37500, Birim USD → otomatik %37</p></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Başarı Kriteri (opsiyonel metin)</p><input class="inp" id="gf_m" oninput="goalFormLive()" placeholder="orn: IELTS 7.5, 100K TL, 10kg" value="'+v(g.measurable)+'"></div>';
+  // Kilometre taslari (milestone) — buyuk hedefi olculebilir ara-hedeflere bol
+  h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Kilometre Taşları <span style="font-size:10px;color:var(--t3);font-weight:500">(ara hedefler / milestone)</span></p><div id="gf_cps"></div></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Neden önemli?</p>'+rtBar('gf_desc')+'<textarea class="inp" id="gf_desc" rows="3" oninput="goalFormLive()" placeholder="Zorlandığında seni ayakta tutacak sebep... (**kalın**, *italik*, - liste)">'+v(g.desc)+'</textarea></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Aksiyon Adımları</p><div id="gf_steps"></div></div>';
   h+='<div style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:10px 12px;background:var(--rl);border-radius:9px"><input type="checkbox" class="cb" id="gf_frog"'+(g.frog?' checked':'')+'> <span style="font-size:13px;font-weight:500">&#128056; En kritik hedefim (Kurbağa)</span></label></div>';
@@ -456,6 +458,7 @@ function openGoalForm(editId){
   h+='<div class="mf"><button class="btn btn-s" style="flex:1" onclick="closeModal()">İptal</button><button class="btn btn-p" style="flex:2" onclick="'+action+'">'+ic('chk',13)+' Kaydet</button></div>';
   showModal(h);
   gfStepsRender();
+  gfCpRender();
   goalFormLive();
 }
 window.openGoalForm=openGoalForm;
@@ -486,6 +489,31 @@ function gfStepsRender(){
   box.innerHTML=h;
 }
 window.gfStepsRender=gfStepsRender;
+
+/* ── SMART-GOALS FAZ-1 P0 #1: Milestone (checkpoint) form editoru (calisma kopyasi) ── */
+var gfCheckpoints=[];
+function gfCpInit(g){var cs=(g&&g.metric&&g.metric.checkpoints)||[];gfCheckpoints=cs.map(function(c){return {id:c.id,label:c.label,date:c.date||'',targetValue:(typeof c.targetValue==='number'?c.targetValue:''),done:!!c.done};});}
+function gfCpIdx(cid){for(var i=0;i<gfCheckpoints.length;i++)if(String(gfCheckpoints[i].id)===String(cid))return i;return -1;}
+function gfCpLabel(cid,val){var i=gfCpIdx(cid);if(i>=0){gfCheckpoints[i].label=String(val).slice(0,200);goalFormLive();}}
+function gfCpDate(cid,val){var i=gfCpIdx(cid);if(i>=0){gfCheckpoints[i].date=String(val||'');}}
+function gfCpDone(cid){var i=gfCpIdx(cid);if(i>=0){gfCheckpoints[i].done=!gfCheckpoints[i].done;goalFormLive();}}
+function gfCpDel(cid){var i=gfCpIdx(cid);if(i>=0){gfCheckpoints.splice(i,1);gfCpRender();goalFormLive();}}
+function gfCpAdd(){gfCheckpoints.push({id:newCheckpointId(),label:'',date:'',targetValue:'',done:false});gfCpRender();var el=ge('gf_cps');if(el){var ins=el.querySelectorAll('input.inp[data-cf="label"]');if(ins.length)ins[ins.length-1].focus();}}
+window.gfCpLabel=gfCpLabel;window.gfCpDate=gfCpDate;window.gfCpDone=gfCpDone;window.gfCpDel=gfCpDel;window.gfCpAdd=gfCpAdd;
+function gfCpRender(){
+  var box=ge('gf_cps');if(!box)return;var h='';
+  if(!gfCheckpoints.length){h+='<div style="padding:10px;border:2px dashed var(--s3);border-radius:9px;text-align:center;color:var(--t3);font-size:12px">Ara hedef (milestone) ekle — büyük hedefi ölçülebilir kilometre taşlarına böl</div>';}
+  else{gfCheckpoints.forEach(function(c){var cid=U.esc(String(c.id));
+    h+='<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">';
+    h+='<input type="checkbox" class="cb" '+(c.done?'checked':'')+' data-cid="'+cid+'" onchange="gfCpDone(this.dataset.cid)" aria-label="Tamamlandı">';
+    h+='<input class="inp" data-cf="label" style="flex:2;padding:7px 9px;font-size:12.5px" value="'+U.esc(c.label)+'" data-cid="'+cid+'" oninput="gfCpLabel(this.dataset.cid,this.value)" placeholder="Kilometre taşı...">';
+    h+='<input type="date" class="inp" style="flex:1;padding:7px 6px;font-size:11.5px;min-width:120px" value="'+U.esc(c.date||'')+'" data-cid="'+cid+'" onchange="gfCpDate(this.dataset.cid,this.value)" aria-label="Kilometre taşı tarihi">';
+    h+='<button type="button" class="btn btn-g btn-ic" style="width:24px;height:24px" data-cid="'+cid+'" onclick="gfCpDel(this.dataset.cid)" aria-label="Sil">'+ic('x',11,'var(--t3)')+'</button>';
+    h+='</div>';});}
+  h+='<button type="button" class="btn btn-s btn-sm" style="margin-top:3px" onclick="gfCpAdd()">'+ic('plus',11)+' Kilometre Taşı Ekle</button>';
+  box.innerHTML=h;
+}
+window.gfCpRender=gfCpRender;
 
 /* ── FAZ-3: Zengin metin toolbar (textarea'ya markdown ekler; contenteditable yok) ── */
 function rtInsert(taId,before,after,linePrefix){
@@ -520,8 +548,10 @@ function goalFromForm(existing){
       start:existing&&existing.metric?Number(existing.metric.start||0):0,
       unit:(ge('gf_mu')&&ge('gf_mu').value)||'',
       direction:(ge('gf_mdir')&&ge('gf_mdir').value)||'up'};
-    if(existing&&existing.metric&&existing.metric.checkpoints)metric.checkpoints=existing.metric.checkpoints;
   }
+  // Milestone (checkpoint) — calisma kopyasindan temizlenmis liste; metric yoksa minimal kap olustur.
+  var cps=(typeof collectValidCheckpoints==='function')?collectValidCheckpoints(gfCheckpoints).checkpoints:[];
+  if(cps.length){ if(!metric)metric={}; metric.checkpoints=cps; }
   return {title:(ge('gf_title')&&ge('gf_title').value.trim())||'',
     desc:(ge('gf_desc')&&ge('gf_desc').value)||'',
     cat:(ge('gf_cat')&&ge('gf_cat').value)||'Gelişim',

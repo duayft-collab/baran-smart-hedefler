@@ -49,6 +49,21 @@ function openGoalDetail(goalId){
   if(mm.structured){var mp=metricPct(g);
     h+='<div style="padding:10px 12px;background:var(--bl);border-radius:9px"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font-size:12.5px;font-weight:600">'+ic('kpi',13,'var(--blue)')+' '+mm.current+' / '+mm.target+' '+U.esc(mm.unit)+'</span><span style="font-size:13px;font-weight:800;color:var(--blue)">%'+mp+'</span></div>'+progBar(mp)+'</div>';}
   else if(g.measurable)h+='<div style="display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--bl);border-radius:9px">'+ic('kpi',14,'var(--blue)')+'<span style="font-size:12.5px"><strong>Başarı:</strong> '+U.esc(g.measurable)+'</span></div>';
+  /* Milestone (kilometre taslari) — varsa ayri ilerleme + tamamlama. Ana ilerlemeyi degistirmez. */
+  var cps=(g.metric&&g.metric.checkpoints)||[];
+  if(cps.length){
+    var cpP=checkpointProgress(g),cpDone=cps.filter(function(c){return c&&c.done;}).length;
+    h+='<div style="padding:10px 12px;background:var(--s2);border-radius:9px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><p style="font-weight:700;font-size:13px">'+ic('tgt',13,'var(--purple)')+' Kilometre Taşları</p><span style="font-size:12px;font-weight:700;color:var(--purple)">'+cpDone+'/'+cps.length+' · %'+cpP+'</span></div>'+progBar(cpP,'var(--purple)');
+    h+='<div style="display:flex;flex-direction:column;gap:4px;margin-top:9px">';
+    cps.forEach(function(c){var cid=U.esc(String(c.id));
+      h+='<div style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:'+(c.done?'var(--gl)':'var(--s)')+'">';
+      h+='<input type="checkbox" class="cb" '+(c.done?'checked':'')+' data-gid="'+g.id+'" data-cid="'+cid+'" onchange="toggleCheckpoint(+this.dataset.gid,this.dataset.cid)" aria-label="Kilometre taşı tamamlandı">';
+      h+='<span style="font-size:12.5px;font-weight:500;text-decoration:'+(c.done?'line-through':'none')+';color:'+(c.done?'var(--t3)':'var(--t)')+';flex:1">'+U.esc(c.label)+'</span>';
+      if(c.date)h+='<span style="font-size:10.5px;color:var(--t3);white-space:nowrap">'+U.esc(String(c.date))+'</span>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
   /* Steps — normalize ile dual-read + string-guvenli ID. Duzenleme icin "Düzenle" (edit formu). */
   var dsteps=normalizeGoalSteps(g);
   h+='<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><p style="font-weight:700;font-size:13px">Aksiyon Planı</p><div style="display:flex;gap:5px"><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openGoalEdit(+this.dataset.gid)">'+ic('edit',11)+' Adımları Düzenle</button><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openAddStep(+this.dataset.gid)">'+ic('plus',12)+' Adım</button></div></div>';
@@ -113,6 +128,19 @@ function delStep(goalId,stepId){
   save();if(openGId===goalId)openGoalDetail(goalId);else renderPage();
 }
 window.delStep=delStep;
+
+/* SMART-GOALS FAZ-1 P0 #1: milestone tamamlama toggle (detay ekranindan). Yalniz done alanini cevirir. */
+function toggleCheckpoint(goalId,cpId){
+  var cid=String(cpId);
+  snap();
+  D.goals=(D.goals||[]).map(function(g){
+    if(g.id!==goalId||!g.metric||!g.metric.checkpoints)return g;
+    var nm=Object.assign({},g.metric,{checkpoints:g.metric.checkpoints.map(function(c){return String(c&&c.id)===cid?Object.assign({},c,{done:!c.done}):c;})});
+    return Object.assign({},g,{metric:nm});
+  });
+  save();if(openGId===goalId)openGoalDetail(goalId);else renderPage();
+}
+window.toggleCheckpoint=toggleCheckpoint;
 
 /* ══ FAZ-4: Hedef detayinda hizli erisimli zengin Notlar ══
    Gorunum modu (rich onizleme + expand) <-> inline edit (toolbar+textarea+Kaydet/Iptal).
