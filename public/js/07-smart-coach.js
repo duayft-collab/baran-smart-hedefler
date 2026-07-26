@@ -441,6 +441,45 @@ function validateGoalPriority(input){
   return {ok:true};
 }
 
+/* ══ SMART-GOALS FAZ-1 P0-5: DUE SOON (deadline'dan TÜRETİLİR, yalniz görsel planlama) ══
+   Yeni model YOK, write YOK. Takvim-günü matematigi (saat/timezone sapmasi YOK): her iki tarih
+   getFullYear/Month/Date ile takvim gününe indirgenir, Date.UTC ile stabil epoch farki alinir.
+   Esikler: overdue<0, today=0, tomorrow=1, this_week 2-7, due_soon 8-30, future>30, none.
+   Done hedefte rozet YOK. Cache YOK (her cagride yeniden hesap). deadline ASLA yeniden yazilmaz.
+   SMART/kalite/ilerleme/checkpoint/health/priority/planning/lifecycle HİÇBİRİNİ etkilemez. */
+function _calDayNum(d){return Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/86400000);}
+function goalDaysRemaining(g,now){
+  var s=String((g&&g.deadline)||'');
+  var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if(!m)return null;
+  var deadlineDay=Math.floor(Date.UTC(+m[1],+m[2]-1,+m[3])/86400000);
+  var nd=now?(now instanceof Date?now:new Date(now)):new Date();
+  if(isNaN(nd.getTime()))nd=new Date();
+  return deadlineDay-_calDayNum(nd);
+}
+function goalDueState(g,now){
+  if(g&&g.status==='done')return 'done';            // tamamlanan hedefte rozet gösterilmez
+  var dr=goalDaysRemaining(g,now);
+  if(dr===null)return 'none';
+  if(dr<0)return 'overdue';
+  if(dr===0)return 'today';
+  if(dr===1)return 'tomorrow';
+  if(dr<=7)return 'this_week';
+  if(dr<=30)return 'due_soon';
+  return 'future';
+}
+function goalDueLabel(g,now){
+  var st=goalDueState(g,now),dr=goalDaysRemaining(g,now);
+  switch(st){
+    case 'overdue': return 'Gecikmiş · '+Math.abs(dr)+' Gün';   // UI mutlak deger gösterir
+    case 'today':   return 'Bugün Son Gün';
+    case 'tomorrow':return 'Yarın Son Gün';
+    case 'this_week':return 'Bu Hafta · '+dr+' Gün';
+    case 'due_soon': return 'Yaklaşıyor · '+dr+' Gün';
+    default: return '';                                          // future/none/done → rozet yok
+  }
+}
+
 /* ══ FAZ-3: GUVENLI ZENGIN METIN (markdown-string modeli) ══
    Ham HTML SAKLANMAZ. renderRichText once her seyi escape eder, yalniz allowlist
    tag'leri (p,br,strong,em,u,ul,ol,li,a) URETIR. script/onerror/javascript: literal metin olur. */
