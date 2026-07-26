@@ -240,31 +240,47 @@ function _wqRenderList(){
   }
   h+='<div style="display:flex;flex-direction:column;gap:8px">';
   list.forEach(function(w){ var id=U.esc(String(w.id));
-    h+='<div class="card" style="padding:14px 16px'+(w.active?'':';opacity:.6')+'">';
+    /* QUOTES-CONSOLIDATION-P1 Step 5B: kompakt kart. Varsayılan görünür = göstergeler +
+       söz + yazar + birincil aksiyonlar (Favori/Sabitle/Düzenle). İkincil metadata
+       (kaynak/etiket/not/dil/öncelik/güncellenme/durum) ve ikincil aksiyonlar (Beni
+       düşündürdü/Aktif-Pasif/Sil) native <details> içinde katlı. Söz metni TAM (clamp yok).
+       Mevcut CRUD fonksiyonları yeniden kullanılır — yeni yazma yolu yok. */
+    h+='<div class="card" style="padding:11px 14px'+(w.active?'':';opacity:.55')+'">';
+    /* üst: sol (göstergeler+söz+yazar) | sağ (3 birincil aksiyon yan yana) — aksiyonlar
+       söz ile paralel olduğundan kart yüksekliğine eklenmez; metadata katlanınca kart daralır. */
     h+='<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">';
-    h+='<div style="flex:1;min-width:0"><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px">';
+    h+='<div style="flex:1;min-width:0">';
+    h+='<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:5px">';
     if(w.category)h+='<span class="pill p-blue" style="font-size:9px">'+U.esc(w.category)+'</span>';
-    if(w.favorite)h+='<span class="pill p-orange" style="font-size:9px">★ Favori</span>';
+    if(w.favorite)h+='<span class="pill p-orange" style="font-size:9px" title="Favori">★</span>';
     if(w.pinned)h+='<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t2)">Sabit</span>';
-    if(w.reflected)h+='<span class="pill" style="font-size:9px;background:var(--bl);color:var(--blue)">Düşündürdü</span>';
+    if(w.reflected)h+='<span class="pill" style="font-size:9px;background:var(--bl);color:var(--blue)" title="Beni düşündürdü">💡</span>';
     if(!w.active)h+='<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t3)">Pasif</span>';
-    if(w.priority)h+='<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t3)">Öncelik '+Number(w.priority)+'</span>';
-    if(w.language&&w.language!=='tr')h+='<span class="pill" style="font-size:9px;background:var(--s2);color:var(--t3)">'+U.esc(w.language)+'</span>';
     h+='</div>';
-    h+='<p style="font-size:14px;font-style:italic;line-height:1.65;color:var(--t);word-break:break-word">&ldquo;'+U.esc(w.quote)+'&rdquo;</p>';
-    if(w.author)h+='<p style="font-size:11.5px;font-weight:700;color:var(--blue);margin-top:5px">&mdash; '+U.esc(w.author)+'</p>';
-    if(w.source)h+='<p style="font-size:10px;color:var(--t3);margin-top:2px">Kaynak: '+U.esc(w.source)+'</p>';
-    if(w.tags&&w.tags.length)h+='<p style="font-size:10px;color:var(--t3);margin-top:3px">'+w.tags.map(function(t){return '#'+U.esc(t);}).join(' ')+'</p>';
-    if(w.notes&&typeof isRichTextEmpty==='function'&&!isRichTextEmpty(w.notes))h+='<div class="rt" style="font-size:11.5px;line-height:1.5;color:var(--t2);margin-top:6px">'+renderRichText(w.notes)+'</div>';
-    h+='<p style="font-size:9.5px;color:var(--t3);margin-top:5px">Güncellenme: '+U.esc(_wqDate(w.updatedAt))+'</p></div>';
-    h+='<div style="display:flex;gap:2px;flex-shrink:0;flex-wrap:wrap;max-width:150px;justify-content:flex-end">';
-    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="Favori" data-id="'+id+'" onclick="wqToggleFav(this.dataset.id)">'+ic('star',12,w.favorite?'var(--orange)':'var(--t3)')+'</button>';
-    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="'+(w.pinned?'Sabitlemeyi kaldır':'Sabitle')+'" data-id="'+id+'" onclick="wqTogglePin(this.dataset.id)">'+ic('star',12,w.pinned?'var(--blue)':'var(--t3)')+'</button>';
-    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="Beni düşündürdü" data-id="'+id+'" onclick="wqToggleReflect(this.dataset.id)">'+(w.reflected?'💡':'○')+'</button>';
-    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="'+(w.active?'Pasifleştir':'Aktifleştir')+'" data-id="'+id+'" onclick="wqToggleActive(this.dataset.id)">'+ic(w.active?'check':'x',12,'var(--t3)')+'</button>';
-    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="Düzenle" data-id="'+id+'" onclick="openWqForm(this.dataset.id)">'+ic('edit',12,'var(--t3)')+'</button>';
-    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="Sil" data-id="'+id+'" onclick="wqDelete(this.dataset.id)">'+ic('trash',12,'var(--t3)')+'</button>';
-    h+='</div></div></div>';
+    h+='<p style="font-size:13.5px;font-style:italic;line-height:1.6;color:var(--t);word-break:break-word">&ldquo;'+U.esc(w.quote)+'&rdquo;</p>';
+    if(w.author)h+='<p style="font-size:11px;font-weight:700;color:var(--blue);margin-top:4px">&mdash; '+U.esc(w.author)+'</p>';
+    h+='</div>';
+    /* birincil aksiyonlar (söz ile paralel sağ kolon) */
+    h+='<div style="display:flex;gap:3px;flex-shrink:0">';
+    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="Favori" aria-label="Favori" data-id="'+id+'" onclick="wqToggleFav(this.dataset.id)">'+ic('star',12,w.favorite?'var(--orange)':'var(--t3)')+'</button>';
+    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="'+(w.pinned?'Sabitlemeyi kaldır':'Sabitle')+'" aria-label="Sabitle" data-id="'+id+'" onclick="wqTogglePin(this.dataset.id)">'+ic('star',12,w.pinned?'var(--blue)':'var(--t3)')+'</button>';
+    h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px" title="Düzenle" aria-label="Düzenle" data-id="'+id+'" onclick="openWqForm(this.dataset.id)">'+ic('edit',12,'var(--t3)')+'</button>';
+    h+='</div></div>';
+    /* ikincil metadata + aksiyonlar (native <details>, varsayılan katlı, 0 write) */
+    h+='<details style="margin-top:6px"><summary style="cursor:pointer;font-size:10.5px;color:var(--t3);padding:2px 0">Detay ve diğer işlemler</summary><div style="margin-top:6px">';
+    if(w.source)h+='<p style="font-size:10px;color:var(--t3)">Kaynak: '+U.esc(w.source)+'</p>';
+    if(w.tags&&w.tags.length)h+='<p style="font-size:10px;color:var(--t3);margin-top:2px">'+w.tags.map(function(t){return '#'+U.esc(t);}).join(' ')+'</p>';
+    if(w.priority)h+='<p style="font-size:10px;color:var(--t3);margin-top:2px">Öncelik: '+Number(w.priority)+'</p>';
+    if(w.language&&w.language!=='tr')h+='<p style="font-size:10px;color:var(--t3);margin-top:2px">Dil: '+U.esc(w.language)+'</p>';
+    h+='<p style="font-size:10px;color:var(--t3);margin-top:2px">Durum: '+(w.active?'Aktif':'Pasif')+'</p>';
+    if(w.notes&&typeof isRichTextEmpty==='function'&&!isRichTextEmpty(w.notes))h+='<div class="rt" style="font-size:11px;line-height:1.5;color:var(--t2);margin-top:4px">'+renderRichText(w.notes)+'</div>';
+    h+='<p style="font-size:9.5px;color:var(--t3);margin-top:4px">Güncellenme: '+U.esc(_wqDate(w.updatedAt))+'</p>';
+    h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">';
+    h+='<button class="btn btn-g btn-sm" title="Beni düşündürdü" data-id="'+id+'" onclick="wqToggleReflect(this.dataset.id)">'+(w.reflected?'💡 Düşündürdü ✓':'Beni düşündürdü')+'</button>';
+    h+='<button class="btn btn-g btn-sm" title="'+(w.active?'Pasifleştir':'Aktifleştir')+'" data-id="'+id+'" onclick="wqToggleActive(this.dataset.id)">'+(w.active?'Pasifleştir':'Aktifleştir')+'</button>';
+    h+='<button class="btn btn-g btn-sm" style="color:var(--red)" title="Sil" aria-label="Sil" data-id="'+id+'" onclick="wqDelete(this.dataset.id)">'+ic('trash',11,'var(--red)')+' Sil</button>';
+    h+='</div></div></details>';
+    h+='</div>';
   });
   h+='</div>'; box.innerHTML=h;
 }
