@@ -16,7 +16,7 @@ function openGoalDetail(goalId){
   h+='<div style="display:flex;align-items:center;gap:8px">'+(g.frog?'<span style="font-size:18px">&#128056;</span>':'');
   h+='<div><p style="font-weight:700;font-size:15px;color:#fff;line-height:1.3">'+U.esc(g.title)+'</p>';
   var hpill='background:rgba(255,255,255,.2);color:#fff;font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px';
-  h+='<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap"><span style="'+hpill+'">'+U.esc(g.cat||'')+'</span><span style="'+hpill+'">'+goalPlanningLabel(g)+'</span><span style="'+hpill+'">'+goalHealthLabel(g)+'</span><span style="'+hpill+'">Güven: '+goalConfidenceLabel(g)+'</span></div></div></div>';
+  h+='<div style="display:flex;gap:5px;margin-top:4px;flex-wrap:wrap"><span style="'+hpill+'">'+U.esc(g.cat||'')+'</span><span style="'+hpill+'">'+goalPlanningLabel(g)+'</span><span style="'+hpill+'">'+goalPriorityLabel(g)+'</span><span style="'+hpill+'">'+goalHealthLabel(g)+'</span><span style="'+hpill+'">Güven: '+goalConfidenceLabel(g)+'</span></div></div></div>';
   h+='<button class="btn" style="background:rgba(255,255,255,.2);color:#fff;width:30px;height:30px;padding:0;justify-content:center;border-radius:8px" onclick="closeModal()">'+ic('x',14,'#fff')+'</button></div></div>';
   h+='<div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">';
   /* Ring */

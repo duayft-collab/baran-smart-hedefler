@@ -420,6 +420,27 @@ function validateGoalHealth(input){
   return {ok:true};
 }
 
+/* ══ SMART-GOALS FAZ-1 P0-4: ÖNCELİK (planlama özniteliği, YALNIZ bilgilendirici) ══
+   priority:{level:'p1'|'p2'|'p3', weight:1|2|3}. P1=en yüksek. Dual-read varsayilan p2/2.
+   SMART/kalite/ilerleme/checkpoint/lifecycle/health/planning/metric HİÇBİRİNİ etkilemez. */
+var GOAL_PRIORITIES=['p1','p2','p3'];
+var GOAL_PRIORITY_WEIGHT={p1:1,p2:2,p3:3};
+var GOAL_PRIORITY_LABELS={p1:'P1 — Kritik',p2:'P2 — Normal',p3:'P3 — Düşük'};
+function goalPriority(g){var l=g&&g.priority&&g.priority.level;return GOAL_PRIORITIES.indexOf(l)>=0?l:'p2';}
+function goalPriorityWeight(g){
+  var w=g&&g.priority&&g.priority.weight;
+  if(w===1||w===2||w===3)return w;
+  return GOAL_PRIORITY_WEIGHT[goalPriority(g)];
+}
+function goalPriorityLabel(g){return GOAL_PRIORITY_LABELS[goalPriority(g)];}
+/* Kaydetme öncesi dogrulama: gecerli seviye (string p1/p2/p3). Bozuk legacy okumada fallback, submit'te RED. */
+function validateGoalPriority(input){
+  input=input||{};
+  if(typeof input.level!=='string'||GOAL_PRIORITIES.indexOf(input.level)<0)
+    return {ok:false,reason:'Geçerli bir öncelik seç (P1/P2/P3).'};
+  return {ok:true};
+}
+
 /* ══ FAZ-3: GUVENLI ZENGIN METIN (markdown-string modeli) ══
    Ham HTML SAKLANMAZ. renderRichText once her seyi escape eder, yalniz allowlist
    tag'leri (p,br,strong,em,u,ul,ol,li,a) URETIR. script/onerror/javascript: literal metin olur. */
