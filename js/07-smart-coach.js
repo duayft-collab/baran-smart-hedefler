@@ -370,6 +370,33 @@ function checkpointProgress(g){
   return Math.round(cs.filter(function(c){return c&&c.done;}).length/cs.length*100);
 }
 
+/* ══ SMART-GOALS FAZ-1 P0-2: YIL + ÇEYREK modeli (dual-read, geriye-uyumlu) ══
+   Yeni model planning:{year:Number,quarter:'Q1'..'Q4'}. Eski quarter:'Q2' korunur.
+   Okuma: planning → legacy quarter → türetilmis (deadline yili / bu yil). Otomatik migration YOK,
+   legacy alan otomatik YENIDEN YAZILMAZ. Çeyrek yalnizca bilgilendirici — SMART/ilerleme DEGISMEZ. */
+var GOAL_QUARTERS=['Q1','Q2','Q3','Q4'];
+var GOAL_YEAR_MIN=2000, GOAL_YEAR_MAX=2100;
+function goalYear(g){
+  if(g&&g.planning&&g.planning.year!=null&&g.planning.year!==''){var y=parseInt(g.planning.year,10);if(!isNaN(y))return y;}
+  if(g&&g.deadline){var dy=new Date(g.deadline).getFullYear();if(!isNaN(dy))return dy;}
+  return new Date().getFullYear();
+}
+function goalQuarter(g){
+  if(g&&g.planning&&GOAL_QUARTERS.indexOf(g.planning.quarter)>=0)return g.planning.quarter;
+  if(g&&GOAL_QUARTERS.indexOf(g.quarter)>=0)return g.quarter;
+  return '';
+}
+function goalPlanningLabel(g){var y=goalYear(g),q=goalQuarter(g);return q?(y+' • '+q):(''+y);}
+/* Kaydetme öncesi dogrulama: 4-haneli/sayisal/aralikta yil + gecerli çeyrek. */
+function validatePlanning(year,quarter){
+  var ys=String(year==null?'':year).trim();
+  if(!ys||!/^\d{4}$/.test(ys))return {ok:false,reason:'Geçerli bir yıl gir (örn. 2026).'};
+  var y=parseInt(ys,10);
+  if(y<GOAL_YEAR_MIN||y>GOAL_YEAR_MAX)return {ok:false,reason:'Yıl '+GOAL_YEAR_MIN+'–'+GOAL_YEAR_MAX+' aralığında olmalı.'};
+  if(GOAL_QUARTERS.indexOf(quarter)<0)return {ok:false,reason:'Geçerli bir çeyrek seç (Q1–Q4).'};
+  return {ok:true};
+}
+
 /* ══ FAZ-3: GUVENLI ZENGIN METIN (markdown-string modeli) ══
    Ham HTML SAKLANMAZ. renderRichText once her seyi escape eder, yalniz allowlist
    tag'leri (p,br,strong,em,u,ul,ol,li,a) URETIR. script/onerror/javascript: literal metin olur. */

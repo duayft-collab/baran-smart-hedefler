@@ -346,7 +346,7 @@ function renderGoals(){
   if(gFilter!=='all'){
     if(gFilter==='active')goals=goals.filter(function(g){return g.status!=='done';});
     else if(gFilter==='done')goals=goals.filter(function(g){return g.status==='done';});
-    else goals=goals.filter(function(g){return g.quarter===gFilter;});
+    else goals=goals.filter(function(g){return goalQuarter(g)===gFilter;});
   }
   var doneCount=all.filter(function(g){return g.status==='done';}).length;
   var avgP=all.length?Math.round(all.reduce(function(a,g){return a+goalProgress(g);},0)/all.length):0;
@@ -382,7 +382,7 @@ function renderGoals(){
       h+='<tr style="cursor:pointer" data-gid="'+g.id+'" onclick="openGoalDetail(+this.dataset.gid)">';
       h+='<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:7px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<div><p style="font-weight:600;font-size:13px">'+U.esc(g.title)+'</p>'+(g.measurable?'<p style="font-size:10.5px;color:var(--t2)">'+U.esc(g.measurable)+'</p>':'')+'</div></div></td>';
       h+='<td><span class="pill" style="background:'+(GOAL_CB[g.cat||'Diğer']||'var(--s2)')+';color:'+cc+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span></td>';
-      h+='<td><span class="pill p-blue" style="font-size:10px">'+g.quarter+'</span></td>';
+      h+='<td><span class="pill p-blue" style="font-size:10px">'+goalPlanningLabel(g)+'</span></td>';
       h+='<td style="font-size:11.5px;color:'+dlc+'">'+(dl===null?'&mdash;':dl<0?'Gecti':dl+'g')+'</td>';
       h+='<td style="min-width:120px"><div style="display:flex;align-items:center;gap:7px">'+progBar(p4)+'<span style="font-size:11px;font-weight:700;color:'+pc2+';min-width:28px">'+p4+'%</span></div></td>';
       h+='<td><button class="btn btn-g btn-ic" style="width:26px;height:26px" data-gid="'+g.id+'" data-dtype="goal" onclick="event.stopPropagation();del(+this.dataset.gid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></td></tr>';
@@ -399,7 +399,7 @@ function renderGoals(){
       h+='<div class="card" style="display:flex;flex-direction:column;overflow:hidden;cursor:pointer" data-gid="'+g.id+'" onclick="openGoalDetail(+this.dataset.gid)">';
       h+='<div style="height:3px;background:'+cc4+'"></div><div style="padding:15px 17px;display:flex;flex-direction:column;gap:10px;flex:1">';
       h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1">';
-      h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<span class="pill" style="background:'+cbg2+';color:'+cc4+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span><span class="pill p-blue" style="font-size:10px">'+g.quarter+'</span>'+(g.status==='done'?'<span class="pill p-green" style="font-size:9px">&#10003; Bitti</span>':'')+'</div>';
+      h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<span class="pill" style="background:'+cbg2+';color:'+cc4+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span><span class="pill p-blue" style="font-size:10px">'+goalPlanningLabel(g)+'</span>'+(g.status==='done'?'<span class="pill p-green" style="font-size:9px">&#10003; Bitti</span>':'')+'</div>';
       h+='<p style="font-weight:700;font-size:14px;line-height:1.3">'+U.esc(g.title)+'</p></div>';
       h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px;flex-shrink:0" data-gid="'+g.id+'" data-dtype="goal" onclick="event.stopPropagation();del(+this.dataset.gid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';
       if(g.measurable)h+='<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--s2);border-radius:8px">'+ic('kpi',13,'var(--t2)')+'<span style="font-size:12px;font-weight:600">'+U.esc(g.measurable)+'</span></div>';
@@ -430,14 +430,17 @@ function openGoalForm(editId){
   gfStepsInit(g);gfCpInit(g);
   var v=function(x){return U.esc(x||'');};
   var catOpts=GOAL_CATS.map(function(c){return '<option value="'+c+'"'+((g.cat||'')===c?' selected':'')+'>'+c+'</option>';}).join('');
-  var qOpts=['Q1','Q2','Q3','Q4'].map(function(q){return '<option'+((g.quarter||'')===q?' selected':'')+'>'+q+'</option>';}).join('');
+  var curQ=(typeof goalQuarter==='function')?goalQuarter(g):(g.quarter||'');
+  var curYear=(typeof goalYear==='function')?goalYear(g):(new Date().getFullYear());
+  var qOpts=['Q1','Q2','Q3','Q4'].map(function(q){return '<option'+(curQ===q?' selected':'')+'>'+q+'</option>';}).join('');
   var dirUp=(m.direction||'up')!=='down';
   var h='<div class="mh"><span style="font-weight:700;font-size:15px">'+(editId?'Hedefi Düzenle':'Yeni Hedef')+'</span><button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>';
   h+='<div class="mb"><div style="padding:10px 12px;background:var(--bl);border-radius:9px;margin-bottom:2px"><p style="font-size:12px;font-weight:700;color:var(--blue)">SMART Prensipleri</p><p style="font-size:11px;color:var(--t2);margin-top:2px">Spesifik, Ölçülebilir, Ulaşılabilir, Anlamlı, Zamanlı</p></div>';
   h+='<div id="gf_coach" style="margin-bottom:4px"></div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Hedef *</p><input class="inp" id="gf_title" oninput="goalFormLive()" placeholder="Net ve somut hedef yaz..." value="'+v(g.title)+'"></div>';
-  h+='<div><p class="lbl" style="margin-bottom:3px">Kategori</p><select class="inp" id="gf_cat">'+catOpts+'</select></div>';
+  h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Kategori</p><select class="inp" id="gf_cat">'+catOpts+'</select></div>';
+  h+='<div><p class="lbl" style="margin-bottom:3px">Yıl</p><input type="number" class="inp" id="gf_year" min="2000" max="2100" step="1" oninput="goalFormLive()" value="'+curYear+'"></div>';
   h+='<div><p class="lbl" style="margin-bottom:3px">Çeyrek</p><select class="inp" id="gf_q">'+qOpts+'</select></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Deadline</p><input type="date" class="inp" id="gf_dl" oninput="goalFormLive()" value="'+v(g.deadline)+'"></div>';
   // Sayisal olcut (metric)
@@ -552,10 +555,14 @@ function goalFromForm(existing){
   // Milestone (checkpoint) — calisma kopyasindan temizlenmis liste; metric yoksa minimal kap olustur.
   var cps=(typeof collectValidCheckpoints==='function')?collectValidCheckpoints(gfCheckpoints).checkpoints:[];
   if(cps.length){ if(!metric)metric={}; metric.checkpoints=cps; }
+  // Yil+Çeyrek (planning) — legacy quarter alani YAZILMAZ; dual-read okur.
+  var yrRaw=(ge('gf_year')&&ge('gf_year').value)||'';
+  var yrNum=parseInt(yrRaw,10);
+  var planning={year:(!isNaN(yrNum)?yrNum:goalYear(existing||{})),quarter:(ge('gf_q')&&ge('gf_q').value)||'Q1'};
   return {title:(ge('gf_title')&&ge('gf_title').value.trim())||'',
     desc:(ge('gf_desc')&&ge('gf_desc').value)||'',
     cat:(ge('gf_cat')&&ge('gf_cat').value)||'Gelişim',
-    quarter:(ge('gf_q')&&ge('gf_q').value)||'Q1',
+    planning:planning,
     deadline:(ge('gf_dl')&&ge('gf_dl').value)||'',
     measurable:(ge('gf_m')&&ge('gf_m').value)||'',
     frog:!!(ge('gf_frog')&&ge('gf_frog').checked),
@@ -582,6 +589,8 @@ window.goalFormLive=goalFormLive;
 function submitGoalForm(){
   var d=goalFromForm();
   if(!d.title){alert('Hedef başlığı zorunlu!');return;}
+  var pv=validatePlanning((ge('gf_year')&&ge('gf_year').value),(ge('gf_q')&&ge('gf_q').value));
+  if(!pv.ok){alert(pv.reason);return;}
   snap();
   var goal=Object.assign({id:Date.now(),notes:'',status:'active',createdAt:U.today()},d);
   if(!goal.metric)delete goal.metric;
@@ -595,10 +604,13 @@ function submitGoalEdit(goalId){
   var cur=(D.goals||[]).find(function(x){return x.id===goalId;});if(!cur)return;
   var d=goalFromForm(cur);
   if(!d.title){alert('Hedef başlığı zorunlu!');return;}
+  var pv=validatePlanning((ge('gf_year')&&ge('gf_year').value),(ge('gf_q')&&ge('gf_q').value));
+  if(!pv.ok){alert(pv.reason);return;}
   snap();
   D.goals=D.goals.map(function(g){
     if(g.id!==goalId)return g;
-    var upd=Object.assign({},g,{title:d.title,desc:d.desc,cat:d.cat,quarter:d.quarter,
+    // planning yazilir; legacy quarter alani OTOMATIK yeniden yazilmaz (dual-read okur).
+    var upd=Object.assign({},g,{title:d.title,desc:d.desc,cat:d.cat,planning:d.planning,
       deadline:d.deadline,measurable:d.measurable,frog:d.frog,steps:d.steps});
     if(d.metric)upd.metric=d.metric;else delete upd.metric;
     return upd;
