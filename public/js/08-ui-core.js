@@ -340,6 +340,14 @@ window.updateKPI=updateKPI;
 
 
 function setGView(){localStorage.setItem('gview',gView);}
+/* Kompakt saglik rozeti — metin etiketli (yalniz renk DEGIL), emoji YOK. Durum rengi + "Güven: X". */
+function goalHealthBadge(g){
+  var st=(typeof goalHealthStatus==='function')?goalHealthStatus(g):'on_track';
+  var col={on_track:'var(--green)',at_risk:'var(--orange)',off_track:'var(--red)',paused:'var(--t3)'}[st]||'var(--t3)';
+  return '<span class="pill" style="font-size:9.5px;background:var(--s2);color:'+col+'">'+goalHealthLabel(g)+'</span>'+
+    '<span style="font-size:9.5px;color:var(--t3)">Güven: '+goalConfidenceLabel(g)+'</span>';
+}
+window.goalHealthBadge=goalHealthBadge;
 function renderGoals(){
   var all=D.goals||[];
   var goals=fil(all,['title','desc','cat']);
@@ -380,7 +388,7 @@ function renderGoals(){
       var dlc=dl===null?'var(--t3)':dl<0?'var(--red)':dl<14?'var(--orange)':'var(--t2)';
       var cc=GOAL_CC[g.cat||'Diğer']||'var(--t3)';
       h+='<tr style="cursor:pointer" data-gid="'+g.id+'" onclick="openGoalDetail(+this.dataset.gid)">';
-      h+='<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:7px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<div><p style="font-weight:600;font-size:13px">'+U.esc(g.title)+'</p>'+(g.measurable?'<p style="font-size:10.5px;color:var(--t2)">'+U.esc(g.measurable)+'</p>':'')+'</div></div></td>';
+      h+='<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:7px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<div><p style="font-weight:600;font-size:13px">'+U.esc(g.title)+'</p>'+(g.measurable?'<p style="font-size:10.5px;color:var(--t2)">'+U.esc(g.measurable)+'</p>':'')+'<div style="display:flex;gap:5px;align-items:center;margin-top:3px">'+goalHealthBadge(g)+'</div></div></div></td>';
       h+='<td><span class="pill" style="background:'+(GOAL_CB[g.cat||'Diğer']||'var(--s2)')+';color:'+cc+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span></td>';
       h+='<td><span class="pill p-blue" style="font-size:10px">'+goalPlanningLabel(g)+'</span></td>';
       h+='<td style="font-size:11.5px;color:'+dlc+'">'+(dl===null?'&mdash;':dl<0?'Gecti':dl+'g')+'</td>';
@@ -400,7 +408,7 @@ function renderGoals(){
       h+='<div style="height:3px;background:'+cc4+'"></div><div style="padding:15px 17px;display:flex;flex-direction:column;gap:10px;flex:1">';
       h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1">';
       h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<span class="pill" style="background:'+cbg2+';color:'+cc4+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span><span class="pill p-blue" style="font-size:10px">'+goalPlanningLabel(g)+'</span>'+(g.status==='done'?'<span class="pill p-green" style="font-size:9px">&#10003; Bitti</span>':'')+'</div>';
-      h+='<p style="font-weight:700;font-size:14px;line-height:1.3">'+U.esc(g.title)+'</p></div>';
+      h+='<p style="font-weight:700;font-size:14px;line-height:1.3">'+U.esc(g.title)+'</p><div style="display:flex;gap:5px;align-items:center;margin-top:4px">'+goalHealthBadge(g)+'</div></div>';
       h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px;flex-shrink:0" data-gid="'+g.id+'" data-dtype="goal" onclick="event.stopPropagation();del(+this.dataset.gid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';
       if(g.measurable)h+='<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--s2);border-radius:8px">'+ic('kpi',13,'var(--t2)')+'<span style="font-size:12px;font-weight:600">'+U.esc(g.measurable)+'</span></div>';
       if(g.steps&&g.steps.length){
@@ -433,6 +441,10 @@ function openGoalForm(editId){
   var curQ=(typeof goalQuarter==='function')?goalQuarter(g):(g.quarter||'');
   var curYear=(typeof goalYear==='function')?goalYear(g):(new Date().getFullYear());
   var qOpts=['Q1','Q2','Q3','Q4'].map(function(q){return '<option'+(curQ===q?' selected':'')+'>'+q+'</option>';}).join('');
+  var curHealth=(typeof goalHealthStatus==='function')?goalHealthStatus(g):'on_track';
+  var curConf=(typeof goalConfidence==='function')?goalConfidence(g):'medium';
+  var healthOpts=[['on_track','Yolunda'],['at_risk','Riskte'],['off_track','Yolunda Değil'],['paused','Duraklatıldı']].map(function(o){return '<option value="'+o[0]+'"'+(curHealth===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
+  var confOpts=[['high','Yüksek'],['medium','Orta'],['low','Düşük']].map(function(o){return '<option value="'+o[0]+'"'+(curConf===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
   var dirUp=(m.direction||'up')!=='down';
   var h='<div class="mh"><span style="font-weight:700;font-size:15px">'+(editId?'Hedefi Düzenle':'Yeni Hedef')+'</span><button class="btn btn-g btn-ic" onclick="closeModal()">'+ic('x',14)+'</button></div>';
   h+='<div class="mb"><div style="padding:10px 12px;background:var(--bl);border-radius:9px;margin-bottom:2px"><p style="font-size:12px;font-weight:700;color:var(--blue)">SMART Prensipleri</p><p style="font-size:11px;color:var(--t2);margin-top:2px">Spesifik, Ölçülebilir, Ulaşılabilir, Anlamlı, Zamanlı</p></div>';
@@ -455,6 +467,8 @@ function openGoalForm(editId){
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Kilometre Taşları <span style="font-size:10px;color:var(--t3);font-weight:500">(ara hedefler / milestone)</span></p><div id="gf_cps"></div></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Neden önemli?</p>'+rtBar('gf_desc')+'<textarea class="inp" id="gf_desc" rows="3" oninput="goalFormLive()" placeholder="Zorlandığında seni ayakta tutacak sebep... (**kalın**, *italik*, - liste)">'+v(g.desc)+'</textarea></div>';
   h+='<div style="grid-column:1/-1"><p class="lbl" style="margin-bottom:3px">Aksiyon Adımları</p><div id="gf_steps"></div></div>';
+  h+='<div><p class="lbl" style="margin-bottom:3px">Durum</p><select class="inp" id="gf_health" aria-label="Hedef durumu">'+healthOpts+'</select></div>';
+  h+='<div><p class="lbl" style="margin-bottom:3px">Güven</p><select class="inp" id="gf_conf" aria-label="Başarı güveni">'+confOpts+'</select></div>';
   h+='<div style="grid-column:1/-1"><label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:10px 12px;background:var(--rl);border-radius:9px"><input type="checkbox" class="cb" id="gf_frog"'+(g.frog?' checked':'')+'> <span style="font-size:13px;font-weight:500">&#128056; En kritik hedefim (Kurbağa)</span></label></div>';
   h+='</div></div>';
   var action=editId?('submitGoalEdit('+editId+')'):'submitGoalForm()';
@@ -559,10 +573,13 @@ function goalFromForm(existing){
   var yrRaw=(ge('gf_year')&&ge('gf_year').value)||'';
   var yrNum=parseInt(yrRaw,10);
   var planning={year:(!isNaN(yrNum)?yrNum:goalYear(existing||{})),quarter:(ge('gf_q')&&ge('gf_q').value)||'Q1'};
+  // Saglik (durum+güven) — lifecycle status'tan AYRI; DOM'dan okunur (yalniz save'de materialize).
+  var health={status:(ge('gf_health')&&ge('gf_health').value)||'on_track',confidence:(ge('gf_conf')&&ge('gf_conf').value)||'medium'};
   return {title:(ge('gf_title')&&ge('gf_title').value.trim())||'',
     desc:(ge('gf_desc')&&ge('gf_desc').value)||'',
     cat:(ge('gf_cat')&&ge('gf_cat').value)||'Gelişim',
     planning:planning,
+    health:health,
     deadline:(ge('gf_dl')&&ge('gf_dl').value)||'',
     measurable:(ge('gf_m')&&ge('gf_m').value)||'',
     frog:!!(ge('gf_frog')&&ge('gf_frog').checked),
@@ -591,6 +608,8 @@ function submitGoalForm(){
   if(!d.title){alert('Hedef başlığı zorunlu!');return;}
   var pv=validatePlanning((ge('gf_year')&&ge('gf_year').value),(ge('gf_q')&&ge('gf_q').value));
   if(!pv.ok){alert(pv.reason);return;}
+  var hv=validateGoalHealth(d.health);
+  if(!hv.ok){alert(hv.reason);return;}
   snap();
   var goal=Object.assign({id:Date.now(),notes:'',status:'active',createdAt:U.today()},d);
   if(!goal.metric)delete goal.metric;
@@ -606,11 +625,13 @@ function submitGoalEdit(goalId){
   if(!d.title){alert('Hedef başlığı zorunlu!');return;}
   var pv=validatePlanning((ge('gf_year')&&ge('gf_year').value),(ge('gf_q')&&ge('gf_q').value));
   if(!pv.ok){alert(pv.reason);return;}
+  var hv=validateGoalHealth(d.health);
+  if(!hv.ok){alert(hv.reason);return;}
   snap();
   D.goals=D.goals.map(function(g){
     if(g.id!==goalId)return g;
-    // planning yazilir; legacy quarter alani OTOMATIK yeniden yazilmaz (dual-read okur).
-    var upd=Object.assign({},g,{title:d.title,desc:d.desc,cat:d.cat,planning:d.planning,
+    // planning + health yazilir; lifecycle status/completedAt DOKUNULMAZ; legacy quarter yeniden yazilmaz.
+    var upd=Object.assign({},g,{title:d.title,desc:d.desc,cat:d.cat,planning:d.planning,health:d.health,
       deadline:d.deadline,measurable:d.measurable,frog:d.frog,steps:d.steps});
     if(d.metric)upd.metric=d.metric;else delete upd.metric;
     return upd;

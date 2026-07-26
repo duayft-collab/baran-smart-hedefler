@@ -397,6 +397,29 @@ function validatePlanning(year,quarter){
   return {ok:true};
 }
 
+/* ══ SMART-GOALS FAZ-1 P0-3: HEDEF SAĞLIĞI (durum + güven), lifecycle'dan AYRI ══
+   health:{status:'on_track'|'at_risk'|'off_track'|'paused', confidence:'high'|'medium'|'low'}.
+   Yaşam döngüsü status(active/done)+completedAt AYRI kalir — health onu DEGISTIRMEZ.
+   Dual-read varsayilan (on_track/medium), migration YOK, otomatik write YOK.
+   SMART/ilerleme/milestone health OKUMAZ (bilgilendirici). */
+var GOAL_HEALTH_STATUSES=['on_track','at_risk','off_track','paused'];
+var GOAL_CONFIDENCES=['high','medium','low'];
+var GOAL_HEALTH_LABELS={on_track:'Yolunda',at_risk:'Riskte',off_track:'Yolunda Değil',paused:'Duraklatıldı'};
+var GOAL_CONFIDENCE_LABELS={high:'Yüksek',medium:'Orta',low:'Düşük'};
+function goalHealthStatus(g){var s=g&&g.health&&g.health.status;return GOAL_HEALTH_STATUSES.indexOf(s)>=0?s:'on_track';}
+function goalConfidence(g){var c=g&&g.health&&g.health.confidence;return GOAL_CONFIDENCES.indexOf(c)>=0?c:'medium';}
+function goalHealthLabel(g){return GOAL_HEALTH_LABELS[goalHealthStatus(g)];}
+function goalConfidenceLabel(g){return GOAL_CONFIDENCE_LABELS[goalConfidence(g)];}
+/* Kaydetme öncesi dogrulama: gecerli durum + gecerli güven (string). Bozuk legacy okumada fallback, submit'te RED. */
+function validateGoalHealth(input){
+  input=input||{};
+  if(typeof input.status!=='string'||GOAL_HEALTH_STATUSES.indexOf(input.status)<0)
+    return {ok:false,reason:'Geçerli bir durum seç (Yolunda/Riskte/Yolunda Değil/Duraklatıldı).'};
+  if(typeof input.confidence!=='string'||GOAL_CONFIDENCES.indexOf(input.confidence)<0)
+    return {ok:false,reason:'Geçerli bir güven seviyesi seç (Yüksek/Orta/Düşük).'};
+  return {ok:true};
+}
+
 /* ══ FAZ-3: GUVENLI ZENGIN METIN (markdown-string modeli) ══
    Ham HTML SAKLANMAZ. renderRichText once her seyi escape eder, yalniz allowlist
    tag'leri (p,br,strong,em,u,ul,ol,li,a) URETIR. script/onerror/javascript: literal metin olur. */
