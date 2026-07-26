@@ -357,9 +357,16 @@ describe('Regresyon', () => {
     assert.equal(c.ok, true);
     assert.equal(sbx.decisionById(c.decision.id).id, c.decision.id);
   });
-  test('39. Wisdom Quotes UI dosyaları dokunulmadı', () => {
-    // 11a/11b QUOTES-CONSOLIDATION-P1 Step 5A'da BİLİNÇLİ değişti; 11c dokunulmadı.
-    assertUnchanged(['js/11c-wisdom-io.js', 'public/js/11c-wisdom-io.js']);
+  test('39. Wisdom Quotes IO davranışı korunur (11c Step 5E ile bilinçli değişti)', () => {
+    // 11a/11b Step 5A'da, 11c QUOTES-CONSOLIDATION-P1 Step 5E'de BİLİNÇLİ değişti (import güvenlik
+    // korumaları). Byte-identity yerine davranışsal doğrulama: temel export/dedup hâlâ çalışır.
+    // Tam kapsam wisdom-io-safety-p1-step5e testlerinde.
+    const sbx = createSandbox();
+    sbx.D.wisdomQuotes = sbx.normalizeWisdomQuotes([{ quote: 'IO regresyon', author: 'A' }]);
+    assert.equal(typeof sbx.wqBuildJsonText, 'function');
+    assert.ok(sbx.wqBuildCsvText(sbx.wqList()).charCodeAt(0) === 0xFEFF, 'CSV BOM korunmalı');
+    const stats = sbx.wqImportAnalyze([{ quote: 'IO regresyon', author: 'A', language: 'tr' }], 'json');
+    assert.ok(stats.warnings.some(w => w.code === 'DUPLICATE_CONTENT'), 'dedup korunmalı');
   });
   test('40. Principles UI bozulmaz (pFormSave hâlâ normal kayıt oluşturur, kanca yokken de)', () => {
     const sbx = createSandbox();

@@ -186,8 +186,10 @@ describe('Regresyon — dokunulmaması gereken dosyalar', () => {
     // 2 satır) — decision-journal-p0-3.test.js'in kendi regresyon/relations testleri
     // bu değişikliğin davranışı bozmadığını doğruluyor (bkz. testler 30/31/40).
     // 11a/11b QUOTES-CONSOLIDATION-P1 Step 5A'da BİLİNÇLİ değişti (kompakt UX); wisdom-ux-p0-step5a
-    // testleri davranışın korunduğunu doğrular. 11c/11f/11g dokunulmadı.
-    assertUnchanged(['js/11c-wisdom-io.js', 'js/11f-principles-display.js', 'js/11g-wisdom-migration.js']);
+    // testleri davranışın korunduğunu doğrular. 11c QUOTES-CONSOLIDATION-P1 Step 5E'de BİLİNÇLİ
+    // değişti (import güvenlik korumaları); wisdom-io-safety-p1-step5e testleri davranışı doğrular.
+    // 11f/11g dokunulmadı.
+    assertUnchanged(['js/11f-principles-display.js', 'js/11g-wisdom-migration.js']);
   });
   test('23. 11h-relations.js dokunulmadı (yeni resolver ayrı dosyada kaydedildi)', () => {
     assertUnchanged(['js/11h-relations.js', 'public/js/11h-relations.js']);

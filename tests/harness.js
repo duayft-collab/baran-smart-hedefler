@@ -92,6 +92,7 @@ function createSandbox() {
   run(src('js/05-diff.js'), '05-diff.js');
   run(src('js/06-restore-engine.js'), '06-restore-engine.js');
   run(src('js/11a-wisdom-quotes.js'), '11a-wisdom-quotes.js');
+  run(src('js/11c-wisdom-io.js'), '11c-wisdom-io.js');
   run(src('js/11b-wisdom-display.js'), '11b-wisdom-display.js');
   run(src('js/11d-principles.js'), '11d-principles.js');
   run(src('js/11g-wisdom-migration.js'), '11g-wisdom-migration.js');
