@@ -148,7 +148,8 @@ var SCHEMA_VERSION=3;
 var CLOUD={ready:false,uid:null,db:null,auth:null,user:null,timer:null,lastError:null,
   deviceId:null,unsubAuth:null,unsubDoc:null,listenerUid:null,
   revision:0,applyingRemote:false,badgeTimer:null,
-  pendingMutation:null,conflict:null,flushing:false,retryTimer:null,lastSavedAt:0};
+  pendingMutation:null,conflict:null,flushing:false,retryTimer:null,lastSavedAt:0,
+  ownMutationIds:[]}; // SG-SYNC-P0: bu bağlamın başarıyla commit ettiği mutation id'leri (own-echo tespiti; deviceId paylaşımlı değil)
 
 /* Kalici, kisisel veri icermeyen cihaz kimligi */
 function deviceId(){

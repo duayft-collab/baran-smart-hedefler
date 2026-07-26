@@ -43,6 +43,7 @@ function flushPending(){
     }
     CLOUD.revision=Number(res.revision||0);
     CLOUD.lastSavedAt=Date.now(); // FAZ-5B: admin cubugu icin son basarili commit zamani (lokal, write yok)
+    CLOUD.ownMutationIds=(CLOUD.ownMutationIds||[]).concat([m.id]).slice(-30); // SG-SYNC-P0: kendi commit id'miz (own-echo tespiti)
     localStorage.setItem('fu7_rev',String(CLOUD.revision));
     // Commit sirasinda yeni kullanici degisikligi geldiyse pending'i silme
     if(CLOUD.pendingMutation&&CLOUD.pendingMutation.id===m.id){CLOUD.pendingMutation=null;savePending();}
@@ -131,7 +132,10 @@ function onRemoteSnapshot(snap){
   var data=snap.data()||{};
   if(!data.payload){setSync('ok');return;}
   var remoteRev=Number(data.revision||0);
-  if(data.updatedByDeviceId===deviceId()){  // kendi yazmamizin sunucu yankisi
+  // SG-SYNC-P0 kök neden düzeltmesi: own-echo YALNIZ bu bağlamın commit ettiği mutation id ile tanınır.
+  // deviceId localStorage'da paylaşımlı olduğundan aynı hesabın başka sekmesi/bağlamı da "same device"
+  // görünür; deviceId'ye güvenmek o yazmayı UYGULAMADAN revision'ı ilerletir → lost update.
+  if(data.lastMutationId&&(CLOUD.ownMutationIds||[]).indexOf(data.lastMutationId)>=0){  // gerçekten kendi yazmamizin yankisi
     CLOUD.revision=Math.max(CLOUD.revision||0,remoteRev);
     localStorage.setItem('fu7_rev',String(CLOUD.revision));
     setSync('ok');return;
@@ -191,6 +195,15 @@ function conflictKeepLocal(){
 window.conflictLoadRemote=conflictLoadRemote;
 window.conflictKeepLocal=conflictKeepLocal;
 
+/* SG-SYNC-P0: çakışma başlığı. Yazma AYNI deviceId'den (aynı hesabın başka sekmesi/bağlamı) geldiyse
+   "başka cihaz" demez; yalnız gerçek farklı cihazda "başka cihaz" ifadesi kullanılır. */
+function conflictHeadline(serverData){
+  var same=serverData&&serverData.updatedByDeviceId&&serverData.updatedByDeviceId===deviceId();
+  return same
+    ? 'Bu hesabın başka bir sekmesinde/bağlamında daha yeni değişiklik var.'
+    : 'Başka bir cihazda daha yeni değişiklik bulundu.';
+}
+window.conflictHeadline=conflictHeadline;
 function showConflictUI(){
   if(document.getElementById('sync-conflict'))return;
   var w=document.createElement('div');w.id='sync-conflict';
@@ -200,7 +213,7 @@ function showConflictUI(){
   b.style.cssText='background:var(--s);color:var(--t);border:1px solid var(--bd);border-radius:14px;'
     +'max-width:440px;width:100%;max-height:85vh;overflow-y:auto;padding:22px;'
     +'box-shadow:0 18px 50px rgba(0,0,0,.28);font:400 13px/1.6 system-ui';
-  b.innerHTML='<p style="font-size:15px;font-weight:700;margin-bottom:8px">Başka bir cihazda daha yeni değişiklik bulundu.</p>'
+  b.innerHTML='<p style="font-size:15px;font-weight:700;margin-bottom:8px">'+conflictHeadline(CLOUD.conflict&&CLOUD.conflict.serverData)+'</p>'
     +'<p style="color:var(--t2);margin-bottom:18px">Değişiklikleriniz bu cihazda korunuyor. '
     +'Buluttaki son sürümü inceleyip yeniden deneyin.</p>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap">'

@@ -280,18 +280,44 @@ function _wqCommitImport(mode,st){
   // yeni ID ata (çakışma önle) + tarih koru; mevcut ID'lerle çakışırsa yenile
   var existing={}; wqList().forEach(function(q){existing[q.id]=1;});
   toAdd.forEach(function(q){
-    if(!q.id||existing[q.id]){ q.id=newWqId(); }
+    // SG-SYNC-P0: id yoksa, çakışıyorsa VEYA index-tabanlı wq-legacy-* ise globalce benzersiz yeni id ver.
+    // (Dış dosyalarda id yok → normalizeWisdomQuote wq-legacy-<satır> atar → iki bağlam aynı id üretir → çakışma.)
+    if(!q.id||existing[q.id]||/^wq-legacy-/.test(String(q.id))){ q.id=newWqId(); }
     existing[q.id]=1;
     D.wisdomQuotes.push(q);
   });
+  var revBefore=(typeof CLOUD!=='undefined')?Number(CLOUD.revision||0):0;
   if(typeof save==='function')save();                   // tek atomik bulut yazımı
   var added=toAdd.length;
   WQ_IMPORT.items=null;WQ_IMPORT.stats=null;
   if(typeof closeModal==='function')closeModal();
-  wqToast(added+' söz içe aktarıldı'+(mode==='replace'?' (tümü değiştirildi)':(mode==='skip'&&st.dupExisting?' ('+st.dupExisting+' yinelenen atlandı)':'')));
+  var suffix=(mode==='replace'?' (tümü değiştirildi)':(mode==='skip'&&st.dupExisting?' ('+st.dupExisting+' yinelenen atlandı)':''));
+  // SG-SYNC-P0: başarı YALNIZ bulut ACK'inden sonra. ACK gelene kadar "senkronize ediliyor".
+  _wqImportAwaitAck(revBefore, added+' söz içe aktarıldı'+suffix);
   if(typeof render==='function')render();
   return added;
 }
+/* Import senkron sonucu: synced (pending temiz + revision ilerledi) | pending (bekliyor) | conflict. Saf. */
+function _wqImportSyncOutcome(revBefore){
+  if(typeof CLOUD==='undefined')return 'synced';
+  if(CLOUD.conflict)return 'conflict';
+  if(CLOUD.pendingMutation)return 'pending';
+  return 'synced';   // pending yok + çakışma yok → yazma tamam (revision ilerledi ya da yazılacak bir şey yoktu)
+}
+/* ACK bekleyerek toast: önce "senkronize ediliyor", ACK'te başarı, çakışmada uyarı, zaman aşımında yerel-uyarı. */
+function _wqImportAwaitAck(revBefore, successMsg){
+  wqToast('Buluta senkronize ediliyor…');
+  if(typeof CLOUD==='undefined'){wqToast(successMsg);return;}
+  var tries=0, max=34;                                   // ~10sn (300ms×34)
+  var iv=setInterval(function(){
+    tries++;
+    var out=_wqImportSyncOutcome(revBefore);
+    if(out==='conflict'){clearInterval(iv);wqToast('İçe aktarıldı ama buluttaki değişiklikle çakıştı — çözüm bekleniyor',true);return;}
+    if(out==='synced'&&Number(CLOUD.revision||0)>revBefore){clearInterval(iv);wqToast(successMsg+' — buluta kaydedildi');return;}
+    if(tries>=max){clearInterval(iv);wqToast('Yerel kaydedildi; buluta senkronizasyon bekleniyor (bağlantıyı kontrol edin)',true);}
+  },300);
+}
+window._wqImportSyncOutcome=_wqImportSyncOutcome;
 
 /* replace: mutasyondan önce zorunlu `before_import` (force) yedek al + doğrula; başarısızsa
    SIFIR mutasyon, SIFIR snap, SIFIR save ile iptal et. Başarılıysa tek save döngüsü. */
