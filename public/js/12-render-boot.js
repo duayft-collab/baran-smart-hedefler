@@ -136,6 +136,7 @@ render();
 initCloud();
 if(typeof wdBoot==='function')wdBoot(); // D10.2: Bilgelik gösterim motoru + tek timer + Visibility API
 if(typeof wexBoot==='function')wexBoot(); // SG-P6-P1: Wisdom Experience (floating kart + gecikmeli tek welcome popup), read-only
+if(typeof wisdomBootActivateWhenReady==='function')wisdomBootActivateWhenReady(); // SG-SHARD-P2.1: gated boot read-transition (auth hazır olunca tek kez; realtime listener yok, write yok, migration yok)
 // Dil butonu senkronizasyonu
 (function(){
   document.querySelectorAll('.lang-sw button').forEach(function(b){

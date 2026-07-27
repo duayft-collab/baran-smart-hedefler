@@ -287,9 +287,13 @@ describe('Static guards (mandatory)', () => {
     assert.equal((a.match(/function\s+wqList\b/g) || []).length, 1);
     assert.equal((a.match(/function\s+wqById\b/g) || []).length, 1);
   });
-  test('G6. no auto sharded flag / no auto reset in migration top-level', () => {
+  test('G6. no auto sharded flag (setSharded(true) only inside GATED boot activation)', () => {
     assert.equal(/^\s*wisdomMigrationStart\s*\(/m.test(MIG_SRC), false);
-    assert.equal(/^\s*wisdomStoreSetSharded\s*\(\s*true/m.test(MIG_SRC), false);
+    // P2.1: wisdomStoreSetSharded(true) tek örnek + yalnız gated wisdomBootActivate içinde
+    assert.equal((MIG_SRC.match(/wisdomStoreSetSharded\s*\(\s*true/g) || []).length, 1);
+    const boot = MIG_SRC.slice(MIG_SRC.indexOf('function wisdomBootActivate('), MIG_SRC.indexOf('window.wisdomBootActivate='));
+    assert.match(boot, /wisdomStoreSetSharded\(true\)/); // tek örnek gated fonksiyonun içinde
+    assert.ok(boot.indexOf('cs.hash!==m.checksum') < boot.indexOf('wisdomStoreSetSharded(true)')); // checksum kapısından sonra
   });
   test('G7. protected files untouched (sync/restore/io/experience/rules)', () => {
     ['js/02-sync.js', 'js/06-restore-engine.js', 'js/11-restore-ui.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {

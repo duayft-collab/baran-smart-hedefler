@@ -16,7 +16,8 @@ window.WISDOM_BATCH_SIZE = WISDOM_BATCH_SIZE;
 
 /* ── Tek runtime cache + durum (tamamı runtime; Firestore'a YAZILMAZ) ── */
 var WQ_STORE = new Map();
-var WQ_STORE_STATE = { loaded:false, loading:false, sharded:false, error:null, count:0, checksum:null, lastLoadAt:null };
+var WQ_STORE_STATE = { loaded:false, loading:false, sharded:false, error:null, count:0, checksum:null, lastLoadAt:null,
+  activationChecked:false, activationReady:false, activationReason:null }; // P2.1: boot read-transition (runtime; Firestore'a YAZILMAZ)
 window.WQ_STORE = WQ_STORE; window.WQ_STORE_STATE = WQ_STORE_STATE;
 
 function wisdomStoreCol(uid){
@@ -152,7 +153,7 @@ function wisdomDualDelete(id){
 window.wisdomDualApply=wisdomDualApply; window.wisdomDualSet=wisdomDualSet; window.wisdomDualDelete=wisdomDualDelete;
 
 /* ── Test/geçiş yardımcıları (P1'de üretimde ÇAĞRILMAZ) ── */
-function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; }
+function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; }
 function wisdomStoreSetSharded(v){ WQ_STORE_STATE.sharded=!!v; } // P2 boot doğrulama sonrası açar; P1'de yalnız test
 function _wisdomStoreSeed(records,sharded){ WQ_STORE.clear(); (Array.isArray(records)?records:[]).forEach(function(r){ if(_wqsValidId(r))WQ_STORE.set(String(r.id),r); }); WQ_STORE_STATE.loaded=true; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=WQ_STORE.size; WQ_STORE_STATE.sharded=!!sharded; }
 window.wisdomStoreReset=wisdomStoreReset; window.wisdomStoreSetSharded=wisdomStoreSetSharded; window._wisdomStoreSeed=_wisdomStoreSeed;

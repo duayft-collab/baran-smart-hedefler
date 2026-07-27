@@ -148,14 +148,69 @@ function wisdomMigrationCanShard(){
 }
 window.wisdomMigrationCanShard=wisdomMigrationCanShard;
 
+/* ══ BOOT READ-TRANSITION ACTIVATION (P2.1) — GATED. Migration tamamlanıp doğrulandıysa
+   sharded read'i boot'ta güvenli+kalıcı aktive eder. Realtime listener YOK (tek get()).
+   Migration BAŞLATMAZ, WRITE YAPMAZ, throw ETMEZ. Kapı geçmezse legacy fallback korunur.
+   Auth öncesi ve oturumda ikinci çağrı no-op. ══ */
+function wisdomBootActivate(){
+  if(WQ_STORE_STATE.activationChecked)return Promise.resolve({ok:false,reason:'already_checked'}); // oturumda tek kez
+  if(typeof CLOUD==='undefined'||!CLOUD.db||!CLOUD.uid)return Promise.resolve({ok:false,reason:'no_auth'}); // auth öncesi: işaretleme, tekrar denenebilir
+  WQ_STORE_STATE.activationChecked=true; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason='checking';
+  var meta=_wmMetaDoc(), mig=_wmMigDoc();
+  if(!meta||!mig){ WQ_STORE_STATE.activationReason='no_db'; return Promise.resolve({ok:false,reason:'no_db'}); }
+  return Promise.all([meta.get(),mig.get()]).then(function(res){
+    var m=(res[0]&&res[0].exists)?res[0].data():null, g=(res[1]&&res[1].exists)?res[1].data():null;
+    if(!m||!g){ WQ_STORE_STATE.activationReason='no_migration'; return {ok:false,reason:'no_migration'}; } // migration yok → legacy (normal)
+    // ── Üçlü kapı (meta + manifest tutarlılığı) ──
+    var gate = m.sharded===true && g.status==='completed' && g.total===g.migratedCount &&
+      m.count===g.total && m.checksum===g.sourceChecksum && m.checksum===g.targetChecksum;
+    if(!gate){ WQ_STORE_STATE.activationReason='gate_failed'; return {ok:false,reason:'gate_failed'}; } // legacy
+    // ── Koleksiyonu yükle + yükleme-sonrası doğrula ──
+    WQ_STORE_STATE.activationReason='verifying';
+    return wisdomStoreLoad().then(function(lr){
+      if(!lr||!lr.ok||WQ_STORE_STATE.error){ WQ_STORE_STATE.activationReason='load_failed'; return {ok:false,reason:'load_failed'}; }
+      if(WQ_STORE.size===0){ WQ_STORE_STATE.activationReason='empty_cache'; return {ok:false,reason:'empty_cache'}; }
+      if(WQ_STORE.size!==m.count){ WQ_STORE_STATE.activationReason='count_mismatch'; return {ok:false,reason:'count_mismatch'}; }
+      return wisdomStoreChecksum().then(function(cs){
+        if(cs.hash!==m.checksum){ WQ_STORE_STATE.activationReason='checksum_mismatch'; return {ok:false,reason:'checksum_mismatch'}; }
+        wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true; WQ_STORE_STATE.activationReason='ready';
+        return {ok:true,count:WQ_STORE.size};
+      });
+    });
+  }).catch(function(e){ WQ_STORE_STATE.activationReason='error'; return {ok:false,reason:'error',error:String((e&&e.message)||e)}; });
+}
+window.wisdomBootActivate=wisdomBootActivate;
+
+/* Bounded hazır-bekleme (realtime listener DEĞİL): auth hazır olunca tek sefer aktive et. */
+function wisdomBootActivateWhenReady(){
+  if(WQ_STORE_STATE.activationChecked||WQ_STORE_STATE._activationScheduled)return;
+  WQ_STORE_STATE._activationScheduled=true;
+  var tries=0, max=40; // ~20sn (500ms×40); listener yok
+  var iv=setInterval(function(){
+    tries++;
+    var ready=typeof CLOUD!=='undefined'&&CLOUD.ready&&CLOUD.db&&CLOUD.uid&&CLOUD.user&&!CLOUD.user.isAnonymous;
+    if(ready){ clearInterval(iv); WQ_STORE_STATE._activationScheduled=false; wisdomBootActivate(); }
+    else if(tries>=max){ clearInterval(iv); WQ_STORE_STATE._activationScheduled=false; } // auth gelmedi → legacy
+  },500);
+}
+window.wisdomBootActivateWhenReady=wisdomBootActivateWhenReady;
+
 /* ── UX durum satırı (SALT OKUNUR): yalnız migration/storage hatası veya geçiş
    durumunda görünür. Normal legacy'de '' döner. İkon + açık metin (renk tek sinyal
    değil); sabit genişlik yok; popup yok; write/migration/auto-load tetiklemez. ── */
+var _WEX_ACT_FAIL={gate_failed:1,count_mismatch:1,checksum_mismatch:1,load_failed:1,empty_cache:1,error:1};
 function wisdomStatusLineHtml(){
   var ms=(typeof wisdomMigrationStatus==='function')?wisdomMigrationStatus():{status:'idle'};
-  var ss=(typeof wisdomStoreStatus==='function')?wisdomStoreStatus():{error:null};
+  var ss=(typeof WQ_STORE_STATE!=='undefined')?WQ_STORE_STATE:{error:null,activationReason:null,activationReady:false}; // activation alanları burada
   var kind=null;
-  if(ms.status==='failed'||ss.error)kind='error';
+  // P2.1 read-transition durumları (öncelikli). Normal legacy (no_migration/no_auth/no_db/null) → gizli.
+  var ar=ss.activationReason;
+  if(ss.activationReady===true||ar==='ready')kind='act_ready';
+  else if(ar==='checking')kind='act_checking';
+  else if(ar==='verifying')kind='act_verifying';
+  else if(ar&&_WEX_ACT_FAIL[ar])kind='act_failed';
+  // Migration durumları (P2) — aktivasyon sinyali yoksa
+  else if(ms.status==='failed'||ss.error)kind='error';
   else if(ms.status==='in_progress')kind='preparing';
   else if(ms.status==='verifying')kind='verifying';
   else if(ms.status==='completed')kind='ready';
@@ -163,7 +218,11 @@ function wisdomStatusLineHtml(){
   var M={ preparing:{i:'ref',c:'var(--blue)',t:'Bulut depolama hazırlanıyor'},
     verifying:{i:'ref',c:'var(--orange)',t:'Veriler doğrulanıyor'},
     ready:{i:'chk',c:'var(--green)',t:'Bulut depolama hazır'},
-    error:{i:'csq',c:'var(--red)',t:'Senkronizasyon tamamlanamadı'} }[kind];
+    error:{i:'csq',c:'var(--red)',t:'Senkronizasyon tamamlanamadı'},
+    act_checking:{i:'ref',c:'var(--blue)',t:'Bulut arşivi kontrol ediliyor'},
+    act_verifying:{i:'ref',c:'var(--orange)',t:'Bulut arşivi doğrulanıyor'},
+    act_ready:{i:'chk',c:'var(--green)',t:'Bulut arşivi kullanıma hazır'},
+    act_failed:{i:'csq',c:'var(--orange)',t:'Bulut arşivi doğrulanamadı, yerel veri kullanılıyor'} }[kind];
   var icn=(typeof ic==='function')?ic(M.i,13,M.c):'';
   return '<div role="status" aria-live="polite" style="display:flex;align-items:center;gap:7px;max-width:100%;padding:6px 10px;margin-bottom:10px;border-radius:8px;background:var(--s2);font-size:11.5px;color:var(--t2)">'+
     icn+'<span style="font-weight:600;color:'+M.c+'">'+M.t+'</span></div>';
