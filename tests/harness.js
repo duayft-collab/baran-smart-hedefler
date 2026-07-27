@@ -42,6 +42,12 @@ function createSandbox() {
   const sandbox = {
     console,
     localStorage,
+    // Real WebCrypto + text codecs so SHA-256 helpers (sha256Hex / wisdomStoreChecksum)
+    // run against the same algorithm the backup verification uses. Additive: no prior
+    // suite references crypto/TextEncoder, so behavior is unchanged for them.
+    crypto: require('crypto').webcrypto,
+    TextEncoder,
+    TextDecoder,
     navigator: { onLine: true },
     confirm(msg) { return typeof sandbox.window.__confirmImpl === 'function' ? sandbox.window.__confirmImpl(msg) : confirmReturn; },
     alert(msg) { capturedAlerts.push(msg); },
@@ -89,6 +95,7 @@ function createSandbox() {
   run(src('js/01-state.js'), '01-state.js');
   run(src('js/03-auth.js'), '03-auth.js');
   run(src('js/02-sync.js'), '02-sync.js');
+  run(src('js/02b-wisdom-store.js'), '02b-wisdom-store.js');
   run(src('js/04-backup.js'), '04-backup.js');
   run(src('js/05-diff.js'), '05-diff.js');
   run(src('js/06-restore-engine.js'), '06-restore-engine.js');

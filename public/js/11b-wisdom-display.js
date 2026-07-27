@@ -22,8 +22,11 @@ var WD_CONTEXT={smart:['Disiplin','Karakter','Sabır'],goals:['Başarı','Hedef'
 function wsGet(){ if(!D.wisdomSettings||typeof D.wisdomSettings!=='object')D.wisdomSettings=Object.assign({},INIT.wisdomSettings); return D.wisdomSettings; }
 window.wsGet=wsGet;
 
-function wdActiveList(){ return (Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]).filter(function(q){return q&&q.active;}); }
-function wdById(id){ return (Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]).filter(function(q){return String(q.id)===String(id);})[0]||null; }
+/* Wisdom Sharding P1: display motoru YALNIZ dual-read tek geçiş noktalarından okur
+   (wqList/wqById) → sharded modda koleksiyon cache, legacy modda D.wisdomQuotes.
+   Başka mantık/cache/seçim motoru YOK. */
+function wdActiveList(){ return wqList().filter(function(q){return q&&q.active;}); }
+function wdById(id){ return wqById(id); }
 /* ── Havuz ── (favori/kategori/dil filtreleri) — D10.2 birebir */
 function wdPool(){
   var s=wsGet();

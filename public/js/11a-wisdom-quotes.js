@@ -58,8 +58,16 @@ function normalizeWisdomQuote(q,i){
 function normalizeWisdomQuotes(list){ return (Array.isArray(list)?list:[]).map(normalizeWisdomQuote).filter(Boolean); }
 window.normalizeWisdomQuote=normalizeWisdomQuote;window.normalizeWisdomQuotes=normalizeWisdomQuotes;
 
-function wqList(){ if(!Array.isArray(D.wisdomQuotes))D.wisdomQuotes=[]; return D.wisdomQuotes; }
-function wqById(id){ return wqList().filter(function(q){return String(q.id)===String(id);})[0]||null; }
+/* Wisdom Sharding P1 dual-read TEK geçiş noktası: sharded aktif+yüklü ise koleksiyon
+   cache'i; aksi halde legacy D.wisdomQuotes (güvenli fallback). İkinci okuma motoru YOK. */
+function wqList(){
+  if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded())return wisdomStoreList();
+  if(!Array.isArray(D.wisdomQuotes))D.wisdomQuotes=[]; return D.wisdomQuotes;
+}
+function wqById(id){
+  if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded())return wisdomStoreById(id);
+  return (Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]).filter(function(q){return String(q.id)===String(id);})[0]||null;
+}
 function wqCategories(){ var s={}; wqList().forEach(function(q){ if(q.category)s[q.category]=1; }); return Object.keys(s).sort(function(a,b){return a.localeCompare(b,'tr');}); }
 function wqLanguages(){ var s={}; wqList().forEach(function(q){ s[q.language||'tr']=1; }); return Object.keys(s).sort(); }
 
