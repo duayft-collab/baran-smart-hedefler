@@ -118,11 +118,17 @@ window.wqSort=wqSort;window.wqFilter=wqFilter;
 /* ── Hızlı işlemler ── (1 write) */
 function _wqTouch(w){ w.updatedAt=wqNow(); }
 function _wqAfter(){ if(typeof save==='function')save(); if(tab==='wisdom')renderWisdomQuotes(); }
-function wqToggleFav(id){ var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.favorite=!w.favorite; _wqTouch(w); _wqAfter(); }
-function wqToggleActive(id){ var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.active=!w.active; _wqTouch(w); _wqAfter(); }
-function wqTogglePin(id){ var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.pinned=!w.pinned; _wqTouch(w); _wqAfter(); } // bu fazda birden fazla pinned olabilir
-function wqToggleReflect(id){ var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.reflected=!w.reflected; _wqTouch(w); _wqAfter(); }
-function wqDelete(id){ if(!confirm('Bu söz kalıcı olarak silinsin mi?'))return; if(typeof snap==='function')snap(); D.wisdomQuotes=wqList().filter(function(q){return String(q.id)!==String(id);}); _wqAfter(); }
+/* P2 dual-write: sharded aktifken tek alan değişimi koleksiyon-önce yazılır (legacy byte-identical kalır). */
+function _wqSharded(){ return typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded(); }
+function _wqDualToggle(id,field){ var c=wqById(id); if(!c)return; var patch={}; patch[field]=!c[field]; patch.updatedAt=wqNow();
+  if(typeof wisdomDualApply==='function')wisdomDualApply(id,patch).then(function(r){ if(r&&r.ok&&tab==='wisdom'&&typeof renderWisdomQuotes==='function')renderWisdomQuotes(); }); }
+function wqToggleFav(id){ if(_wqSharded())return _wqDualToggle(id,'favorite'); var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.favorite=!w.favorite; _wqTouch(w); _wqAfter(); }
+function wqToggleActive(id){ if(_wqSharded())return _wqDualToggle(id,'active'); var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.active=!w.active; _wqTouch(w); _wqAfter(); }
+function wqTogglePin(id){ if(_wqSharded())return _wqDualToggle(id,'pinned'); var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.pinned=!w.pinned; _wqTouch(w); _wqAfter(); } // bu fazda birden fazla pinned olabilir
+function wqToggleReflect(id){ if(_wqSharded())return _wqDualToggle(id,'reflected'); var w=wqById(id); if(!w)return; if(typeof snap==='function')snap(); w.reflected=!w.reflected; _wqTouch(w); _wqAfter(); }
+function wqDelete(id){ if(!confirm('Bu söz kalıcı olarak silinsin mi?'))return;
+  if(_wqSharded()){ if(typeof wisdomDualDelete==='function')wisdomDualDelete(id).then(function(r){ if(r&&r.ok&&tab==='wisdom'&&typeof renderWisdomQuotes==='function')renderWisdomQuotes(); }); return; }
+  if(typeof snap==='function')snap(); D.wisdomQuotes=wqList().filter(function(q){return String(q.id)!==String(id);}); _wqAfter(); }
 window.wqToggleFav=wqToggleFav;window.wqToggleActive=wqToggleActive;window.wqTogglePin=wqTogglePin;window.wqToggleReflect=wqToggleReflect;window.wqDelete=wqDelete;
 
 /* ── Form (oluştur / düzenle) ── */
@@ -166,6 +172,14 @@ function wqFormSave(id){
     active:!!(ge('wq_active')&&ge('wq_active').checked), favorite:!!(ge('wq_favorite')&&ge('wq_favorite').checked),
     pinned:!!(ge('wq_pinned')&&ge('wq_pinned').checked), reflected:!!(ge('wq_reflected')&&ge('wq_reflected').checked)
   };
+  /* P2 dual-write (sharded): Edit + Tek kayıt ekleme koleksiyon-önce yazılır. Legacy yolu (aşağıda) DEĞİŞMEZ. */
+  if(_wqSharded()&&typeof wisdomDualSet==='function'){
+    var nowS=wqNow(), full;
+    if(id){ var cur=wqById(id); if(!cur){wqClearDraft();sh('modal-root','');return;} full=Object.assign({},cur,rec,{updatedAt:nowS}); }
+    else { full=normalizeWisdomQuote(Object.assign({id:newWqId(),createdAt:nowS,updatedAt:nowS,lastShownAt:null,showCount:0},rec),0); }
+    wisdomDualSet(full).then(function(){ wqClearDraft(); if(typeof sh==='function')sh('modal-root',''); if(typeof renderWisdomQuotes==='function')renderWisdomQuotes(); });
+    return;
+  }
   if(id){
     var w=wqById(id); if(!w){wqClearDraft();sh('modal-root','');return;}
     // Değişiklik yoksa 0 write
@@ -207,6 +221,7 @@ function renderWisdomQuotes(){
   h+='<button class="btn btn-p" onclick="openWqForm()">'+ic('plus',13)+' Yeni Söz</button>';
   h+=(typeof wisdomIoButtonsHtml==='function'?wisdomIoButtonsHtml():''); // D10.3: içe/dışa aktarma butonları (additive)
   h+=(typeof wisdomMigrationButtonHtml==='function'?wisdomMigrationButtonHtml():'')+'</div>'; // D10.6.1: admin-only Öz Sözler→Özlü Sözler taşıma butonu (additive, non-admin='')
+  h+=(typeof wisdomStatusLineHtml==='function'?wisdomStatusLineHtml():''); // SG-SHARD-P2: salt-okunur bulut-depolama durum satırı (yalnız migration/hata; normal legacy'de '')
   // istatistik
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
   /* QUOTES-CONSOLIDATION-P1 Step 5A: birincil özet 4 kutu (Toplam/Favori/Aktif/Sabit).

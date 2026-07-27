@@ -34,7 +34,9 @@ function loadData(){
    migration compatibility until Step 4). Single canonical adapter — no per-screen selection
    logic, no dual-source fallback. */
 function getActiveWisdomQuotes(){
-  var list = Array.isArray(D.wisdomQuotes) ? D.wisdomQuotes : [];
+  /* Wisdom Sharding P2: dual-read tek geçiş noktası (wqList) — sharded modda koleksiyon
+     cache, legacy modda D.wisdomQuotes. İkinci selector yok. rndQuote/Günün Sözü bunu okur. */
+  var list = (typeof wqList === 'function') ? wqList() : (Array.isArray(D.wisdomQuotes) ? D.wisdomQuotes : []);
   return list.filter(function(w){ return w && w.active!==false && String(w.quote==null?'':w.quote).trim(); });
 }
 function getWisdomQuoteDisplayText(rec){ return rec ? String(rec.quote==null?'':rec.quote) : ''; }

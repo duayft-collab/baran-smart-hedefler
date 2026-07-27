@@ -189,8 +189,15 @@ describe('Static guards (mandatory)', () => {
   test('G3c. Firestore realtime listener = 0 in store (no listener API calls)', () => {
     assert.equal(/onSnapshot\s*\(|addSnapshotListener\s*\(|\.subscribe\s*\(/.test(STORE_SRC), false);
   });
-  test('G4. does not remove D.wisdomQuotes / no state-doc write engine', () => {
-    assert.equal(/delete\s+D\.wisdomQuotes|D\.wisdomQuotes\s*=|queueCloudSave\s*\(|commitMutation\s*\(|stateRef\s*\(/.test(STORE_SRC), false);
+  test('G4. no legacy removal / no state-doc sync engine (P2 dual-write is gated)', () => {
+    // Wholesale legacy silme veya state-doc sync motoru YOK. (P2 dual-write per-record
+    // legacy yazması wisdomStoreIsSharded() ardında gated; wholesale removal değil.)
+    assert.equal(/delete\s+D\.wisdomQuotes|queueCloudSave\s*\(|commitMutation\s*\(|stateRef\s*\(/.test(STORE_SRC), false);
+    // dual-write yolları sharded kapısıyla korunur
+    ['wisdomDualApply', 'wisdomDualSet', 'wisdomDualDelete'].forEach(function (fn) {
+      const body = STORE_SRC.slice(STORE_SRC.indexOf('function ' + fn));
+      assert.match(body.slice(0, 160), /wisdomStoreIsSharded\(\)/, fn + ' must be gated');
+    });
   });
   test('G5. no second selector / single cache (one WQ_STORE Map)', () => {
     assert.equal((STORE_SRC.match(/new Map\(/g) || []).length, 1);
@@ -201,7 +208,8 @@ describe('Static guards (mandatory)', () => {
   });
   test('G6. protected files untouched by grep signature (rules/firebase/sync/backup/restore/io/experience)', () => {
     // 02b, 11a, 11b harici wisdom-store bağlantısı yok
-    ['js/02-sync.js', 'js/04-backup.js', 'js/06-restore-engine.js', 'js/11-restore-ui.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
+    // NOT: 04-backup.js P2'de sharded rehydrate için wisdomStore* okur (izinli); listeden çıkarıldı.
+    ['js/02-sync.js', 'js/06-restore-engine.js', 'js/11-restore-ui.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
       assert.equal(/wisdomStore|WQ_STORE/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), false, f);
     });
   });

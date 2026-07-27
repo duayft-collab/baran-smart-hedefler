@@ -151,6 +151,12 @@ async function createBackup(reason,options){
   var uid=CLOUD.uid;
 
   var payload=JSON.parse(JSON.stringify(options.payload||D));      // derin snapshot
+  /* Wisdom Sharding P2: sharded aktifse wisdomQuotes payload'a KOLEKSİYONDAN rehydrate
+     edilir (state doc'ta legacy 130 kalsa da yedek tam koleksiyonu içerir). Checksum/
+     doğrulama akışı DEĞİŞMEZ. Legacy modda hiçbir fark yok (byte-identical). */
+  if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded()&&typeof wisdomStoreList==='function'){
+    payload.wisdomQuotes=JSON.parse(JSON.stringify(wisdomStoreList()));
+  }
   var plain=canonicalStringify(payload);
   var plainSha256=await sha256Hex(plain);
   var plainBytes=new TextEncoder().encode(plain).length;

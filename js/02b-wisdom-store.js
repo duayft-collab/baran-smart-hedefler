@@ -116,6 +116,41 @@ function wisdomStoreBatchWrite(records){
 window.wisdomStoreSet=wisdomStoreSet; window.wisdomStoreUpdate=wisdomStoreUpdate;
 window.wisdomStoreDelete=wisdomStoreDelete; window.wisdomStoreBatchWrite=wisdomStoreBatchWrite;
 
+/* ══ DUAL-WRITE (P2) — YALNIZ sharded aktifken. Koleksiyon ÖNCE; ACK başarısızsa
+   legacy state DEĞİŞMEZ (sessiz başarı yok). İkincil legacy yazma + save geçici
+   (P3'e kadar). Idempotent (id bazlı). Toplu 4987 import bu yolu ASLA kullanmaz. ══ */
+function wisdomDualApply(id,patch){
+  if(!wisdomStoreIsSharded())return Promise.resolve({ok:false,reason:'not_sharded'});
+  return wisdomStoreUpdate(id,patch).then(function(res){
+    if(!res||!res.ok)return {ok:false,reason:'collection_failed'};       // legacy DEĞİŞMEZ
+    var w=(Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]).filter(function(q){return String(q.id)===String(id);})[0];
+    if(w){ Object.assign(w,patch); if(typeof save==='function')save(); } // geçici legacy + save
+    return {ok:true,id:String(id)};
+  },function(e){ return {ok:false,reason:'collection_failed',error:String((e&&e.message)||e)}; });
+}
+function wisdomDualSet(record){
+  if(!wisdomStoreIsSharded())return Promise.resolve({ok:false,reason:'not_sharded'});
+  if(!_wqsValidId(record))return Promise.resolve({ok:false,reason:'MISSING_ID'});
+  return wisdomStoreSet(record).then(function(res){
+    if(!res||!res.ok)return {ok:false,reason:'collection_failed'};
+    if(!Array.isArray(D.wisdomQuotes))D.wisdomQuotes=[];
+    var i=D.wisdomQuotes.map(function(q){return String(q.id);}).indexOf(String(record.id));
+    if(i>=0)D.wisdomQuotes[i]=record; else D.wisdomQuotes.push(record);
+    if(typeof save==='function')save();
+    return {ok:true,id:String(record.id)};
+  },function(e){ return {ok:false,reason:'collection_failed',error:String((e&&e.message)||e)}; });
+}
+function wisdomDualDelete(id){
+  if(!wisdomStoreIsSharded())return Promise.resolve({ok:false,reason:'not_sharded'});
+  return wisdomStoreDelete(id).then(function(res){
+    if(!res||!res.ok)return {ok:false,reason:'collection_failed'};
+    if(Array.isArray(D.wisdomQuotes))D.wisdomQuotes=D.wisdomQuotes.filter(function(q){return String(q.id)!==String(id);});
+    if(typeof save==='function')save();
+    return {ok:true,id:String(id)};
+  },function(e){ return {ok:false,reason:'collection_failed',error:String((e&&e.message)||e)}; });
+}
+window.wisdomDualApply=wisdomDualApply; window.wisdomDualSet=wisdomDualSet; window.wisdomDualDelete=wisdomDualDelete;
+
 /* ── Test/geçiş yardımcıları (P1'de üretimde ÇAĞRILMAZ) ── */
 function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; }
 function wisdomStoreSetSharded(v){ WQ_STORE_STATE.sharded=!!v; } // P2 boot doğrulama sonrası açar; P1'de yalnız test
