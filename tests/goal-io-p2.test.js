@@ -68,8 +68,8 @@ describe('JSON export', () => {
   });
   test('7. Deterministic export (same input → same text)', () => {
     const S = createSandbox();
-    const t1 = S.goalBuildJsonText([fullGoal()]).replace(/"exportedAt":"[^"]*"/, '');
-    const t2 = S.goalBuildJsonText([fullGoal()]).replace(/"exportedAt":"[^"]*"/, '');
+    const t1 = S.goalBuildJsonText([fullGoal()]).replace(/"exportedAt":\s*"[^"]*"/, '');
+    const t2 = S.goalBuildJsonText([fullGoal()]).replace(/"exportedAt":\s*"[^"]*"/, '');
     assert.equal(t1, t2);
   });
   test('9+10. Only goals exported, no unrelated state leakage', () => {
