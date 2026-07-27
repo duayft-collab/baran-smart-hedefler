@@ -135,6 +135,7 @@ updateClock();
 render();
 initCloud();
 if(typeof wdBoot==='function')wdBoot(); // D10.2: Bilgelik gösterim motoru + tek timer + Visibility API
+if(typeof wexBoot==='function')wexBoot(); // SG-P6-P1: Wisdom Experience (floating kart + gecikmeli tek welcome popup), read-only
 // Dil butonu senkronizasyonu
 (function(){
   document.querySelectorAll('.lang-sw button').forEach(function(b){

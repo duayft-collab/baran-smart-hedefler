@@ -215,6 +215,7 @@ function renderDashboard(){
   var rq=rndQuote(); // QUOTES-CONSOLIDATION-P1: "Quote of the Day" now sources from wisdomQuotes (canonical adapter)
 
   var h='<div class="fade">';
+  if(typeof wexDashboardCardHtml==='function')h+=wexDashboardCardHtml(); // SG-P6-P1: Bugünün Bilgeliği premium kartı (read-only, additive)
   if(typeof wisdomHeroHtml==='function')h+=wisdomHeroHtml(); // D10.2: pozisyon 'hero' ise Bilgelik kartı (additive)
 
   /* System status bar */
