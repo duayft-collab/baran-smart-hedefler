@@ -53,12 +53,11 @@ function wisdomMigrationStart(opts){
     return Promise.resolve({ok:false,reason:'already_running'});
   if(typeof createBackup!=='function')return Promise.resolve({ok:false,reason:'no_backup_engine'});
   _wmRunning=true;
-  // 1) Doğrulanmış backup — başarısızsa SIFIR write
-  return Promise.resolve().then(function(){ return createBackup('before_shard_migration',{force:true,label:'Wisdom sharding migration safety backup'}); })
-    .then(function(bk){
-      if(!bk||(!bk.id&&!bk.skipped))throw new Error('backup_unverified');
-      return wisdomMigrationPlan();
-    })
+  // 1) Doğrulanmış backup — başarısızsa SIFIR write (backup hatası ayrı etiketlenir)
+  return Promise.resolve().then(function(){ return createBackup('before_migration',{force:true,label:'Wisdom sharding migration safety backup'}); })
+    .then(function(bk){ if(!bk||(!bk.id&&!bk.skipped))return Promise.reject({__backup:true}); return bk; },
+          function(e){ return Promise.reject({__backup:true,msg:String((e&&e.message)||e)}); })
+    .then(function(bk){ return wisdomMigrationPlan(); })
     .then(function(plan){
       WISDOM_MIGRATION.status='in_progress'; WISDOM_MIGRATION.total=plan.total; WISDOM_MIGRATION.migratedCount=0;
       WISDOM_MIGRATION.lastBatchIndex=-1; WISDOM_MIGRATION.sourceChecksum=plan.sourceChecksum;
@@ -69,9 +68,12 @@ function wisdomMigrationStart(opts){
     .then(function(){ return wisdomMigrationVerify(); })
     .then(function(v){ _wmRunning=false; return v; })
     .catch(function(e){
-      WISDOM_MIGRATION.status='failed'; WISDOM_MIGRATION.error=String((e&&e.message)||e||'error'); _wmRunning=false;
-      _wmPersistManifest();
-      return {ok:false,reason:'failed',error:WISDOM_MIGRATION.error};
+      var isBackup=!!(e&&e.__backup);
+      WISDOM_MIGRATION.status='failed';
+      WISDOM_MIGRATION.error=isBackup?'backup_failed':String((e&&e.message)||e||'error');
+      _wmRunning=false;
+      if(!isBackup)_wmPersistManifest(); // backup gate hiç yazmadı → manifest de yazma (0 write)
+      return {ok:false,reason:isBackup?'backup_failed':'failed',error:WISDOM_MIGRATION.error};
     });
 }
 window.wisdomMigrationStart=wisdomMigrationStart;
@@ -210,6 +212,7 @@ function wisdomStatusLineHtml(){
   else if(ar==='verifying')kind='act_verifying';
   else if(ar&&_WEX_ACT_FAIL[ar])kind='act_failed';
   // Migration durumları (P2) — aktivasyon sinyali yoksa
+  else if(ms.status==='failed'&&ms.error==='backup_failed')kind='backup_failed'; // P2.2: backup gate özel metni
   else if(ms.status==='failed'||ss.error)kind='error';
   else if(ms.status==='in_progress')kind='preparing';
   else if(ms.status==='verifying')kind='verifying';
@@ -219,6 +222,7 @@ function wisdomStatusLineHtml(){
     verifying:{i:'ref',c:'var(--orange)',t:'Veriler doğrulanıyor'},
     ready:{i:'chk',c:'var(--green)',t:'Bulut depolama hazır'},
     error:{i:'csq',c:'var(--red)',t:'Senkronizasyon tamamlanamadı'},
+    backup_failed:{i:'csq',c:'var(--red)',t:'Güvenli yedek oluşturulamadı. Taşıma başlatılmadı.'},
     act_checking:{i:'ref',c:'var(--blue)',t:'Bulut arşivi kontrol ediliyor'},
     act_verifying:{i:'ref',c:'var(--orange)',t:'Bulut arşivi doğrulanıyor'},
     act_ready:{i:'chk',c:'var(--green)',t:'Bulut arşivi kullanıma hazır'},
