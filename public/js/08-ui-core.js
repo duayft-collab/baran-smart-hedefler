@@ -365,6 +365,29 @@ function goalDueBadge(g){
   return '<span class="pill" style="font-size:9.5px;background:var(--s2);color:'+col+'">'+lbl+'</span>';
 }
 window.goalDueBadge=goalDueBadge;
+/* SMART-GOALS P2-P2: Goal IO çubuğu (ince UI kancası; ağır mantık 11l-goal-io.js'te).
+   İçe Aktar = gizli dosya girişi → 11l parse+analyze+preview. Dışa Aktar = JSON/CSV. */
+function goalIoBarHtml(){
+  return '<label class="btn btn-s btn-sm" style="cursor:pointer">'+((typeof ic==='function')?ic('arc',12):'')+' İçe Aktar'+
+    '<input type="file" accept=".json,.csv,application/json,text/csv" style="display:none" onchange="goalImportFile(this)"></label>'+
+    '<button class="btn btn-s btn-sm" onclick="goalExportJSON()" title="Kayıpsız tam yedek">Dışa Aktar JSON</button>'+
+    '<button class="btn btn-s btn-sm" onclick="goalExportCSV()" title="CSV — bilinçli lossy">CSV</button>';
+}
+window.goalIoBarHtml=goalIoBarHtml;
+function goalImportFile(input){
+  var f=input&&input.files&&input.files[0]; if(!f)return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var p=(typeof goalParseImportFile==='function')?goalParseImportFile(String(reader.result||''),f.name):{ok:false,error:'IO modülü yok'};
+    if(!p.ok){ if(typeof toast==='function')toast(p.error,true); else if(typeof wqToast==='function')wqToast(p.error,true); input.value=''; return; }
+    var st=goalAnalyzeImport(p.records,p.fmt,'append');
+    goalImportShowPreview(st,p.fmt,'append');
+    input.value='';
+  };
+  reader.onerror=function(){ if(typeof toast==='function')toast('Dosya okunamadı',true); };
+  reader.readAsText(f);
+}
+window.goalImportFile=goalImportFile;
 function renderGoals(){
   var all=D.goals||[];
   var goals=fil(all,['title','desc','cat']);
@@ -382,7 +405,7 @@ function renderGoals(){
     var a=gView===vv.v;
     h+='<button class="btn btn-sm" style="padding:4px 10px;background:'+(a?'var(--s)':'transparent')+';color:'+(a?'var(--t)':'var(--t2)')+'" data-v="'+vv.v+'" onclick="gView=this.dataset.v;setGView();renderPage()">'+vv.l+'</button>';
   });
-  h+='</div><button class="btn btn-p" onclick="openGoalForm()">'+ic('plus',13)+' Hedef Ekle</button></div></div>';
+  h+='</div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+goalIoBarHtml()+'<button class="btn btn-p" onclick="openGoalForm()">'+ic('plus',13)+' Hedef Ekle</button></div></div>';
   h+='<div class="g5" style="margin-bottom:16px">';
   h+=statCard('Toplam',all.length,'tgt','var(--blue)');
   h+=statCard('Aktif',all.length-doneCount,'zap','var(--orange)');
