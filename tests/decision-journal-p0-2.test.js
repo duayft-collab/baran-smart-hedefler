@@ -191,7 +191,23 @@ describe('Regresyon — dokunulmaması gereken dosyalar', () => {
     // 11f/11g dokunulmadı.
     assertUnchanged(['js/11f-principles-display.js', 'js/11g-wisdom-migration.js']);
   });
-  test('23. 11h-relations.js dokunulmadı (yeni resolver ayrı dosyada kaydedildi)', () => {
-    assertUnchanged(['js/11h-relations.js', 'public/js/11h-relations.js']);
+  test('23. 11h-relations.js SMART-GOALS P2-P1\'de BİLİNÇLİ değişti (additive) — Karar Günlüğü davranışı korunur', () => {
+    // 11h P2-P1'de additive sertleştirildi (yeni REL_TYPES supports/depends_on/blocks + self-link
+    // + boş-id guard). Byte-freeze yerine DAVRANIŞSAL guard: Karar Günlüğü'nün kullandığı motor
+    // sözleşmesi (dedup + resolver + mevcut relation türleri) bozulmadı. goal-relations-p1 testleri
+    // yeni davranışı ayrıca doğrular. Yeni resolver'lar (generalNote/task) 11k'de kayıtlıdır.
+    const sbx = createSandbox();
+    // Karar Günlüğü mirası türler hâlâ geçerli:
+    ['used_in', 'derived_from', 'inspired_by', 'related_to'].forEach(function (rt) {
+      const r = sbx.relAdd({ sourceType: 'decision', sourceId: 'd1', targetType: 'principle', targetId: 'p1', relationType: rt });
+      assert.equal(r.ok, true, rt);
+    });
+    // dedup korunur:
+    const before = sbx.relList().length;
+    sbx.relAdd({ sourceType: 'decision', sourceId: 'd1', targetType: 'principle', targetId: 'p1', relationType: 'used_in' });
+    assert.equal(sbx.relList().length, before);
+    // decision resolver hâlâ çözer:
+    sbx.D.decisions = [{ id: 'd1', title: 'Karar X' }];
+    assert.equal(sbx.relResolve('decision', 'd1').label, 'Karar X');
   });
 });

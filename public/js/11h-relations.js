@@ -7,7 +7,9 @@
    Resolver deseni ContentEngine'in (11e) CD_ADAPTERS registry'siyle aynı ruhtadır.
    ══════════════════════════════════════════════════════════════════════════ */
 
-var REL_TYPES=['used_in','derived_from','inspired_by','related_to'];
+/* SMART-GOALS P2-P1: Goal ilişkileri için additive tipler (supports/depends_on/blocks).
+   Mevcut used_in/derived_from/inspired_by/related_to KORUNUR (Karar Günlüğü kullanır). */
+var REL_TYPES=['used_in','derived_from','inspired_by','related_to','supports','depends_on','blocks'];
 var REL_CONFIDENCE=['low','medium','high'];
 
 function relList(){ if(!Array.isArray(D.relations))D.relations=[]; return D.relations; }
@@ -43,6 +45,10 @@ function relAdd(input){
   if(!relValidateConfidence(confidence))return {ok:false,error:'INVALID_CONFIDENCE'};
   var sourceType=String(input.sourceType), sourceId=String(input.sourceId);
   var targetType=String(input.targetType), targetId=String(input.targetId);
+  // SMART-GOALS P2-P1: boş id (null MISSING_FIELDS'te yakalandı, '' burada) reddedilir.
+  if(sourceId===''||targetId==='')return {ok:false,error:'MISSING_FIELDS'};
+  // SMART-GOALS P2-P1: self-link MOTORDA reddedilir (yalnız picker UI'da değil).
+  if(sourceType===targetType&&sourceId===targetId)return {ok:false,error:'SELF_LINK'};
   var existing=relFind(sourceType,sourceId,targetType,targetId,relationType);
   if(existing){
     if(input.note!=null)existing.note=String(input.note);

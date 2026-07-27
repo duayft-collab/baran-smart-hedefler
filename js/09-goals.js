@@ -82,6 +82,9 @@ function openGoalDetail(goalId){
   }
   h+='</div>';
   h+='<div id="gnotes_box"></div>';
+  /* SMART-GOALS P2-P1: İlişkili Kayıtlar paneli (TEK motor 11h/D.relations; goal kaydına
+     ilişki GÖMÜLMEZ). #ent_rel_box wrapper'ı re-render için; iç içeriği 11k üretir. */
+  h+='<div id="ent_rel_box">'+((typeof entityRelationsPanelHtml==='function')?entityRelationsPanelHtml('goal',g.id):'')+'</div>';
   h+='</div><div style="padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:8px">';
   if(g.status!=='done')h+='<button class="btn btn-p" style="flex:2;justify-content:center;background:var(--green)" data-gid="'+g.id+'" onclick="markGoalDone(+this.dataset.gid)">'+ic('chk',13)+' Tamamla (+100 XP)</button>';
   else h+='<button class="btn btn-s" style="flex:2;justify-content:center" data-gid="'+g.id+'" onclick="markGoalActive(+this.dataset.gid)">Tekrar Aktif</button>';
@@ -281,20 +284,38 @@ function renderTodos(){
       gi.forEach(function(t){
         var dl=t.end?Math.ceil((new Date(t.end)-new Date())/864e5):null;
         var dlc=dl===null?'var(--t3)':dl<0?'var(--red)':dl<3?'var(--orange)':'var(--t3)';
-        h+='<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.05)"><input type="checkbox" class="cb" '+(t.done?'checked':'')+' data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><div style="flex:1"><p style="font-weight:500;font-size:13.5px">'+U.esc(t.text)+'</p><div style="display:flex;gap:6px;margin-top:2px">'+(t.category?'<span class="pill p-gray" style="font-size:9.5px">'+U.esc(t.category)+'</span>':'')+(dl!==null?'<span style="font-size:10px;font-weight:600;color:'+dlc+'">'+(dl<0?'Gecti '+Math.abs(dl)+'g':dl===0?'Bugün':dl+'g kaldi')+'</span>':'')+'</div></div><button class="btn btn-g btn-ic" style="width:26px;height:26px" data-tid="'+t.id+'" data-dtype="todo" onclick="del(+this.dataset.tid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';
+        h+='<div id="todo-row-'+t.id+'" style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.05)"><input type="checkbox" class="cb" '+(t.done?'checked':'')+' data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><div style="flex:1"><p style="font-weight:500;font-size:13.5px">'+U.esc(t.text)+'</p><div style="display:flex;gap:6px;margin-top:2px">'+(t.category?'<span class="pill p-gray" style="font-size:9.5px">'+U.esc(t.category)+'</span>':'')+(dl!==null?'<span style="font-size:10px;font-weight:600;color:'+dlc+'">'+(dl<0?'Gecti '+Math.abs(dl)+'g':dl===0?'Bugün':dl+'g kaldi')+'</span>':'')+'</div></div><button class="btn btn-g btn-ic" style="width:26px;height:26px" data-tid="'+t.id+'" data-dtype="todo" onclick="del(+this.dataset.tid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';
       });
       h+='</div></div>';
     });
     var noPri=filtered.filter(function(t){return !t.done&&['urgent','high','normal'].indexOf(t.priority)<0;});
-    if(noPri.length){h+='<div style="margin-bottom:14px"><p class="lbl" style="margin-bottom:7px">Diğer</p><div class="card" style="overflow:hidden">';noPri.forEach(function(t){h+='<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.05)"><input type="checkbox" class="cb" data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><span style="font-weight:500;flex:1">'+U.esc(t.text)+'</span><button class="btn btn-g btn-ic" style="width:26px;height:26px" data-tid="'+t.id+'" data-dtype="todo" onclick="del(+this.dataset.tid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';});h+='</div></div>';}
+    if(noPri.length){h+='<div style="margin-bottom:14px"><p class="lbl" style="margin-bottom:7px">Diğer</p><div class="card" style="overflow:hidden">';noPri.forEach(function(t){h+='<div id="todo-row-'+t.id+'" style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid rgba(0,0,0,.05)"><input type="checkbox" class="cb" data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><span style="font-weight:500;flex:1">'+U.esc(t.text)+'</span><button class="btn btn-g btn-ic" style="width:26px;height:26px" data-tid="'+t.id+'" data-dtype="todo" onclick="del(+this.dataset.tid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';});h+='</div></div>';}
     var doneTodos=filtered.filter(function(t){return t.done;});
-    if(doneTodos.length){h+='<details><summary style="cursor:pointer;font-size:12px;color:var(--t2);font-weight:600;padding:6px 2px">Tamamlanan ('+doneTodos.length+')</summary><div class="card" style="overflow:hidden;margin-top:8px">';doneTodos.forEach(function(t){h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(0,0,0,.04);opacity:.5"><input type="checkbox" class="cb" checked data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><span style="font-size:13px;text-decoration:line-through;color:var(--t2);flex:1">'+U.esc(t.text)+'</span><button class="btn btn-g btn-ic" style="width:24px;height:24px" data-tid="'+t.id+'" data-dtype="todo" onclick="del(+this.dataset.tid,this.dataset.dtype)">'+ic('trash',11,'var(--t3)')+'</button></div>';});h+='</div></details>';}
+    if(doneTodos.length){h+='<details><summary style="cursor:pointer;font-size:12px;color:var(--t2);font-weight:600;padding:6px 2px">Tamamlanan ('+doneTodos.length+')</summary><div class="card" style="overflow:hidden;margin-top:8px">';doneTodos.forEach(function(t){h+='<div id="todo-row-'+t.id+'" style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(0,0,0,.04);opacity:.5"><input type="checkbox" class="cb" checked data-tid="'+t.id+'" onchange="toggleTodo(+this.dataset.tid)"><span style="font-size:13px;text-decoration:line-through;color:var(--t2);flex:1">'+U.esc(t.text)+'</span><button class="btn btn-g btn-ic" style="width:24px;height:24px" data-tid="'+t.id+'" data-dtype="todo" onclick="del(+this.dataset.tid,this.dataset.dtype)">'+ic('trash',11,'var(--t3)')+'</button></div>';});h+='</div></details>';}
     if(!filtered.length)h+='<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px"><div style="width:52px;height:52px;border-radius:14px;background:var(--gl);display:flex;align-items:center;justify-content:center">'+ic('chk',26,'var(--green)')+'</div><p style="font-weight:700;font-size:16px">Tüm görevler tamam!</p><button class="btn btn-p" data-type="todo" onclick="openForm(this.dataset.type)">'+ic('plus',13)+' Yeni Görev</button></div>';
   }
   h+='</div>';sh('pinner',h);
 }
 function toggleTodo(id){snap();D.todos=D.todos.map(function(t){if(t.id!==id)return t;if(!t.done)xp(15,'Görev tamamlandı');return Object.assign({},t,{done:!t.done});});save();renderPage();}
 window.toggleTodo=toggleTodo;
+/* SMART-GOALS P2-P1: İlişkilerden "tam kayıt aç" adaptörü. Görevin ayrı detay/edit formu YOK →
+   görev sekmesine gider ve TAM o görevi (todo-row-<id>) odaklar/scroll eder. Yeni ekran/renderer
+   YOK, D.todos/save DOKUNMAZ (salt navigasyon+odak). Yoksa false döner (throw etmez). */
+function openTaskById(taskId){
+  var t=(D.todos||[]).filter(function(x){return String(x.id)===String(taskId);})[0];
+  if(!t)return false;
+  if(typeof todoView!=='undefined')todoView='list';        // satırların bulunduğu görünüm
+  if(typeof gotoTab==='function')gotoTab('todos');
+  else if(typeof renderPage==='function')renderPage();
+  if(typeof setTimeout==='function')setTimeout(function(){
+    var el=(typeof ge==='function')?ge('todo-row-'+t.id):null;
+    if(el){ if(el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.style.transition='background .4s'; el.style.background='var(--rl)';
+      setTimeout(function(){ if(el)el.style.background=''; },1600); }
+  },60);
+  return true;
+}
+window.openTaskById=openTaskById;
 
 function renderHabits(){
   var habits=D.habits||[];var today=U.today();
