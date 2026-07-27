@@ -428,7 +428,7 @@ function renderGoals(){
       var dlc=dl===null?'var(--t3)':dl<0?'var(--red)':dl<14?'var(--orange)':'var(--t2)';
       var cc=GOAL_CC[g.cat||'Diğer']||'var(--t3)';
       h+='<tr style="cursor:pointer" data-gid="'+g.id+'" onclick="openGoalDetail(+this.dataset.gid)">';
-      h+='<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:7px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<div><p style="font-weight:600;font-size:13px">'+U.esc(g.title)+'</p>'+(g.measurable?'<p style="font-size:10.5px;color:var(--t2)">'+U.esc(g.measurable)+'</p>':'')+'<div style="display:flex;gap:5px;align-items:center;margin-top:3px">'+goalHealthBadge(g)+goalPriorityBadge(g)+goalDueBadge(g)+'</div></div></div></td>';
+      h+='<td style="padding-left:16px"><div style="display:flex;align-items:center;gap:7px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<div><p style="font-weight:600;font-size:13px">'+U.esc(g.title)+'</p>'+(g.measurable?'<p style="font-size:10.5px;color:var(--t2)">'+U.esc(g.measurable)+'</p>':'')+'<div style="display:flex;gap:5px;align-items:center;margin-top:3px">'+goalHealthBadge(g)+goalPriorityBadge(g)+goalDueBadge(g)+((typeof goalDependencyBadge==='function')?goalDependencyBadge(g):'')+'</div></div></div></td>';
       h+='<td><span class="pill" style="background:'+(GOAL_CB[g.cat||'Diğer']||'var(--s2)')+';color:'+cc+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span></td>';
       h+='<td><span class="pill p-blue" style="font-size:10px">'+goalPlanningLabel(g)+'</span></td>';
       h+='<td style="font-size:11.5px;color:'+dlc+'">'+(dl===null?'&mdash;':dl<0?'Gecti':dl+'g')+'</td>';
@@ -448,7 +448,7 @@ function renderGoals(){
       h+='<div style="height:3px;background:'+cc4+'"></div><div style="padding:15px 17px;display:flex;flex-direction:column;gap:10px;flex:1">';
       h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><div style="flex:1">';
       h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px">'+(g.frog?'<span style="font-size:14px">&#128056;</span>':'')+'<span class="pill" style="background:'+cbg2+';color:'+cc4+';font-size:10px">'+U.esc(g.cat||'Diğer')+'</span><span class="pill p-blue" style="font-size:10px">'+goalPlanningLabel(g)+'</span>'+(g.status==='done'?'<span class="pill p-green" style="font-size:9px">&#10003; Bitti</span>':'')+'</div>';
-      h+='<p style="font-weight:700;font-size:14px;line-height:1.3">'+U.esc(g.title)+'</p><div style="display:flex;gap:5px;align-items:center;margin-top:4px">'+goalHealthBadge(g)+goalPriorityBadge(g)+goalDueBadge(g)+'</div></div>';
+      h+='<p style="font-weight:700;font-size:14px;line-height:1.3">'+U.esc(g.title)+'</p><div style="display:flex;gap:5px;align-items:center;margin-top:4px">'+goalHealthBadge(g)+goalPriorityBadge(g)+goalDueBadge(g)+((typeof goalDependencyBadge==='function')?goalDependencyBadge(g):'')+'</div></div>';
       h+='<button class="btn btn-g btn-ic" style="width:26px;height:26px;flex-shrink:0" data-gid="'+g.id+'" data-dtype="goal" onclick="event.stopPropagation();del(+this.dataset.gid,this.dataset.dtype)">'+ic('trash',12,'var(--t3)')+'</button></div>';
       if(g.measurable)h+='<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--s2);border-radius:8px">'+ic('kpi',13,'var(--t2)')+'<span style="font-size:12px;font-weight:600">'+U.esc(g.measurable)+'</span></div>';
       if(g.steps&&g.steps.length){

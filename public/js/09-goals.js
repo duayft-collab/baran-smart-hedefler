@@ -87,6 +87,8 @@ function openGoalDetail(goalId){
   h+='<div id="ent_rel_box">'+((typeof entityRelationsPanelHtml==='function')?entityRelationsPanelHtml('goal',g.id):'')+'</div>';
   /* SMART-GOALS P3-P1: İlerleme Geçmişi paneli (TEK kaynak D.goalCheckIns; goal'a gömülmez). */
   h+='<div id="goal_checkin_box">'+((typeof goalCheckInPanelHtml==='function')?goalCheckInPanelHtml(g.id):'')+'</div>';
+  /* SMART-GOALS P4-P1: Bağımlılıklar paneli (türetilmiş; D.relations üzerinden, goal'a gömülmez). */
+  h+='<div id="goal_dep_box">'+((typeof goalDependencyPanelHtml==='function')?goalDependencyPanelHtml(g.id):'')+'</div>';
   h+='</div><div style="padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:8px">';
   if(g.status!=='done')h+='<button class="btn btn-p" style="flex:2;justify-content:center;background:var(--green)" data-gid="'+g.id+'" onclick="markGoalDone(+this.dataset.gid)">'+ic('chk',13)+' Tamamla (+100 XP)</button>';
   else h+='<button class="btn btn-s" style="flex:2;justify-content:center" data-gid="'+g.id+'" onclick="markGoalActive(+this.dataset.gid)">Tekrar Aktif</button>';
