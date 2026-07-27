@@ -108,6 +108,7 @@ function createSandbox() {
   run(src('js/11o-goal-dependencies.js'), '11o-goal-dependencies.js');
   run(src('js/11p-goal-okr.js'), '11p-goal-okr.js');
   run(src('js/11q-wisdom-experience.js'), '11q-wisdom-experience.js');
+  run(src('js/11r-goal-analytics.js'), '11r-goal-analytics.js');
 
   // 10-general-notes.js: extract only the RESTORE_UI / rstRisk block (rest of the file
   // is unrelated "Genel Notlar" feature code with its own DOM-heavy dependencies).

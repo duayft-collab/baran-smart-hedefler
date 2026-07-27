@@ -1,6 +1,6 @@
 function renderPage(){
   var pages={
-    dashboard:renderDashboard,kpi:renderKPI,goals:renderGoals,goalsdash:renderGoalsDashboard,okr:renderOKR,
+    dashboard:renderDashboard,kpi:renderKPI,goals:renderGoals,goalsdash:renderGoalsDashboard,okr:renderOKR,analytics:renderAnalytics,
     todos:renderTodos,habits:renderHabits,routines:renderRoutines,
     smart:renderSMART,onething:renderOneThing,frog:renderFrog,
     timeblock:renderTimeBlock,weeklyreview:renderWeeklyReview,gtd:renderGTD,
