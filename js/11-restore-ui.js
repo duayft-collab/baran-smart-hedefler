@@ -113,7 +113,7 @@ window.rstOpenPreview=rstOpenPreview;
 /* RESTORE-UX-P0 revizyon: alfabetik değil, kullanıcının değer sırasına göre 4 katman:
    kritik kişisel içerik > diğer kişisel kayıtlar > operasyonel > geri kalan. */
 var RST_MODULE_ORDER=[
-  'wisdomQuotes','principles','goals',      // en değerli / kritik
+  'wisdomQuotes','principles','goals','goalCheckIns',  // en değerli / kritik (goalCheckIns goals'a bağlı geçmiş)
   'generalNotes','journal','logs',
   'todos','habits','routines',
   'quotes','kpis'                            // diğerleri
@@ -121,7 +121,7 @@ var RST_MODULE_ORDER=[
 var RST_MODULE_TIER_BREAKS={'generalNotes':1,'todos':1};   // bu alandan önce görsel ayraç
 var RST_MODULE_LABELS={goals:'Hedefler',todos:'Görevler',habits:'Alışkanlıklar',journal:'Günlük',
   quotes:'Öz Sözler (Legacy)',wisdomQuotes:'Özlü Sözler',principles:'İlkeler',generalNotes:'Genel Notlar',
-  logs:'Kayıtlar',kpis:'KPI',routines:'Rutinler'};
+  logs:'Kayıtlar',kpis:'KPI',routines:'Rutinler',goalCheckIns:'İlerleme Kayıtları'};
 /* RESTORE-UX-P2: cur/tgt hesaplaması artık paylaşılan tek yerden (P0'da rstModuleRow'a
    gömülüydü, P2'nin sonuç-özeti de aynı hesaba ihtiyaç duyunca çıkarıldı — motor DEĞİŞMEDİ,
    yalnız zaten var olan perModule alanlarından türetilen saf aritmetik. */

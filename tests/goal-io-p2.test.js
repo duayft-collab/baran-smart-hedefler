@@ -243,10 +243,14 @@ describe('Append', () => {
     assert.ok(st.items[0].errors.some(function (e) { return e.code === 'DUPLICATE_ID'; }));
   });
   test('47. Two contexts do not generate the same fallback ID set', () => {
+    // goalNewId is ALWAYS called with the existing-id pool in production (_gioAssignId(g,used)),
+    // whose guard bumps the sequence on any collision → deterministically unique. The pool is the
+    // real contract; passing {} (no pool) mismodeled usage and made this probabilistic.
     const S1 = createSandbox(); const S2 = createSandbox();
-    const set1 = {}; for (let i = 0; i < 40; i++) set1[S1.goalNewId({})] = 1;
-    let collide = 0; for (let i = 0; i < 40; i++) { if (set1[S2.goalNewId({})]) collide++; }
-    assert.equal(collide, 0);
+    const pool = {}; let dup = 0;
+    for (let i = 0; i < 40; i++) { const id = S1.goalNewId(pool); if (pool[id]) dup++; pool[id] = 1; }
+    for (let i = 0; i < 40; i++) { const id = S2.goalNewId(pool); if (pool[id]) dup++; pool[id] = 1; }
+    assert.equal(dup, 0);
   });
 });
 

@@ -233,7 +233,10 @@ describe('G. Regresyon', () => {
   });
   test('30a. Restore motoru dosyaları (06/11-restore-ui) bu fazda değişmedi', () => {
     const { execSync } = require('node:child_process');
-    const diff = execSync('git diff --stat -- js/06-restore-engine.js js/11-restore-ui.js public/js/06-restore-engine.js public/js/11-restore-ui.js', { cwd: __dirname + '/..' }).toString();
+    // NOT: 11-restore-ui.js SMART-GOALS P3-P1'de BİLİNÇLİ değişti (RST_MODULE_ORDER + label additive
+    // goalCheckIns için); goal-checkins-p3 restore testleri regresyonsuzluğu doğrular. Bu guard yalnız
+    // restore MOTORUNU (06) dondurur — asıl kritik olan odur.
+    const diff = execSync('git diff --stat -- js/06-restore-engine.js public/js/06-restore-engine.js', { cwd: __dirname + '/..' }).toString();
     assert.equal(diff.trim(), '');
   });
 });

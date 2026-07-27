@@ -85,6 +85,8 @@ function openGoalDetail(goalId){
   /* SMART-GOALS P2-P1: İlişkili Kayıtlar paneli (TEK motor 11h/D.relations; goal kaydına
      ilişki GÖMÜLMEZ). #ent_rel_box wrapper'ı re-render için; iç içeriği 11k üretir. */
   h+='<div id="ent_rel_box">'+((typeof entityRelationsPanelHtml==='function')?entityRelationsPanelHtml('goal',g.id):'')+'</div>';
+  /* SMART-GOALS P3-P1: İlerleme Geçmişi paneli (TEK kaynak D.goalCheckIns; goal'a gömülmez). */
+  h+='<div id="goal_checkin_box">'+((typeof goalCheckInPanelHtml==='function')?goalCheckInPanelHtml(g.id):'')+'</div>';
   h+='</div><div style="padding:12px 20px;border-top:1px solid var(--s2);display:flex;gap:8px">';
   if(g.status!=='done')h+='<button class="btn btn-p" style="flex:2;justify-content:center;background:var(--green)" data-gid="'+g.id+'" onclick="markGoalDone(+this.dataset.gid)">'+ic('chk',13)+' Tamamla (+100 XP)</button>';
   else h+='<button class="btn btn-s" style="flex:2;justify-content:center" data-gid="'+g.id+'" onclick="markGoalActive(+this.dataset.gid)">Tekrar Aktif</button>';
@@ -606,7 +608,7 @@ function renderSMART(){
       if(tips.length){h+='<div style="margin-top:9px;display:flex;flex-direction:column;gap:4px">';
         tips.slice(0,2).forEach(function(t){h+='<div style="display:flex;gap:6px;align-items:flex-start"><span style="color:var(--blue);font-size:11px;font-weight:800">&rsaquo;</span><span style="font-size:11px;color:var(--t2);line-height:1.4">'+U.esc(t)+'</span></div>';});
         h+='</div>';}
-      h+='<div style="display:flex;gap:7px;margin-top:10px"><button class="btn btn-p btn-sm" data-gid="'+g.id+'" onclick="openGoalEdit(+this.dataset.gid)">'+ic('edit',11)+' Geliştir</button><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openGoalDetail(+this.dataset.gid)">Detay</button><button class="btn btn-g btn-sm" data-gid="'+g.id+'" data-dtype="goal" onclick="del(+this.dataset.gid,this.dataset.dtype)" style="margin-left:auto">'+ic('trash',11)+'</button></div></div>';
+      h+='<div style="display:flex;gap:7px;margin-top:10px"><button class="btn btn-p btn-sm" data-gid="'+g.id+'" onclick="openGoalEdit(+this.dataset.gid)">'+ic('edit',11)+' Geliştir</button><button class="btn btn-s btn-sm" data-gid="'+g.id+'" onclick="openGoalDetail(+this.dataset.gid)">Detay</button><button class="btn btn-g btn-sm" data-gid="'+g.id+'" onclick="deleteGoalWithCheckInGuard(+this.dataset.gid)" style="margin-left:auto">'+ic('trash',11)+'</button></div></div>';
     });
     h+='</div>';
   }

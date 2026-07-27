@@ -179,7 +179,8 @@ describe('Regresyon — dokunulmaması gereken dosyalar', () => {
     assert.equal(diff.trim(), '');
   }
   test('21. Restore Engine / Restore UI dokunulmadı', () => {
-    assertUnchanged(['js/06-restore-engine.js', 'js/11-restore-ui.js', 'public/js/06-restore-engine.js', 'public/js/11-restore-ui.js']);
+    // 11-restore-ui.js SMART-GOALS P3-P1'de additive değişti (goalCheckIns modül-sırası); restore MOTORU (06) donuk.
+    assertUnchanged(['js/06-restore-engine.js', 'public/js/06-restore-engine.js']);
   });
   test('22. General Notes / Wisdom UI dokunulmadı', () => {
     // 11d-principles.js P0-3'te BİLİNÇLİ olarak dokunuldu (genel _pAfterSave kancası,

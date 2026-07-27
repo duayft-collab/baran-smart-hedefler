@@ -348,8 +348,9 @@ describe('Regresyon', () => {
     assert.equal(r2.created, false);
   });
   test('37. Restore P0/P1/P2 dosyaları dokunulmadı', () => {
-    assertUnchanged(['js/06-restore-engine.js', 'js/11-restore-ui.js', 'js/10-general-notes.js',
-      'public/js/06-restore-engine.js', 'public/js/11-restore-ui.js', 'public/js/10-general-notes.js']);
+    // 11-restore-ui.js SMART-GOALS P3-P1'de additive değişti (goalCheckIns modül-sırası+label); 06 motoru + 10 donuk.
+    assertUnchanged(['js/06-restore-engine.js', 'js/10-general-notes.js',
+      'public/js/06-restore-engine.js', 'public/js/10-general-notes.js']);
   });
   test('38. Decision Journal altyapı testleri yeşil (temel CRUD hâlâ çalışıyor)', () => {
     const sbx = createSandbox();
