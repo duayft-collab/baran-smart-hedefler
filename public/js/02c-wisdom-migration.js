@@ -168,23 +168,28 @@ function wisdomBootActivate(){
     // ── Koleksiyonu yükle + yükleme-sonrası COUNT doğrula (legacy fallback koşulları) ──
     WQ_STORE_STATE.activationReason='verifying';
     return wisdomStoreLoad().then(function(lr){
-      if(!lr||!lr.ok||WQ_STORE_STATE.error){ WQ_STORE_STATE.activationReason='load_failed'; return {ok:false,reason:'load_failed'}; }
-      if(WQ_STORE.size===0){ WQ_STORE_STATE.activationReason='empty_cache'; return {ok:false,reason:'empty_cache'}; }
-      if(WQ_STORE.size!==m.count){ WQ_STORE_STATE.activationReason='count_mismatch'; return {ok:false,reason:'count_mismatch'}; }
+      // P3d: kapı geçtikten SONRA başarısızlık = gerçek FALLBACK (koleksiyon bekleniyordu ama açılamadı)
+      if(!lr||!lr.ok||WQ_STORE_STATE.error){ WQ_STORE_STATE.activationReason='load_failed'; _wexFallback('load_failed'); return {ok:false,reason:'load_failed'}; }
+      if(WQ_STORE.size===0){ WQ_STORE_STATE.activationReason='empty_cache'; _wexFallback('empty_cache'); return {ok:false,reason:'empty_cache'}; }
+      if(WQ_STORE.size!==m.count){ WQ_STORE_STATE.activationReason='count_mismatch'; _wexFallback('count_mismatch'); return {ok:false,reason:'count_mismatch'}; }
       // ── COUNT DOĞRU → AKTİVE ET. İçerik checksum'ı (volatile hariç) yalnız WARNING + self-heal. ──
       return wisdomContentChecksum().then(function(cs){
         var checksumOk=(cs.hash===m.checksum);
         wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true;
         WQ_STORE_STATE.activationReason=checksumOk?'ready':'metadata_update';
+        WQ_STORE_STATE.source='sharded'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.lastSuccessfulRead=Date.now(); // P3d: primary aktif
         if(!checksumOk)_wexSelfHealMeta(cs.hash); // yalnız gerçekten farklıysa; tek yazma
         return {ok:true,count:WQ_STORE.size,checksumOk:checksumOk};
       },function(){ // checksum hesaplanamadı → yine de count-based aktive
         wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true; WQ_STORE_STATE.activationReason='ready';
+        WQ_STORE_STATE.source='sharded'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.lastSuccessfulRead=Date.now();
         return {ok:true,count:WQ_STORE.size,checksumOk:null};
       });
     });
-  }).catch(function(e){ WQ_STORE_STATE.activationReason='error'; return {ok:false,reason:'error',error:String((e&&e.message)||e)}; });
+  }).catch(function(e){ WQ_STORE_STATE.activationReason='error'; _wexFallback('error'); return {ok:false,reason:'error',error:String((e&&e.message)||e)}; });
 }
+/* P3d: gerçek fallback kaydı (yalnız kapı geçtikten sonra oluşan hata). runtime; 0 write. */
+function _wexFallback(reason){ WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=reason; WQ_STORE_STATE.fallbackCount=(WQ_STORE_STATE.fallbackCount||0)+1; WQ_STORE_STATE.lastFallbackAt=Date.now(); }
 window.wisdomBootActivate=wisdomBootActivate;
 /* Self-heal (P3b): count doğru + checksum farklıysa meta.checksum'ı arka planda tek
    batch ile güncelle. Yalnız farklıysa çağrılır + oturumda tek sefer (_selfHealed). */

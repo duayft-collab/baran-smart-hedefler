@@ -61,6 +61,7 @@ function wisdomStatsPanelHtml(now){
   h+=_wsCard('Bu Hafta Gösterilen',s.weekShown,null,'zap','var(--blue)');
   h+=_wsCard('Son Eklenen',s.newestAt,newQ,'plus','var(--t)');
   h+=_wsCard('Son Güncellenen',s.newestUpdatedAt,updQ,'edit','var(--t)');
+  h+=(typeof wisdomArchiveHealthCardHtml==='function'?wisdomArchiveHealthCardHtml():''); // SG-SHARD-P3d: Arşiv Durumu sağlık kartı
   h+='</div></div>';
   return h;
 }

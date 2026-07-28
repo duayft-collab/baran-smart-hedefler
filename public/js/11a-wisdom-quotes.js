@@ -218,6 +218,7 @@ window.wqSetQuery=wqSetQuery;window.wqSetFilter=wqSetFilter;window.wqSetCat=wqSe
 function renderWisdomQuotes(){
   var st=wqStats();
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Özlü Sözler</h1><p class="sh-sub">Kişisel özlü söz kütüphanen. Hedeflerden ve notlardan bağımsız.</p></div>';
+  h+=(typeof wisdomSourceBadgeHtml==='function'?'<span style="align-self:center">'+wisdomSourceBadgeHtml()+'</span>':''); // SG-SHARD-P3d: kaynak rozeti (Bulut Arşivi / fallback: Yerel Güvenlik Arşivi)
   h+='<button class="btn btn-p" onclick="openWqForm()">'+ic('plus',13)+' Yeni Söz</button>';
   h+=(typeof wisdomIoButtonsHtml==='function'?wisdomIoButtonsHtml():''); // D10.3: içe/dışa aktarma butonları (additive)
   h+=(typeof wisdomMigrationButtonHtml==='function'?wisdomMigrationButtonHtml():'')+'</div>'; // D10.6.1: admin-only Öz Sözler→Özlü Sözler taşıma butonu (additive, non-admin='')
