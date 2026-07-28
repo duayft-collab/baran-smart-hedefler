@@ -347,10 +347,13 @@ describe('Regresyon', () => {
     assert.equal(r1.created, true);
     assert.equal(r2.created, false);
   });
-  test('37. Restore P0/P1/P2 dosyaları dokunulmadı', () => {
-    // 11-restore-ui.js SMART-GOALS P3-P1'de additive değişti (goalCheckIns modül-sırası+label); 06 motoru + 10 donuk.
-    assertUnchanged(['js/06-restore-engine.js', 'js/10-general-notes.js',
-      'public/js/06-restore-engine.js', 'public/js/10-general-notes.js']);
+  test('37. General Notes (10) donuk; Restore motoru (06) P3c-genişletildi (gated)', () => {
+    // 10-general-notes.js hâlâ donuk. 06-restore-engine.js Wisdom Sharding P3c'de sharded restore
+    // hook ile bilinçli genişletildi (gated); çekirdek korunur.
+    assertUnchanged(['js/10-general-notes.js', 'public/js/10-general-notes.js']);
+    const fs = require('fs'), path = require('path');
+    const eng = fs.readFileSync(path.join(__dirname, '..', 'js', '06-restore-engine.js'), 'utf8');
+    assert.match(eng, /function executeRestore/); assert.match(eng, /wisdomStoreIsSharded\(\)/);
   });
   test('38. Decision Journal altyapı testleri yeşil (temel CRUD hâlâ çalışıyor)', () => {
     const sbx = createSandbox();

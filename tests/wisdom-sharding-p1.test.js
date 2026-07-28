@@ -209,7 +209,8 @@ describe('Static guards (mandatory)', () => {
   test('G6. protected files untouched by grep signature (rules/firebase/sync/backup/restore/io/experience)', () => {
     // 02b, 11a, 11b harici wisdom-store bağlantısı yok
     // NOT: 04-backup.js P2'de sharded rehydrate için wisdomStore* okur (izinli); listeden çıkarıldı.
-    ['js/02-sync.js', 'js/06-restore-engine.js', 'js/11-restore-ui.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
+    // NOT: 06-restore/11-restore P3c'de sharded restore için genişledi (izinli); listeden çıkarıldı.
+    ['js/02-sync.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
       assert.equal(/wisdomStore|WQ_STORE/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), false, f);
     });
   });

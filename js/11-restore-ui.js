@@ -28,6 +28,7 @@ function rstFilterCounts(){
 function renderRestore(){
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Yedekler / Geri Yükleme</h1><p class="sh-sub">Bir yedek seç, önizle ve güvenle geri yükle. Geri yükleme öncesi otomatik güvenlik yedeği alınır.</p></div>';
   h+='<button class="btn btn-g" onclick="rstLoadList()">'+ic('ci',13)+' Yenile</button></div>';
+  h+=(typeof wisdomRestoreStageHtml==='function'?wisdomRestoreStageHtml():''); // SG-SHARD-P3c: sharded wisdom restore aşama göstergesi (idle→gizli)
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">';
   h+='<input class="inp" id="rst_search" style="max-width:280px" placeholder="Yedeklerde ara (açıklama, tarih, tip)..." value="'+U.esc(RESTORE_UI.query)+'" oninput="rstSetQuery(this.value)">';
   h+='<div style="display:flex;gap:4px;flex-wrap:wrap">';

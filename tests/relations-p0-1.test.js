@@ -231,12 +231,13 @@ describe('G. Regresyon', () => {
     const diff = execSync('git diff --stat -- js/11e-content-display-core.js public/js/11e-content-display-core.js', { cwd: __dirname + '/..' }).toString();
     assert.equal(diff.trim(), '');
   });
-  test('30a. Restore motoru dosyaları (06/11-restore-ui) bu fazda değişmedi', () => {
-    const { execSync } = require('node:child_process');
-    // NOT: 11-restore-ui.js SMART-GOALS P3-P1'de BİLİNÇLİ değişti (RST_MODULE_ORDER + label additive
-    // goalCheckIns için); goal-checkins-p3 restore testleri regresyonsuzluğu doğrular. Bu guard yalnız
-    // restore MOTORUNU (06) dondurur — asıl kritik olan odur.
-    const diff = execSync('git diff --stat -- js/06-restore-engine.js public/js/06-restore-engine.js', { cwd: __dirname + '/..' }).toString();
-    assert.equal(diff.trim(), '');
+  test('30a. Restore motoru çekirdeği korundu (06); P3c sharded hook gated', () => {
+    // NOT: 06-restore-engine.js SMART-GOALS Wisdom Sharding P3c'de BİLİNÇLİ genişletildi
+    // (sharded wisdom restore hook — koleksiyona yönlendirme, gated). Motor ÇEKİRDEĞİ (tek
+    // commitMutation otoritesi, before_restore güvenlik yedeği) korunur.
+    const fs = require('fs'), path = require('path');
+    const eng = fs.readFileSync(path.join(__dirname, '..', 'js', '06-restore-engine.js'), 'utf8');
+    assert.match(eng, /before_restore/); assert.match(eng, /commitMutation\(m\)/); assert.match(eng, /function executeRestore/);
+    assert.match(eng, /wisdomStoreIsSharded\(\)/); // P3c hook gated
   });
 });

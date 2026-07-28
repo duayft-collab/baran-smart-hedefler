@@ -298,9 +298,12 @@ describe('RESTORE-UX-P2: Regresyon', () => {
     assert.equal(sbx.prepareRestore.length, 1);
     assert.equal(sbx.cancelRestore.length, 1);
   });
-  test('32. confirmRestore/executeRestore motoruna yeni yol eklenmez (06-restore-engine.js değişmedi)', () => {
-    const { execSync } = require('node:child_process');
-    const diff = execSync('git diff --stat -- js/06-restore-engine.js public/js/06-restore-engine.js', { cwd: __dirname + '/..' }).toString();
-    assert.equal(diff.trim(), '');
+  test('32. Restore motoru çekirdeği korundu; P3c sharded wisdom yolu gated (06 genişletildi)', () => {
+    // 06-restore-engine.js Wisdom Sharding P3c'de BİLİNÇLİ genişletildi: sharded modda wisdomQuotes
+    // KOLEKSİYONA restore edilir (app/state'e büyük dizi yazılmaz). Legacy yol byte-identical (gated).
+    const fs = require('fs'), path = require('path');
+    const eng = fs.readFileSync(path.join(__dirname, '..', 'js', '06-restore-engine.js'), 'utf8');
+    assert.match(eng, /function executeRestore/); assert.match(eng, /before_restore/);
+    assert.match(eng, /if\(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded\(\)\)/); // hook gated
   });
 });

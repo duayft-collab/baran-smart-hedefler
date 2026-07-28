@@ -178,9 +178,12 @@ describe('Regresyon — dokunulmaması gereken dosyalar', () => {
     const diff = execSync('git diff --stat -- ' + files.join(' '), { cwd: __dirname + '/..' }).toString();
     assert.equal(diff.trim(), '');
   }
-  test('21. Restore Engine / Restore UI dokunulmadı', () => {
-    // 11-restore-ui.js SMART-GOALS P3-P1'de additive değişti (goalCheckIns modül-sırası); restore MOTORU (06) donuk.
-    assertUnchanged(['js/06-restore-engine.js', 'public/js/06-restore-engine.js']);
+  test('21. Restore motoru çekirdeği korundu (06 P3c-genişletildi, gated)', () => {
+    // 06-restore-engine.js Wisdom Sharding P3c'de sharded restore hook ile genişletildi (gated);
+    // motor çekirdeği (executeRestore + before_restore + tek commitMutation) korunur.
+    const fs = require('fs'), path = require('path');
+    const eng = fs.readFileSync(path.join(__dirname, '..', 'js', '06-restore-engine.js'), 'utf8');
+    assert.match(eng, /function executeRestore/); assert.match(eng, /before_restore/); assert.match(eng, /wisdomStoreIsSharded\(\)/);
   });
   test('22. General Notes / Wisdom UI dokunulmadı', () => {
     // 11d-principles.js P0-3'te BİLİNÇLİ olarak dokunuldu (genel _pAfterSave kancası,

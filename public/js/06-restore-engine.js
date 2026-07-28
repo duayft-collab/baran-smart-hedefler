@@ -1,3 +1,6 @@
+/* SG-SHARD-P3c: sharded restore'da app/state'ten çıkarılan wisdomQuotes payload'ı;
+   commit sonrası koleksiyona restore edilir. Legacy modda daima null. */
+var _WISDOM_SHARDED_RESTORE_PAYLOAD=null;
 async function restorePrecheck(backupId,opts){
   opts=opts||{};
   if(!CLOUD.user||!CLOUD.uid)return restoreErr('AUTH_REQUIRED','Oturum gerekli');
@@ -129,6 +132,14 @@ async function executeRestore(operationId){
     // ── COMMIT (tek transaction otoritesi) ──
     transitionRestore('COMMITTING');
     var restoreState=buildStateFromPayload(RS.backupPayload);   // INIT-merge: eksik alanlar (generalNotes) additive
+    /* SG-SHARD-P3c: sharded aktifken wisdomQuotes KOLEKSİYONA restore edilir (post-commit);
+       app/state'e büyük dizi yazılmaz (1MiB güvenli). Legacy dizi mevcut haliyle korunur.
+       Legacy modda hiçbir fark yok (byte-identical). */
+    _WISDOM_SHARDED_RESTORE_PAYLOAD=null;
+    if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded()){
+      _WISDOM_SHARDED_RESTORE_PAYLOAD=Array.isArray(restoreState.wisdomQuotes)?restoreState.wisdomQuotes:[];
+      restoreState.wisdomQuotes=Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[];
+    }
     var restorePayload=JSON.parse(JSON.stringify(restoreState));
     var m={id:newMutationId(),expectedRevision:RS.sourceRevision,
       payload:restorePayload,createdAt:Date.now(),updatedAt:Date.now()};
@@ -180,6 +191,12 @@ function finalizeRestore(newRevision,commitVerified){
     {commitVerified:commitVerified,pendingCleared:true,undoCleared:true,deferredSnapshotAction:deferredAction});
   if(typeof render==='function')render();            // tek render
   if(typeof renderAdminSystemStatusBar==='function')renderAdminSystemStatusBar();
+  /* SG-SHARD-P3c: state commit sonrası wisdomQuotes'u KOLEKSİYONA restore et (kendi
+     backup/doğrulama/rollback + UX aşama göstergesiyle). Legacy modda tetiklenmez. */
+  if(_WISDOM_SHARDED_RESTORE_PAYLOAD&&typeof wisdomShardedRestore==='function'){
+    var _wp=_WISDOM_SHARDED_RESTORE_PAYLOAD; _WISDOM_SHARDED_RESTORE_PAYLOAD=null;
+    try{ wisdomShardedRestore(_wp); }catch(e){}
+  }
   finishRestoreSession('success');                   // -> resetRestoreSession -> IDLE
   RS=null;
   return restoreResult('success',{operationId:rep.operationId,report:rep});
