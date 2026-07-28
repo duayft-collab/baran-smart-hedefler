@@ -249,11 +249,10 @@ describe('Integration & Regression', () => {
     const S = createSandbox();
     setup(S, [wq('a', { showCount: 1 })]);
     S.tab = 'wisdom';
-    assert.doesNotThrow(() => S.renderWisdomQuotes());
+    // UX-R8: exec review komut-menüsü 'execreview' destination'ında render
+    assert.doesNotThrow(() => S.wisdomGoDest('execreview'));
     const html = S.__getElements().pinner.innerHTML;
-    assert.ok(/Yönetici İncelemesi/.test(html));
-    assert.ok(/Bilgi Koçu/.test(html)); // P6 intact
-    assert.ok(/Yönetici İçgörü Merkezi/.test(html)); // P7 intact
+    assert.ok(/Yönetici İncelemesi/.test(html)); // execreview dest yalnız P8'i render eder (UX-R8)
   });
   test('23. prior derived layers intact (P4/P5/P6/P7)', () => {
     const S = createSandbox();

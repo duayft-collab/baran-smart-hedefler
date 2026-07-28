@@ -301,7 +301,8 @@ describe('Integration & Regression', () => {
     const S = createSandbox();
     setup(S, [wq('a', { quote: 'liderlik' })], { goals: [{ id: 1, title: 'liderlik', status: 'active' }] });
     S.tab = 'wisdom';
-    assert.doesNotThrow(() => S.renderWisdomQuotes());
+    // UX-R8: paneller default'tan kaldırıldı → komut-menüsü 'coach' destination'ından render
+    assert.doesNotThrow(() => S.wisdomGoDest('coach'));
     const html = S.__getElements().pinner.innerHTML;
     assert.ok(/Bilgi Koçu/.test(html));
   });

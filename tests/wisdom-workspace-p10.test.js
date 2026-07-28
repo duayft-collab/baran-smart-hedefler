@@ -213,12 +213,12 @@ describe('Integration & Regression', () => {
     const S = createSandbox();
     setup(S, [wq('a', { showCount: 1, quote: 'liderlik' })], { goals: [{ id: 1, title: 'liderlik', status: 'active' }] });
     S.tab = 'wisdom';
-    assert.doesNotThrow(() => S.renderWisdomQuotes());
-    const html = S.__getElements().pinner.innerHTML;
-    assert.ok(/Bilgi Çalışma Alanı/.test(html)); // P10
-    assert.ok(/Bilgi Koçu/.test(html)); // P6 intact
-    assert.ok(/Yönetici İçgörü Merkezi/.test(html)); // P7 intact
-    assert.ok(/Yönetici İncelemesi/.test(html)); // P8 intact
+    // UX-R8: paneller komut-menüsü destination'larından erişilir (default'ta değil)
+    const at = (d) => { S.wisdomGoDest(d); return S.__getElements().pinner.innerHTML; };
+    assert.ok(/Bilgi Çalışma Alanı/.test(at('workspace'))); // P10
+    assert.ok(/Bilgi Koçu/.test(at('coach'))); // P6
+    assert.ok(/Yönetici İçgörü Merkezi/.test(at('settings'))); // P7 (settings dest)
+    assert.ok(/Yönetici İncelemesi/.test(at('execreview'))); // P8
   });
   test('22. prior derived layers intact (P4/P5/P6/P7/P8)', () => {
     const S = createSandbox();

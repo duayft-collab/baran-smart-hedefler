@@ -286,8 +286,10 @@ function wqHeroHtml(){
   h+='<button class="btn btn-g btn-sm wq-hero-btn" style="color:var(--t3)" data-id="'+id+'" onclick="wqHeroCopy(this.dataset.id)" title="Kopyala" aria-label="Kopyala">Kopyala</button>';
   h+='<button class="btn btn-g btn-sm wq-hero-btn" style="color:var(--t3)" data-id="'+id+'" onclick="wqHeroShare(this.dataset.id)" title="Paylaş" aria-label="Paylaş">Paylaş</button>';
   h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:36px;height:36px;font-size:19px;line-height:1" title="Sonraki" aria-label="Sonraki söz" onclick="wqHeroNav(1)">&rsaquo;</button>';
+  h+='<button id="wisdom_readmode_btn" class="btn btn-g btn-ic wq-hero-btn" style="width:36px;height:36px" title="Okuma Modu" aria-label="Okuma Modu" onclick="wisdomEnterReading()">'+ic('sun',14,'var(--t3)')+'</button>'; // UX-R9: dikkat-dağıtmayan okuma modu girişi
   h+='</div>';
-  h+='<div style="font-size:9px;color:var(--t3);margin-top:12px;letter-spacing:.05em">'+(p.idx+1)+' / '+p.total+'</div>';
+  // UX-R9: sessiz tipografik okuma-konumu göstergesi (kart değil; prev/next ile güncellenir; erişilebilir)
+  h+='<div role="status" aria-label="Okuma konumu" style="font-size:9px;color:var(--t3);margin-top:12px;letter-spacing:.05em">'+(p.idx+1)+' / '+p.total+'</div>';
   h+='</div>';
   return h;
 }
@@ -300,8 +302,8 @@ function wqUxStyleHtml(){
     '.wq-hero-btn{background:transparent;min-height:36px;transition:background .12s ease,color .12s ease}'+
     '.wq-hero-btn:hover{background:var(--s2)}'+
     '.wq-hero-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}'+
-    '@media (prefers-reduced-motion: no-preference){.wq-hero{animation:wqHeroFade 140ms ease}@keyframes wqHeroFade{from{opacity:.4}to{opacity:1}}}'+
-    '@media (prefers-reduced-motion: reduce){.wq-hero{animation:none}}'+
+    '@media (prefers-reduced-motion: no-preference){.wq-hero{animation:wqHeroFade 140ms ease}@keyframes wqHeroFade{from{opacity:.4}to{opacity:1}}.wq-cmd{animation:wqCmdIn 140ms ease}@keyframes wqCmdIn{from{opacity:0}to{opacity:1}}}'+
+    '@media (prefers-reduced-motion: reduce){.wq-hero,.wq-cmd{animation:none}}'+
     '</style>';
 }
 window.wqUxStyleHtml=wqUxStyleHtml;
@@ -311,29 +313,130 @@ function wqHeroCopy(id){ var q=(typeof wqById==='function')?wqById(id):null; if(
 window.wqHeroCopy=wqHeroCopy;
 function wqHeroShare(id){ var q=(typeof wqById==='function')?wqById(id):null; if(!q)return; var t=String(q.quote||'')+(q.author?' — '+q.author:''); try{ if(typeof navigator!=='undefined'&&navigator.share){ navigator.share({text:t}); return; } }catch(e){} wqHeroCopy(id); }
 window.wqHeroShare=wqHeroShare;
-/* Ağır paneller tek katlanabilir bölümde (varsayılan kapalı; açık durum re-render'da korunur). */
-var WISDOM_TOOLS_OPEN=false; window.WISDOM_TOOLS_OPEN=false;
-function wisdomToolsHtml(){
-  var inner='';
-  inner+=(typeof wwsWorkspaceHtml==='function'?wwsWorkspaceHtml():''); // P10 birleşik çalışma alanı
-  inner+=(typeof werEntryPointHtml==='function'?werEntryPointHtml():''); // P8 yönetici incelemesi
-  inner+=(typeof wkgKnowledgeCenterHtml==='function'?wkgKnowledgeCenterHtml():''); // P5 bilgi merkezi
-  inner+=(typeof wcoCoachPanelHtml==='function'?wcoCoachPanelHtml():''); // P6 koç
-  inner+=(typeof wiaExecutiveInsightCenterHtml==='function'?wiaExecutiveInsightCenterHtml():''); // P7 içgörü
-  inner+=(typeof wlcLearningSectionHtml==='function'?wlcLearningSectionHtml():''); // P4 öğrenme
-  inner+=(typeof wisdomStatsPanelHtml==='function'?wisdomStatsPanelHtml():''); // P3a istatistik
-  if(typeof wisdomDisplayPanelHtml==='function')inner+=wisdomDisplayPanelHtml(); // D10.2 gösterim ayarları
-  if(!inner)return '';
-  return '<details id="wisdom_tools"'+(window.WISDOM_TOOLS_OPEN?' open':'')+' style="margin-bottom:14px;max-width:100%" ontoggle="window.WISDOM_TOOLS_OPEN=this.open">'+
-    '<summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--t2);padding:8px 4px">'+ic('layers',13,'var(--t3)')+' Araçlar, Analitik ve İçgörüler</summary>'+
-    '<div style="margin-top:10px">'+inner+'</div></details>';
+/* ─────────────────────────────────────────────────────────────────────────
+   UX-R8: "Araçlar, Analitik ve İçgörüler" katlanabilir bölümü KALDIRILDI.
+   Yerine invisible-first Komut Menüsü / Kütüphane sheet'i. Default ekran saf
+   okuma deneyimidir; tüm güçlü paneller (P4–P12) tek giriş noktasının arkasında
+   ve YALNIZ seçilince lazy-render edilir (Apple Books / Linear command menu).
+   Paneller SİLİNMEDİ — okuma arayüzünden çıkarıldı. Sunum+navigasyon; 0 write. */
+var _wisdomDest=null, _wisdomMenuOpen=false, _wisdomMenuIdx=0, _wisdomReading=false;
+var WISDOM_DESTS=[
+  ['reading','Okuma','qt'],['readingmode','Okuma Modu','sun'],['search','Arama','ci'],
+  ['collections','Koleksiyonlar','layers'],['coach','Koç','star'],['learning','Öğrenme','bk'],['knowledge','Bilgi Merkezi','brain'],
+  ['statistics','İstatistikler','kpi'],['workspace','Çalışma Alanı','dash'],
+  ['execreview','Yönetici İncelemesi','arc'],['execintel','Yönetici Zekâsı','trophy'],
+  ['knowledgeos','Kurumsal Harita','layers'],['settings','Ayarlar','ref']
+];
+window.WISDOM_DESTS=WISDOM_DESTS;
+/* UX-R9: sessiz metin etiketli 3 grup (tek seviye). */
+var WISDOM_DEST_GROUPS=[
+  ['Okuma',['reading','readingmode','search']],
+  ['Keşfet',['collections','coach','learning','knowledge']],
+  ['Gelişmiş',['statistics','workspace','execreview','execintel','knowledgeos','settings']]
+];
+function _wisdomDestEntry(k){ for(var i=0;i<WISDOM_DESTS.length;i++)if(WISDOM_DESTS[i][0]===k)return WISDOM_DESTS[i]; return [k,k,'qt']; }
+function _wisdomDestLabel(d){ return _wisdomDestEntry(d)[1]; }
+var WISDOM_DEST_DESC={ reading:'Sakin okuma ekranı', readingmode:'Dikkat dağıtmayan tam-okuma', search:'Kütüphanede ara',
+  collections:'Konu koleksiyonları', coach:'Bağlamsal öneriler', learning:'Öğrenme merkezi', knowledge:'Bilgi merkezi',
+  statistics:'Kütüphane istatistikleri', workspace:'Birleşik çalışma alanı', execreview:'Yönetici incelemesi',
+  execintel:'Yönetici karar zekâsı', knowledgeos:'Çapraz-modül bilgi haritası', settings:'Gösterim ve arşiv ayarları' };
+function _wisdomMenuItems(){ var out=[]; WISDOM_DEST_GROUPS.forEach(function(g){ g[1].forEach(function(k){ out.push(_wisdomDestEntry(k)); }); }); return out; } // düz liste (klavye indeksi)
+function _wisdomDestPanel(d){ // lazy: yalnız aktif destination render edilir
+  if(d==='coach')return (typeof wcoCoachPanelHtml==='function')?wcoCoachPanelHtml():'';
+  if(d==='learning')return (typeof wlcLearningSectionHtml==='function')?wlcLearningSectionHtml():'';
+  if(d==='knowledge'||d==='collections')return (typeof wkgKnowledgeCenterHtml==='function')?wkgKnowledgeCenterHtml():'';
+  if(d==='statistics')return (typeof wisdomStatsPanelHtml==='function')?wisdomStatsPanelHtml():'';
+  if(d==='workspace')return (typeof wwsWorkspaceHtml==='function')?wwsWorkspaceHtml():'';
+  if(d==='execreview')return (typeof werExecutiveWorkspaceHtml==='function')?werExecutiveWorkspaceHtml():'';
+  if(d==='execintel')return (typeof weiDashboardHtml==='function')?weiDashboardHtml():'';
+  if(d==='knowledgeos')return (typeof wkosKnowledgeOsHtml==='function')?wkosKnowledgeOsHtml():'';
+  if(d==='settings'){ var s=''; if(typeof wisdomDisplayPanelHtml==='function')s+=wisdomDisplayPanelHtml(); if(typeof wiaExecutiveInsightCenterHtml==='function')s+=wiaExecutiveInsightCenterHtml(); if(typeof wisdomArchiveHealthCardHtml==='function')s+=wisdomArchiveHealthCardHtml(); return s; }
+  return '';
 }
-window.wisdomToolsHtml=wisdomToolsHtml;
+window._wisdomDestPanel=_wisdomDestPanel;
+function wisdomCommandMenuHtml(){
+  var h='<div id="wisdom_cmd" class="wq-cmd" role="dialog" aria-modal="true" aria-label="Kütüphane menüsü" tabindex="-1" onkeydown="wisdomMenuKey(event)" style="position:fixed;inset:0;z-index:60;background:var(--s);display:flex;flex-direction:column;padding:20px;overflow:auto">';
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;width:100%;max-width:560px;margin-left:auto;margin-right:auto">'+ic('layers',16,'var(--t3)')+'<h2 style="font-size:15px;font-weight:800">Kütüphane</h2>'+
+     '<button class="btn btn-g btn-sm wq-hero-btn" style="margin-left:auto" onclick="wisdomCloseMenu()" aria-label="Kapat" title="Kapat">'+ic('x',13,'var(--t3)')+'</button></div>';
+  h+='<div role="menu" aria-label="Hedefler" style="display:flex;flex-direction:column;gap:1px;width:100%;max-width:560px;margin:0 auto">';
+  var idx=0;
+  WISDOM_DEST_GROUPS.forEach(function(g){
+    h+='<div role="presentation" style="font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);font-weight:700;padding:12px 4px 4px">'+U.esc(g[0])+'</div>';
+    g[1].forEach(function(k){ var d=_wisdomDestEntry(k), a=(idx===_wisdomMenuIdx);
+      h+='<button role="menuitem" id="wisdom_menuitem_'+idx+'" data-d="'+k+'" tabindex="'+(a?'0':'-1')+'" aria-selected="'+(a?'true':'false')+'" onclick="wisdomGoDest(this.dataset.d)" class="btn btn-g wq-hero-btn" style="justify-content:flex-start;background:'+(a?'var(--s2)':'transparent')+';padding:11px 14px;font-size:14px;min-height:44px'+(a?';outline:2px solid var(--blue);outline-offset:-2px':'')+'">'+ic(d[2],15,'var(--t3)')+' '+U.esc(d[1])+'</button>';
+      idx++;
+    });
+  });
+  h+='</div></div>';
+  return h;
+}
+window.wisdomCommandMenuHtml=wisdomCommandMenuHtml;
+function _wisdomFocus(id){ var el=(typeof ge==='function')?ge(id):null; if(el&&typeof el.focus==='function')el.focus(); }
+function wisdomOpenMenu(){ _wisdomMenuOpen=true; _wisdomMenuIdx=0; if(typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes(); _wisdomFocus('wisdom_menuitem_0'); }
+function wisdomCloseMenu(){ _wisdomMenuOpen=false; if(typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes(); _wisdomFocus('wisdom_menu_btn'); } // odak Kütüphane butonuna döner
+function wisdomGoDest(d){ _wisdomMenuOpen=false; if(d==='readingmode'){ return wisdomEnterReading(); } _wisdomDest=(d==='reading'||d==='search')?null:d; if(typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes(); }
+function wisdomBackToReading(){ _wisdomDest=null; _wisdomMenuOpen=false; if(typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes(); }
+function wisdomMenuKey(ev){ if(!ev)return; var k=ev.key;
+  if(k==='Escape'){ wisdomCloseMenu(); return; }
+  var items=_wisdomMenuItems(), n=items.length; if(!n)return;
+  if(k==='ArrowDown')_wisdomMenuIdx=(_wisdomMenuIdx+1)%n;
+  else if(k==='ArrowUp')_wisdomMenuIdx=(_wisdomMenuIdx-1+n)%n;
+  else if(k==='Home')_wisdomMenuIdx=0;
+  else if(k==='End')_wisdomMenuIdx=n-1;
+  else if(k==='Enter'){ if(typeof ev.preventDefault==='function')ev.preventDefault(); wisdomGoDest(items[_wisdomMenuIdx][0]); return; }
+  else return; // Tab vb. native davranış korunur
+  if(typeof ev.preventDefault==='function')ev.preventDefault();
+  if(_wisdomMenuOpen&&typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes();
+  _wisdomFocus('wisdom_menuitem_'+_wisdomMenuIdx);
+}
+window.wisdomOpenMenu=wisdomOpenMenu; window.wisdomCloseMenu=wisdomCloseMenu; window.wisdomGoDest=wisdomGoDest; window.wisdomBackToReading=wisdomBackToReading; window.wisdomMenuKey=wisdomMenuKey;
+/* UX-R9 Reading Mode — dikkat-dağıtmayan tam-okuma. Yalnız modül-yerel bayrak;
+   tarayıcı-deposu/Firestore/payload/bulut-yazımı/tam-ekran-API kullanmaz. Esc çıkar,
+   odak giriş kontrolüne döner. */
+function wisdomEnterReading(){ _wisdomReading=true; _wisdomDest=null; _wisdomMenuOpen=false; if(typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes(); }
+function wisdomExitReading(){ _wisdomReading=false; if(typeof renderWisdomQuotes==='function'&&tab==='wisdom')renderWisdomQuotes(); _wisdomFocus('wisdom_readmode_btn'); }
+function wisdomReadingKey(ev){ if(ev&&ev.key==='Escape')wisdomExitReading(); }
+window.wisdomEnterReading=wisdomEnterReading; window.wisdomExitReading=wisdomExitReading; window.wisdomReadingKey=wisdomReadingKey;
+function wisdomReadingModeHtml(){
+  var p=_wqHeroPick(); if(!p)return '<div class="fade" role="region" aria-label="Okuma Modu" style="text-align:center;padding:40px">'+ic('sun',15,'var(--t3)')+' Okunacak söz yok. <button class="btn btn-s btn-sm" onclick="wisdomExitReading()">Çık</button></div>';
+  var q=p.q, id=U.esc(String(q.id));
+  var h='<div class="fade wq-cmd" id="wisdom_readmode" role="region" aria-label="Okuma Modu" tabindex="-1" onkeydown="wisdomReadingKey(event)" style="min-height:60vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px 20px">';
+  h+=(typeof wqUxStyleHtml==='function'?wqUxStyleHtml():'');
+  if(q.category)h+='<div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--t3);font-weight:600;margin-bottom:22px">'+U.esc(q.category)+'</div>';
+  h+='<p class="wq-hero-quote" style="font-size:clamp(20px,4.6vw,30px);line-height:1.6;font-weight:500;color:var(--t);margin:0 0 24px;max-width:64ch;word-break:break-word">'+U.esc(q.quote)+'</p>';
+  if(q.author)h+='<p style="font-size:15px;font-weight:600;color:var(--blue);margin:0 0 26px">'+U.esc(q.author)+'</p>';
+  h+='<div style="display:flex;gap:2px;justify-content:center;align-items:center;flex-wrap:wrap">';
+  h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:38px;height:38px;font-size:20px;line-height:1" aria-label="Önceki söz" onclick="wqHeroNav(-1)">&lsaquo;</button>';
+  h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:38px;height:38px" data-id="'+id+'" onclick="wqToggleFav(this.dataset.id)" aria-label="Favori">'+ic('star',15,q.favorite?'var(--orange)':'var(--t3)')+'</button>';
+  h+='<button class="btn btn-g btn-sm wq-hero-btn" style="background:transparent;color:var(--t3)" data-id="'+id+'" onclick="wqHeroCopy(this.dataset.id)" aria-label="Kopyala">Kopyala</button>';
+  h+='<button class="btn btn-g btn-sm wq-hero-btn" style="background:transparent;color:var(--t3)" data-id="'+id+'" onclick="wqHeroShare(this.dataset.id)" aria-label="Paylaş">Paylaş</button>';
+  h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:38px;height:38px;font-size:20px;line-height:1" aria-label="Sonraki söz" onclick="wqHeroNav(1)">&rsaquo;</button>';
+  h+='</div>';
+  h+='<div role="status" aria-label="Okuma konumu" style="font-size:9px;color:var(--t3);margin-top:14px;letter-spacing:.05em">'+(p.idx+1)+' / '+p.total+'</div>';
+  h+='<button class="btn btn-s btn-sm wq-hero-btn" style="margin-top:22px" onclick="wisdomExitReading()" aria-label="Okuma modundan çık">'+ic('x',12,'var(--t3)')+' Okuma Modundan Çık</button>';
+  h+='</div>';
+  return h;
+}
+window.wisdomReadingModeHtml=wisdomReadingModeHtml;
+function renderWisdomReadingMode(){ sh('pinner',wisdomReadingModeHtml()); }
+window.renderWisdomReadingMode=renderWisdomReadingMode;
+function renderWisdomDest(){
+  var h='<div class="fade">';
+  h+=(typeof wqUxStyleHtml==='function'?wqUxStyleHtml():'');
+  h+='<div class="sh"><div><h1 class="sh-t">'+U.esc(_wisdomDestLabel(_wisdomDest))+'</h1><p class="sh-sub">'+U.esc(WISDOM_DEST_DESC[_wisdomDest]||'Özlü Sözler kütüphanesi')+'</p></div>';
+  h+='<button class="btn btn-s btn-sm wq-hero-btn" onclick="wisdomBackToReading()" aria-label="Okumaya dön" title="Okumaya dön">&lsaquo; Okumaya Dön</button></div>';
+  h+='<div id="wisdom_dest_panel">'+_wisdomDestPanel(_wisdomDest)+'</div></div>';
+  sh('pinner',h);
+}
+window.renderWisdomDest=renderWisdomDest;
 
 function renderWisdomQuotes(){
+  if(_wisdomReading){ renderWisdomReadingMode(); return; } // UX-R9: dikkat-dağıtmayan okuma modu
+  if(_wisdomDest){ renderWisdomDest(); return; } // UX-R8: destination fullscreen görünümü
   var st=wqStats();
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Özlü Sözler</h1><p class="sh-sub">Kişisel özlü söz kütüphanen. Hedeflerden ve notlardan bağımsız.</p></div>';
   h+=(typeof wisdomSourceBadgeHtml==='function'?'<span style="align-self:center">'+wisdomSourceBadgeHtml()+'</span>':''); // SG-SHARD-P3d: kaynak rozeti (Bulut Arşivi / fallback: Yerel Güvenlik Arşivi)
+  h+='<button id="wisdom_menu_btn" class="btn btn-s btn-sm wq-hero-btn" onclick="wisdomOpenMenu()" aria-label="Kütüphane menüsü" title="Kütüphane">'+ic('layers',13,'var(--t3)')+' Kütüphane</button>'; // UX-R8: tek komut-menüsü giriş noktası (araçlar/analitik/içgörüler burada)
   h+='<button class="btn btn-p" onclick="openWqForm()">'+ic('plus',13)+' Yeni Söz</button>';
   h+=(typeof wisdomIoButtonsHtml==='function'?wisdomIoButtonsHtml():''); // D10.3: içe/dışa aktarma butonları (additive)
   h+=(typeof wisdomMigrationButtonHtml==='function'?wisdomMigrationButtonHtml():'')+'</div>'; // D10.6.1: admin-only Öz Sözler→Özlü Sözler taşıma butonu (additive, non-admin='')
@@ -358,9 +461,9 @@ function renderWisdomQuotes(){
   if(cats.length){ h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">';
     cats.forEach(function(c){var a=wqCat===c; h+='<button class="btn btn-sm" style="background:'+(a?'var(--blue)':'var(--s2)')+';color:'+(a?'#fff':'var(--t2)')+'" data-c="'+U.esc(c)+'" onclick="wqSetCat(this.dataset.c)">'+U.esc(c)+'</button>';});
     h+='</div>'; }
-  // WISDOM-UXR1: ağır analitik/araç panelleri (P4–P12) tek katlanabilir bölümde, varsayılan kapalı → sakin varsayılan görünüm. İçerik DOM'da kalır (işlev korunur); açık durum WISDOM_TOOLS_OPEN ile re-render'da korunur.
-  h+=wisdomToolsHtml();
+  // UX-R8: ağır paneller default ekrandan KALDIRILDI → yalnız Kütüphane komut-menüsü arkasında (lazy).
   h+='<div id="wq_list"></div></div>';
+  if(_wisdomMenuOpen)h+=wisdomCommandMenuHtml(); // UX-R8: fullscreen komut-menüsü overlay (yalnız açıkken)
   sh('pinner',h);
   _wqRenderList();
 }

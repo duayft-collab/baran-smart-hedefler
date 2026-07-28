@@ -284,10 +284,10 @@ describe('Integration & Regression', () => {
     const S = createSandbox();
     setup(S, [wq('a', { quote: 'liderlik', showCount: 1 })], { goals: [{ id: 1, title: 'liderlik', status: 'active' }] });
     S.tab = 'wisdom';
-    assert.doesNotThrow(() => S.renderWisdomQuotes());
+    // UX-R8: insight center komut-menüsü 'settings' destination'ında render
+    assert.doesNotThrow(() => S.wisdomGoDest('settings'));
     const html = S.__getElements().pinner.innerHTML;
-    assert.ok(/Yönetici İçgörü Merkezi/.test(html));
-    assert.ok(/Bilgi Koçu/.test(html)); // P6 hâlâ var
+    assert.ok(/Yönetici İçgörü Merkezi/.test(html)); // settings dest P7 içgörü merkezini içerir (UX-R8)
   });
   test('25. prior derived panels intact (P4/P5/P6)', () => {
     const S = createSandbox();

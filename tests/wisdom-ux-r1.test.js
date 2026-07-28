@@ -61,37 +61,38 @@ describe('Calm reading hero (primary focus)', () => {
   });
 });
 
-describe('Secondary tools collapsed by default', () => {
-  test('6. heavy panels live inside a collapsed <details id="wisdom_tools">', () => {
+describe('Command menu (UX-R8: tools panel removed)', () => {
+  test('6. default screen has NO tools panel; single "Kütüphane" menu entry instead', () => {
     const S = createSandbox();
     const h = screen(S);
-    assert.ok(/<details id="wisdom_tools"/.test(h));
-    // varsayılan KAPALI (open yok)
-    assert.equal(/<details id="wisdom_tools" open/.test(h), false, 'tools must be collapsed by default');
-    assert.ok(/Araçlar, Analitik ve İçgörüler/.test(h));
+    assert.equal(/wisdom_tools/.test(h), false, 'collapsed tools section must be removed');
+    assert.ok(/wisdomOpenMenu\(\)/.test(h), 'command menu entry present');
+    assert.ok(/Kütüphane/.test(h));
   });
-  test('7. tools appear AFTER search (not dominating the top)', () => {
+  test('7. default reading screen shows no heavy panels', () => {
     const S = createSandbox();
     const h = screen(S);
-    assert.ok(h.indexOf('wisdom_tools') > h.indexOf('wq_search'), 'tools must follow search');
-    // ağır paneller aramadan sonra
-    assert.ok(h.indexOf('Bilgi Çalışma Alanı') > h.indexOf('wq_search'));
+    ['Bilgi Çalışma Alanı', 'Bilgi Koçu', 'Yönetici İçgörü Merkezi', 'Yönetici İncelemesi']
+      .forEach(sec => assert.equal(h.indexOf(sec), -1, sec + ' must not be on the default reading screen'));
   });
-  test('8. panel content still present in DOM (functionality preserved)', () => {
+  test('8. every previous module reachable via command menu destinations', () => {
     const S = createSandbox();
-    const h = screen(S);
-    ['Bilgi Çalışma Alanı', 'Bilgi Koçu', 'Yönetici İçgörü Merkezi', 'Yönetici İncelemesi', 'Bilgi Merkezi']
-      .forEach(sec => assert.ok(h.indexOf(sec) >= 0, 'missing (should be inside tools): ' + sec));
+    ['reading', 'coach', 'learning', 'knowledge', 'statistics', 'workspace', 'execreview', 'execintel', 'knowledgeos', 'settings']
+      .forEach(d => assert.ok(S.WISDOM_DESTS.some(x => x[0] === d), 'missing destination: ' + d));
+    // coach destination lazy-renders the coach panel
+    S.D.wisdomQuotes = [wq('a', { quote: 'liderlik' })]; S.D.goals = [{ id: 1, title: 'liderlik', status: 'active' }]; S.wisdomStoreReset();
+    S.tab = 'wisdom'; S.wisdomGoDest('coach');
+    assert.ok(S.__getElements()['pinner'].innerHTML.indexOf('Bilgi Koçu') >= 0);
   });
-  test('9. open state persists across re-render via WISDOM_TOOLS_OPEN', () => {
+  test('9. command menu opens as a fullscreen sheet (role=dialog) and closes', () => {
     const S = createSandbox();
-    screen(S);
-    S.window.WISDOM_TOOLS_OPEN = true; // kullanıcı açtı
-    S.renderWisdomQuotes();
-    const h = S.__getElements()['pinner'].innerHTML;
-    assert.ok(/<details id="wisdom_tools" open/.test(h), 'open state must survive re-render');
-    // ontoggle senkron kancası mevcut
-    assert.ok(/ontoggle="window\.WISDOM_TOOLS_OPEN=this\.open"/.test(h));
+    S.D.wisdomQuotes = [wq('a')]; S.wisdomStoreReset(); S.tab = 'wisdom';
+    S.wisdomOpenMenu();
+    const open = S.__getElements()['pinner'].innerHTML;
+    assert.ok(/id="wisdom_cmd"/.test(open) && /role="dialog"/.test(open) && /aria-modal="true"/.test(open));
+    assert.ok(/role="menuitem"/.test(open));
+    S.wisdomCloseMenu();
+    assert.equal(/id="wisdom_cmd"/.test(S.__getElements()['pinner'].innerHTML), false);
   });
 });
 
@@ -124,7 +125,7 @@ describe('Zero-write / functionality preserved', () => {
     const S = createSandbox();
     let writes = 0; const _s = S.save; S.save = function () { writes++; return _s && _s.apply(this, arguments); };
     screen(S);
-    S.wqHeroHtml(); S.wisdomToolsHtml();
+    S.wqHeroHtml(); S.wisdomCommandMenuHtml();
     S.save = _s;
     assert.equal(writes, 0);
   });
@@ -136,7 +137,7 @@ describe('Zero-write / functionality preserved', () => {
   });
   test('15. CRUD + prior render pipeline intact', () => {
     const S = createSandbox();
-    ['openWqForm', 'wqToggleFav', 'wqTogglePin', 'wqDelete', 'renderWisdomQuotes', 'wqHeroHtml', 'wisdomToolsHtml']
+    ['openWqForm', 'wqToggleFav', 'wqTogglePin', 'wqDelete', 'renderWisdomQuotes', 'wqHeroHtml', 'wisdomCommandMenuHtml']
       .forEach(fn => assert.equal(typeof S[fn], 'function', fn));
   });
 });

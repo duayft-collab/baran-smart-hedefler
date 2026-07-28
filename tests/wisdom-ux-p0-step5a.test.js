@@ -80,12 +80,15 @@ describe('Category filter simplification', () => {
     // categories in the panel are wdToggleCat (display engine), inside the details element
     assert.ok(/<details[\s\S]*wdToggleCat\([\s\S]*<\/details>/i.test(h));
   });
-  test('8. the list category filter is the screen-level one (wqSetCat), shown once', () => {
+  test('8. list category filter (wqSetCat) on screen; display-engine (wdToggleCat) via settings dest (UX-R8)', () => {
     const sbx = createSandbox(); seed(sbx);
     const screen = screenHtml(sbx);
     assert.ok(/wqSetCat\(/.test(screen), 'list category filter missing');
-    // list filter and display-engine filter are distinct handlers (not merged)
-    assert.ok(/wdToggleCat\(/.test(screen), 'display-engine categories should still exist inside panel');
+    // UX-R8: display panel moved to command-menu 'settings' destination
+    sbx.tab = 'wisdom'; sbx.wisdomGoDest('settings');
+    const settings = sbx.__getElements()['pinner'].innerHTML;
+    assert.ok(/wdToggleCat\(/.test(settings), 'display-engine categories should exist in settings dest');
+    sbx.wisdomBackToReading();
   });
   test('9. list category filter does not touch display-engine settings', () => {
     const sbx = createSandbox(); seed(sbx);

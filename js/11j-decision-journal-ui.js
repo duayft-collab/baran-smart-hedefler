@@ -41,6 +41,8 @@ function renderDecisions(){
   var archived=all.filter(function(d){return d.status==='archived';});
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Karar Günlüğü</h1><p class="sh-sub">Kararlarını kaydet, gözden geçir, ne öğrendiğini not et.</p></div>';
   h+='<button class="btn btn-p" onclick="djOpenForm()">'+ic('plus',13)+' Yeni Karar</button></div>';
+  h+=(typeof wisdomUxTokensHtml==='function'?wisdomUxTokensHtml():''); // UX-R6: paylaşılan sunum-token bloğu (focus-visible + calm token + reduced-motion); İlkelerim ile tutarlı
+  h+=(typeof wiCardHtml==='function'?wiCardHtml((all[0]?wiCtxFromDecision(all[0]):null)):''); // CROSS-K1: karar bağlamında tek İlgili Bilgelik (ikincil; karar birincil kalır, salt-okunur)
   if(!all.length){
     h+='<div class="card" style="padding:48px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px">'+ic('layers',32,'var(--t3)')+
        '<p style="font-weight:700;font-size:16px">Henüz karar eklemedin.</p>'+

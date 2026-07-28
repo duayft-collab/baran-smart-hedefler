@@ -143,10 +143,26 @@ function pSetArea(v){ pArea=v; renderPrinciples(); }
 function pSetType(v){ pType=v; renderPrinciples(); }
 
 /* ── Render ── */
+/* UX-R6: Wisdom-bitişik operasyonel ekranlar (İlkelerim/Karar Günlüğü) için TEK
+   paylaşılan sunum-token bloğu. Yalnız design-system token'ları; iş mantığı/state/
+   listener/timer YOK; light/dark uyumlu; reduced-motion güvenli. Klavye tutarlılığı:
+   :focus-visible ana etkileşim kontrollerinde. Calm token'lar (uxr6-meta/uxr6-quiet)
+   opt-in. İçerik HTML'i değişmez; yalnız ek stil (davranış birebir korunur). */
+function wisdomUxTokensHtml(){
+  return '<style id="uxr6-tokens">'+
+    '.btn:focus-visible,summary:focus-visible,[role="tab"]:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px}'+
+    '.uxr6-meta{color:var(--t3);font-weight:400}'+
+    '.uxr6-quiet{border-color:var(--s2)!important;box-shadow:none!important}'+
+    '@media (prefers-reduced-motion: reduce){.uxr6-anim,.wd-anim{animation:none!important;transition:none!important}}'+
+    '</style>';
+}
+window.wisdomUxTokensHtml=wisdomUxTokensHtml;
 function renderPrinciples(){
   var st=pStats();
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">İlkelerim</h1><p class="sh-sub">Hayatında yaşatmak, zihnine yerleştirmek ve karakterine dönüştürmek istediğin ilkeler.</p></div>';
   h+='<button class="btn btn-p" onclick="openPrincipleForm()">'+ic('plus',13)+' Yeni İlke</button></div>';
+  h+=(typeof wisdomUxTokensHtml==='function'?wisdomUxTokensHtml():''); // UX-R6: paylaşılan sunum-token bloğu (focus-visible + calm token + reduced-motion)
+  h+=(typeof wiCardHtml==='function'?wiCardHtml((typeof pList==='function'&&pList()[0])?wiCtxFromPrinciple(pList()[0]):null):''); // CROSS-K1: ilke bağlamında tek destekleyici İlgili Bilgelik (salt-okunur, 0 write)
   // özet kartları
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
   [['Toplam',st.total],['Aktif',st.active],['Karakterime Yerleşti',st.internalized],['Arşiv',st.archived]].forEach(function(x){

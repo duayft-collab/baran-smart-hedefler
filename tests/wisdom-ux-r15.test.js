@@ -81,12 +81,12 @@ describe('Dashboard feeling removed', () => {
     ['Bilgi Çalışma Alanı', 'Yönetici İçgörü Merkezi', 'Bilgi Koçu', 'Kurumsal Bilgi Haritası']
       .forEach(sec => assert.equal(region.indexOf(sec), -1, sec + ' should be collapsed/secondary'));
   });
-  test('9. heavy panels remain collapsed by default (content still in DOM)', () => {
+  test('9. heavy panels not on default screen; reachable via command menu (UX-R8)', () => {
     const S = createSandbox();
     const h = screenOf(S);
-    assert.ok(/<details id="wisdom_tools"/.test(h));
-    assert.equal(/<details id="wisdom_tools" open/.test(h), false);
-    assert.ok(h.indexOf('Bilgi Koçu') >= 0);
+    assert.equal(/wisdom_tools/.test(h), false); // tools section removed
+    assert.ok(/wisdomOpenMenu\(\)/.test(h)); // menu entry present
+    assert.equal(h.indexOf('Bilgi Koçu'), -1); // panel not on default reading screen
   });
 });
 
@@ -119,7 +119,7 @@ describe('Reading hierarchy & functionality preserved', () => {
   });
   test('14. CRUD + hero + tools pipeline intact', () => {
     const S = createSandbox();
-    ['openWqForm', 'wqToggleFav', 'wqDelete', 'wqHeroHtml', 'wisdomToolsHtml', 'renderWisdomQuotes']
+    ['openWqForm', 'wqToggleFav', 'wqDelete', 'wqHeroHtml', 'wisdomCommandMenuHtml', 'renderWisdomQuotes']
       .forEach(fn => assert.equal(typeof S[fn], 'function', fn));
   });
   test('15. empty library → no hero, no crash', () => {

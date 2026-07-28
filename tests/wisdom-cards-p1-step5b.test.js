@@ -129,11 +129,14 @@ describe('Regression (screen still wired)', () => {
     sbx.D.wisdomQuotes = [FULL];
     sbx.tab = 'wisdom'; sbx.renderWisdomQuotes();
     const screen = sbx.__getElements()['pinner'].innerHTML;
-    assert.ok(/<details class="card"/.test(screen), 'display panel not a details');
     // UX-R1.5: kartlı 4-box → ince tipografik özet satırı (kutu yok)
     assert.equal((screen.match(/min-width:90px/g) || []).length, 0);
     const region = screen.split('wq_search')[0];
     ['söz', 'favori', 'aktif', 'sabit'].forEach(l => assert.ok(region.indexOf(l) >= 0, l));
+    // UX-R8: gösterim ayar paneli (<details class="card">) komut-menüsü 'settings' destination'ında
+    sbx.tab = 'wisdom'; sbx.wisdomGoDest('settings');
+    assert.ok(/<details class="card"/.test(sbx.__getElements()['pinner'].innerHTML), 'display panel in settings dest');
+    sbx.wisdomBackToReading();
   });
   test('29. dashboard quote still sources from wisdomQuotes', () => {
     const sbx = createSandbox();

@@ -63,15 +63,16 @@ describe('Motion (subtle, reduced-motion safe)', () => {
     const S = createSandbox();
     const style = S.wqUxStyleHtml();
     assert.ok(/@media \(prefers-reduced-motion: no-preference\)/.test(style));
-    assert.ok(/@media \(prefers-reduced-motion: reduce\)\{\.wq-hero\{animation:none\}\}/.test(style));
+    assert.ok(/@media \(prefers-reduced-motion: reduce\)\{\.wq-hero,\.wq-cmd\{animation:none\}\}/.test(style));
   });
-  test('6. no animation elsewhere (only .wq-hero animates)', () => {
+  test('6. only .wq-hero and .wq-cmd animate (subtle, motion-safe)', () => {
     const S = createSandbox();
     const style = S.wqUxStyleHtml();
-    const anims = style.match(/animation:/g) || [];
-    // biri wq-hero fade, biri reduce'da none → 2 animation bildirimi, ikisi de .wq-hero
-    assert.ok(anims.length <= 2);
-    assert.equal(/animation:[^;]*wqHeroFade/.test(style.replace(/\.wq-hero\{animation:wqHeroFade[^}]*\}/, '')), false);
+    // yalnız iki hafif geçiş: hero fade + command-menu fade (ikisi de reduced-motion'da kapanır)
+    assert.ok(/\.wq-hero\{animation:wqHeroFade 140ms/.test(style));
+    assert.ok(/\.wq-cmd\{animation:wqCmdIn 140ms/.test(style));
+    // reduce altında ikisi de none
+    assert.ok(/@media \(prefers-reduced-motion: reduce\)\{\.wq-hero,\.wq-cmd\{animation:none\}\}/.test(style));
   });
 });
 
@@ -139,13 +140,14 @@ describe('Color restraint & contrast', () => {
 });
 
 describe('Regression & guards', () => {
-  test('15. borderless hero + typographic summary + tools collapsed preserved', () => {
+  test('15. borderless hero + typographic summary + command-menu entry (UX-R8: tools removed)', () => {
     const S = createSandbox();
     const h = screenOf(S);
     assert.equal(/id="wisdom_hero"[^>]*border:/.test(h), false); // borderless
     assert.equal((h.match(/min-width:90px/g) || []).length, 0); // no stat cards
-    assert.ok(/<details id="wisdom_tools"/.test(h) && !/<details id="wisdom_tools" open/.test(h));
-    assert.ok(h.indexOf('Bilgi Koçu') >= 0); // P6–P12 content still present
+    assert.equal(/wisdom_tools/.test(h), false); // tools section removed
+    assert.ok(/wisdomOpenMenu\(\)/.test(h)); // command menu entry present
+    assert.equal(h.indexOf('Bilgi Koçu'), -1); // panels not on default reading screen
   });
   test('16. render performs zero cloud writes', () => {
     const S = createSandbox();
