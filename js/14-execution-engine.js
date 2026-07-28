@@ -158,7 +158,7 @@ function execDailyFocusCardHtml(){
   if(a.blockerLabel)h+='<span class="pill" style="font-size:9.5px;background:var(--s2);color:var(--red)">Engel: '+_exe(String(a.blockerLabel).slice(0,28))+'</span>';
   h+='</div>';
   h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:9px">';
-  h+='<button class="btn btn-g btn-sm" data-id="'+_exe(String(a.goalId))+'" onclick="if(typeof openGoalDetail===\'function\')openGoalDetail(this.dataset.id)" title="Hedefi aç">'+_exIc('tgt',11,'var(--t3)')+' Hedefi Aç</button>';
+  h+='<button class="btn btn-g btn-sm" data-id="'+_exe(String(a.goalId))+'" onclick="if(typeof openGoalDetail===\'function\')openGoalDetail(+this.dataset.id)" title="Hedefi aç">'+_exIc('tgt',11,'var(--t3)')+' Hedefi Aç</button>';
   if(a.wisdomId)h+='<button class="btn btn-g btn-sm" data-id="'+_exe(String(a.wisdomId))+'" onclick="if(typeof wiOpen===\'function\')wiOpen(this.dataset.id)" title="İlgili bilgelik">'+_exIc('qt',11,'var(--t3)')+' İlgili Bilgelik</button>';
   h+='</div></div>';
   return h;

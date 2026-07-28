@@ -139,6 +139,16 @@ describe('Daily Focus card + integration', () => {
     const S = createSandbox(); boot(S, []);
     assert.equal(S.execDailyFocusCardHtml(), '');
   });
+  test('12b. open-goal button coerces id to number (openGoalDetail uses strict ===)', () => {
+    // Regression: goal ids are numeric (09-goals matches with x.id===goalId and every
+    // working caller sends +this.dataset.gid). A raw string dataset.id never matches →
+    // the "Hedefi Aç" button silently no-ops in production. Handler MUST coerce with +.
+    const S = createSandbox();
+    boot(S, [goal(1784485410450, { deadline: past(2) })]);
+    const h = S.execDailyFocusCardHtml();
+    assert.ok(/openGoalDetail\(\+this\.dataset\.id\)/.test(h), 'must coerce dataset.id to Number with +');
+    assert.equal(/openGoalDetail\(this\.dataset\.id\)/.test(h), false, 'must not pass raw string id');
+  });
   test('13. Goals Dashboard surfaces the focus card (additive; stats intact)', () => {
     const S = createSandbox();
     boot(S, [goal(1, { deadline: past(2) })]);
