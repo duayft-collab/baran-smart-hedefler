@@ -49,6 +49,20 @@ function wisdomStoreChecksum(records){
 }
 window.wisdomStoreChecksum=wisdomStoreChecksum;
 
+/* İÇERİK checksum'ı (P3b) — volatile/runtime alanlar HARİÇ. Yalnız kalıcı içerik
+   bütünlüğünü temsil eder; showCount/lastShownAt/updatedAt gibi alanların değişmesi
+   checksum'ı değiştirmez → aktivasyon kapısı bayatlamaz. SHA-256, deterministik. */
+var WISDOM_VOLATILE_FIELDS=['showCount','lastShownAt','updatedAt','lastViewedAt','lastPopupAt','lastRotationAt'];
+window.WISDOM_VOLATILE_FIELDS=WISDOM_VOLATILE_FIELDS;
+function _wqStripVolatile(r){ if(!r||typeof r!=='object')return r; var o={}; for(var k in r){ if(Object.prototype.hasOwnProperty.call(r,k)&&WISDOM_VOLATILE_FIELDS.indexOf(k)<0)o[k]=r[k]; } return o; }
+function wisdomContentChecksum(records){
+  var arr=(Array.isArray(records)?records:wisdomStoreList()).slice().sort(function(a,b){return String(a&&a.id).localeCompare(String(b&&b.id));}).map(_wqStripVolatile);
+  var s=arr.map(function(r){return String(r&&r.id)+_wqsCanon(r);}).join('');
+  if(typeof sha256Hex!=='function')return Promise.reject(new Error('sha256Hex unavailable'));
+  return sha256Hex(s).then(function(hex){ return {count:arr.length,hash:hex}; });
+}
+window.wisdomContentChecksum=wisdomContentChecksum;
+
 /* ── Yükleme: koleksiyonu cache'e al (bilinmeyen alan KORUNUR; normalize YOK) ──
    DB yoksa/hata → loaded=false → sharded false kalır → legacy fallback.
    HİÇBİR boot akışına bağlı DEĞİL (P1). Realtime listener KULLANMAZ (tek get()). */
@@ -153,7 +167,7 @@ function wisdomDualDelete(id){
 window.wisdomDualApply=wisdomDualApply; window.wisdomDualSet=wisdomDualSet; window.wisdomDualDelete=wisdomDualDelete;
 
 /* ── Test/geçiş yardımcıları (P1'de üretimde ÇAĞRILMAZ) ── */
-function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; }
+function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; WQ_STORE_STATE._selfHealed=false; WQ_STORE_STATE._activationScheduled=false; }
 function wisdomStoreSetSharded(v){ WQ_STORE_STATE.sharded=!!v; } // P2 boot doğrulama sonrası açar; P1'de yalnız test
 function _wisdomStoreSeed(records,sharded){ WQ_STORE.clear(); (Array.isArray(records)?records:[]).forEach(function(r){ if(_wqsValidId(r))WQ_STORE.set(String(r.id),r); }); WQ_STORE_STATE.loaded=true; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=WQ_STORE.size; WQ_STORE_STATE.sharded=!!sharded; }
 window.wisdomStoreReset=wisdomStoreReset; window.wisdomStoreSetSharded=wisdomStoreSetSharded; window._wisdomStoreSeed=_wisdomStoreSeed;

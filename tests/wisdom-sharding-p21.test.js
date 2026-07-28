@@ -51,7 +51,7 @@ async function seedMigrated(S, records) {
   // koleksiyona kayıtları koy
   const col = db._cols['users/u/wisdomQuotes'] = new Map();
   records.forEach(r => col.set(String(r.id), JSON.parse(JSON.stringify(r))));
-  const cs = await S.wisdomStoreChecksum(records);
+  const cs = await S.wisdomContentChecksum(records);
   const app = db._cols['users/u/app'] = new Map();
   app.set('wisdomMeta', { sharded: true, count: records.length, checksum: cs.hash });
   app.set('wisdomMigration', { status: 'completed', total: records.length, migratedCount: records.length, sourceChecksum: cs.hash, targetChecksum: cs.hash });
@@ -79,19 +79,23 @@ describe('Legacy fallback (gate not passed)', () => {
     assert.equal((await S.wisdomBootActivate()).reason, 'gate_failed');
     assert.equal(S.wisdomStoreIsSharded(), false);
   });
-  test('4. count mismatch (meta vs manifest) => legacy', async () => {
+  test('4. count mismatch (post-load) => legacy (count_mismatch)', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
     await seedMigrated(S, [wq('a'), wq('b')]);
-    S.CLOUD.db._cols['users/u/app'].get('wisdomMeta').count = 99;
-    assert.equal((await S.wisdomBootActivate()).reason, 'gate_failed');
+    S.CLOUD.db._cols['users/u/app'].get('wisdomMeta').count = 99; // koleksiyon 2, meta 99
+    const r = await S.wisdomBootActivate();
+    assert.equal(r.reason, 'count_mismatch'); // P3b: count kapıda, checksum değil
     assert.equal(S.wisdomStoreIsSharded(), false);
   });
-  test('5. checksum mismatch => legacy', async () => {
+  test('5. P3b: checksum mismatch => activation PROCEEDS (count-based), not legacy', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
     await seedMigrated(S, [wq('a')]);
-    S.CLOUD.db._cols['users/u/app'].get('wisdomMeta').checksum = 'deadbeef';
-    assert.equal((await S.wisdomBootActivate()).reason, 'gate_failed');
-    assert.equal(S.wisdomStoreIsSharded(), false);
+    S.CLOUD.db._cols['users/u/app'].get('wisdomMeta').checksum = 'deadbeef'; // bayat checksum
+    const r = await S.wisdomBootActivate();
+    assert.equal(r.ok, true); // checksum artık BLOKE ETMEZ
+    assert.equal(r.checksumOk, false);
+    assert.equal(S.wisdomStoreIsSharded(), true);
+    assert.equal(S.WQ_STORE_STATE._selfHealed, true); // self-heal tetiklendi (reason self-heal sonrası 'ready' olabilir)
   });
   test('6. post-load count mismatch (collection drifted) => legacy', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a'), wq('b')];
@@ -166,16 +170,18 @@ describe('UX status line (read-transition)', () => {
     const S = createSandbox(); S.wisdomStoreReset(); S.wisdomMigrationReset();
     assert.equal(S.wisdomStatusLineHtml(), '');
   });
-  test('14. read-transition texts by activationReason', () => {
+  test('14. read-transition texts by activationReason (P3b texts)', () => {
     const S = createSandbox();
     S.WQ_STORE_STATE.activationReason = 'checking';
-    assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi kontrol ediliyor/);
+    assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi hazırlanıyor/);
     S.WQ_STORE_STATE.activationReason = 'verifying';
-    assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi doğrulanıyor/);
-    S.WQ_STORE_STATE.activationReason = 'ready'; S.WQ_STORE_STATE.activationReady = true;
-    assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi kullanıma hazır/);
-    S.WQ_STORE_STATE.activationReady = false; S.WQ_STORE_STATE.activationReason = 'checksum_mismatch';
-    assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi doğrulanamadı, yerel veri kullanılıyor/);
+    assert.match(S.wisdomStatusLineHtml(), /Bulut doğrulanıyor/);
+    S.WQ_STORE_STATE.activationReason = 'metadata_update'; S.WQ_STORE_STATE.activationReady = true;
+    assert.match(S.wisdomStatusLineHtml(), /Metadata güncelleniyor/);
+    S.WQ_STORE_STATE.activationReason = 'ready';
+    assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi hazır/);
+    S.WQ_STORE_STATE.activationReady = false; S.WQ_STORE_STATE.activationReason = 'count_mismatch';
+    assert.match(S.wisdomStatusLineHtml(), /Yerel arşiv kullanılıyor/);
   });
   test('15. normal legacy activation reasons stay hidden (no_migration/no_auth)', () => {
     const S = createSandbox(); S.wisdomStoreReset();
@@ -187,7 +193,7 @@ describe('UX status line (read-transition)', () => {
   test('16. status line icon + explicit text, no fixed width, no modal', () => {
     const S = createSandbox(); S.WQ_STORE_STATE.activationReason = 'checking';
     const h = S.wisdomStatusLineHtml();
-    assert.ok(/<svg/.test(h) && /kontrol ediliyor/.test(h) && /role="status"/.test(h));
+    assert.ok(/<svg/.test(h) && /hazırlanıyor/.test(h) && /role="status"/.test(h));
     assert.equal(/width:\s*\d{2,}px/.test(h), false);
     assert.equal(/showModal|class="ov"/.test(h), false);
   });
@@ -230,7 +236,7 @@ describe('Static guards (mandatory)', () => {
     assert.ok(fn.indexOf('cs.hash!==m.checksum') < fn.indexOf('wisdomStoreSetSharded(true)'));
   });
   test('G3. no realtime listener / no migration start / no write in activation', () => {
-    const fn = MIG_SRC.slice(MIG_SRC.indexOf('function wisdomBootActivate('), MIG_SRC.indexOf('/* Bounded'));
+    const fn = MIG_SRC.slice(MIG_SRC.indexOf('function wisdomBootActivate('), MIG_SRC.indexOf('window.wisdomBootActivate='));
     assert.equal(/onSnapshot\s*\(|\.subscribe\s*\(|wisdomMigrationStart\s*\(|\.set\s*\(|\.update\s*\(|\.delete\s*\(/.test(fn), false);
   });
   test('G4. mirrors byte-identical + module < 900', () => {

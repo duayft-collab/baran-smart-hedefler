@@ -107,7 +107,7 @@ describe('Batch migration + verify gates', () => {
     S.WISDOM_MIGRATION._records = JSON.parse(JSON.stringify(recs));
     S.WISDOM_MIGRATION.status = 'in_progress'; S.WISDOM_MIGRATION.total = 3;
     S.WISDOM_MIGRATION.lastBatchIndex = -1; S.WISDOM_MIGRATION.migratedCount = 0;
-    S.WISDOM_MIGRATION.sourceChecksum = (await S.wisdomStoreChecksum(recs)).hash;
+    S.WISDOM_MIGRATION.sourceChecksum = (await S.wisdomContentChecksum(recs)).hash;
     const r = await S.wisdomMigrationResume();
     assert.equal(r.ok, true); assert.equal(colSize(S), 3);
     assert.equal(S.wisdomMigrationStatus().status, 'completed');
@@ -289,11 +289,13 @@ describe('Static guards (mandatory)', () => {
   });
   test('G6. no auto sharded flag (setSharded(true) only inside GATED boot activation)', () => {
     assert.equal(/^\s*wisdomMigrationStart\s*\(/m.test(MIG_SRC), false);
-    // P2.1: wisdomStoreSetSharded(true) tek örnek + yalnız gated wisdomBootActivate içinde
-    assert.equal((MIG_SRC.match(/wisdomStoreSetSharded\s*\(\s*true/g) || []).length, 1);
+    // P3b: wisdomStoreSetSharded(true) yalnız gated wisdomBootActivate içinde (count kapısından sonra).
     const boot = MIG_SRC.slice(MIG_SRC.indexOf('function wisdomBootActivate('), MIG_SRC.indexOf('window.wisdomBootActivate='));
-    assert.match(boot, /wisdomStoreSetSharded\(true\)/); // tek örnek gated fonksiyonun içinde
-    assert.ok(boot.indexOf('cs.hash!==m.checksum') < boot.indexOf('wisdomStoreSetSharded(true)')); // checksum kapısından sonra
+    const total = (MIG_SRC.match(/wisdomStoreSetSharded\s*\(\s*true/g) || []).length;
+    const inBoot = (boot.match(/wisdomStoreSetSharded\s*\(\s*true/g) || []).length;
+    assert.equal(total, inBoot); // tüm setSharded(true) çağrıları boot activation içinde
+    assert.ok(inBoot >= 1);
+    assert.ok(boot.indexOf('WQ_STORE.size!==m.count') < boot.indexOf('wisdomStoreSetSharded(true)')); // count kapısından sonra
   });
   test('G7. protected files untouched (sync/restore/io/experience/rules)', () => {
     ['js/02-sync.js', 'js/06-restore-engine.js', 'js/11-restore-ui.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
