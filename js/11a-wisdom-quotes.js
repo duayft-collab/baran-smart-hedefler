@@ -231,7 +231,11 @@ function renderWisdomQuotes(){
   [['Toplam',st.total],['Favori',st.favorites],['Aktif',st.active],['Sabit',st.pinned]].forEach(function(x){
     h+='<div class="card" style="padding:8px 12px;flex:1;min-width:90px"><p style="font-size:10px;color:var(--t3)">'+x[0]+'</p><p style="font-size:18px;font-weight:800">'+x[1]+'</p></div>';});
   h+='</div>';
+  h+=(typeof wwsWorkspaceHtml==='function'?wwsWorkspaceHtml():''); // WISDOM-P10: Bilgi Çalışma Alanı — P4–P8 birleşik hub (sol nav + ana bölüm + sağ bağlam + arama + odak; türetilmiş, salt-okunur, 0 write). Mevcut paneller korunur (ek katman).
+  h+=(typeof werEntryPointHtml==='function'?werEntryPointHtml():''); // WISDOM-P8: Yönetici İncelemesi kompakt giriş noktası → sekmeli workspace (türetilmiş, salt-okunur, 0 write)
   h+=(typeof wkgKnowledgeCenterHtml==='function'?wkgKnowledgeCenterHtml():''); // WISDOM-P5: Bilgi Merkezi (koleksiyonlar + uzmanlık + radar + Knowledge Score; salt-okunur)
+  h+=(typeof wcoCoachPanelHtml==='function'?wcoCoachPanelHtml():''); // WISDOM-P6: Bilgi Koçu (bağlamsal öneriler + neden-önemli; türetilmiş, salt-okunur, 0 write)
+  h+=(typeof wiaExecutiveInsightCenterHtml==='function'?wiaExecutiveInsightCenterHtml():''); // WISDOM-P7: Yönetici İçgörü Merkezi (analytics + boşluklar + yansıma + haftalık + öneriler + timeline; türetilmiş, salt-okunur, 0 write)
   h+=(typeof wlcLearningSectionHtml==='function'?wlcLearningSectionHtml():''); // WISDOM-P4: Öğrenme Merkezi (Günün Öğretisi + dashboard + ilerleme + kategoriler; salt-okunur)
   h+=(typeof wisdomStatsPanelHtml==='function'?wisdomStatsPanelHtml():''); // SG-SHARD-P3a: türetilmiş kütüphane istatistik paneli (salt-okunur, wqList üzerinden)
   if(typeof wisdomDisplayPanelHtml==='function')h+=wisdomDisplayPanelHtml(); // D10.2: gösterim/rotasyon ayar paneli (additive)
