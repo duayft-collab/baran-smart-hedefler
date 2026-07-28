@@ -18,7 +18,7 @@ setInterval(updateClock,1000);
 var NAV=[
   {sec:'secMain',items:[{id:'dashboard',l:'Dashboard',i:'dash'},{id:'kpi',l:'KPI & Metrikler',i:'kpi'},{id:'challenges',l:'90-Gün Mücadelesi',i:'trophy'}]},
   {sec:'secMethod',items:[{id:'smart',l:'SMART Hedef Motoru',i:'tgt'},{id:'onething',l:'ONE Thing',i:'zap'},{id:'frog',l:'Eat That Frog',i:'flame'},{id:'timeblock',l:'Zaman Bloklama',i:'ci'},{id:'weeklyreview',l:'Haftalık Review',i:'ref'},{id:'gtd',l:'GTD Inbox',i:'arc'}]},
-  {sec:'secProd',items:[{id:'goals',l:'Hedefler',i:'tgt'},{id:'goalsdash',l:'Hedef Panosu',i:'kpi'},{id:'okr',l:'OKR',i:'ref'},{id:'analytics',l:'Analitik',i:'kpi'},{id:'todos',l:'Yapılacaklar',i:'csq'},{id:'habits',l:'Alışkanlıklar',i:'star'},{id:'routines',l:'Rutinler',i:'ref'}]},
+  {sec:'secProd',items:[{id:'today',l:'Bugün',i:'zap'},{id:'goals',l:'Hedefler',i:'tgt'},{id:'goalsdash',l:'Hedef Panosu',i:'kpi'},{id:'okr',l:'OKR',i:'ref'},{id:'analytics',l:'Analitik',i:'kpi'},{id:'todos',l:'Yapılacaklar',i:'csq'},{id:'habits',l:'Alışkanlıklar',i:'star'},{id:'routines',l:'Rutinler',i:'ref'}]},
   {sec:'secBook',items:[{id:'library',l:'Kitap Kütüphanesi',i:'bk'},{id:'mybooks',l:'Okuma Listesi',i:'layers'},{id:'readingplan',l:'Okuma Planları',i:'bk'}]},
   {sec:'secKnow',items:[{id:'wisdom',l:'Özlü Sözler',i:'qt'},{id:'generalnotes',l:'Genel Notlar',i:'pen'},{id:'restore',l:'Yedekler / Geri Yükleme',i:'arc'},{id:'journal',l:'Günlük',i:'pen'},{id:'principles',l:'İlkelerim',i:'sh'},{id:'decisions',l:'Karar Günlüğü',i:'layers'},{id:'coaching',l:'Koçluk',i:'us'},{id:'vault',l:'Bilgi Kasası',i:'arc'}]},
   {sec:'secSys',items:[{id:'deepwork',l:'Derin Çalışma',i:'brain'},{id:'sop',l:'SOP Şablonları',i:'layers'},{id:'tools',l:'Odak Araçları',i:'hp'}]},
