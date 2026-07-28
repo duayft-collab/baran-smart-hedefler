@@ -89,8 +89,10 @@ function goalsDashboardHtml(filter){
   var years={}; goals.forEach(function(g){ years[goalYear(g)]=1; });
   var cats={}; goals.forEach(function(g){ cats[String(g.cat||'Diğer')]=1; });
 
+  var _exFocus=(typeof execDailyFocusCardHtml==='function')?execDailyFocusCardHtml():''; // PLATFORM-P2: Günün En İyi Aksiyonu (türetilmiş, salt-okunur, 0 write)
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Hedef Panosu</h1><p class="sh-sub">Türetilmiş özet — '+st.total+' hedef</p></div>'+
     '<button class="btn btn-s btn-sm" onclick="gotoTab(\'goals\')">'+ic2('tgt',12)+' Hedefler</button></div>';
+  h+=_exFocus; // PLATFORM-P2: Günün En İyi Aksiyonu kartı (panonun en üstünde, filtrelerden önce)
 
   /* Filtreler */
   h+='<div class="card" style="padding:12px 14px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px">';

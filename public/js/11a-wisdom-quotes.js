@@ -5,6 +5,38 @@
    reflected, kategori/etiket, arama/filtre, deterministik sıra, dirty draft,
    temel istatistik, Backup/DIFF entegrasyonu.
    YOK: otomatik gösterim, zamanlama, rotasyon, timer, import/export, bağlamsal.
+   ══════════════════════════════════════════════════════════════════════════
+   R11 — WISDOM V1.0 STABLE · MİMARİ HARİTASI (sunum katmanı, bakım rehberi)
+
+   RENDER PIPELINE — tek giriş `renderWisdomQuotes()`, üç moda dallanır:
+     _wisdomReading  → renderWisdomReadingMode()  (UX-R9 dikkat-dağıtmayan okuma)
+     _wisdomDest     → renderWisdomDest()          (UX-R8 komut-menüsü destination'ı, lazy)
+     (varsayılan)    → sakin okuma ekranı: hero + özet + arama/filtre + kütüphane
+   Liste ayrı: `_wqRenderList()` yalnız #wq_list'i doldurur (arama/filtre değişince).
+
+   NAVİGASYON (tek felsefe, tek back davranışı):
+     wisdomOpenMenu/CloseMenu  → komut-menüsü aç/kapa (odak yönetimi: _wisdomFocus)
+     wisdomGoDest(d)           → destination'a git (readingmode→Reading Mode; reading/search→okuma)
+     wisdomBackToReading()     → tek "‹ Okumaya Dön" davranışı; hero indeksi + arama sorgusu korunur
+     wisdomMenuKey / wisdomReadingKey → klavye (Arrow/Home/End/Enter/Esc)
+
+   KOMUT MENÜSÜ (UX-R8/R9): WISDOM_DEST_GROUPS (Okuma/Keşfet/Gelişmiş, sessiz etiketler) +
+     WISDOM_DESTS (13 hedef) → wisdomCommandMenuHtml() fullscreen sheet; _wisdomDestPanel(d)
+     mevcut motor panelini (P4–P12) LAZY render eder (paneller burada silinmez, çağrılır).
+
+   HERO SEÇİMİ (UX-R4 determinizm): _wqDailyPick() = FNV-1a hash(id|_wqDailySeed()) MAX skor
+     (list.length modulo YOK → kaynak/sıralama/aktivasyon-zamanı bağımsız aynı gün-id).
+     _wqHeroReady() aktivasyon penceresinde false → _wqHeroLoadingHtml() placeholder;
+     _wqHeroWatch() bounded self-terminating (aktivasyon bitince 1 kez re-render).
+
+   ENTEGRASYON KATMANI (K1, ayrı dosya 13-wisdom-integration.js): wiCardHtml/wiRecommend
+     Hedef/Karar/İlke ekranlarına bağlamsal "İlgili Bilgelik" kartı enjekte eder; buradaki
+     wqList/wqById/rndQuote'u yeniden kullanır. 11a bu katmanı BİLMEZ (gevşek bağlı).
+
+   DOKUNULMAZ (V1.0 dondurma): motorlar 11u/11v/11w/11x/11y/12a/12b/12c/13, store/sync/
+     backup/restore/relations, DIFF_SCHEMA, veri modeli. Kabul edilen borç: türetilmiş
+     modüllerin kendi _Xe/_XIc esc/ic wrapper'ları (bilinçli self-containment; motorlara
+     dokunmamak için birleştirilmedi).
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Dirty draft (kendi namespace'i) ── */
