@@ -224,8 +224,53 @@ window.wqSetQuery=wqSetQuery;window.wqSetFilter=wqSetFilter;window.wqSetCat=wqSe
    ───────────────────────────────────────────────────────────────────────── */
 var _whIdx=null;
 function _wqHeroList(){ var l=(typeof wqList==='function'?wqList():[]).filter(function(q){return q&&q.active!==false&&String(q.quote==null?'':q.quote).trim();}); return (typeof wqSort==='function')?wqSort(l):l; }
-function _wqHeroPick(){ var l=_wqHeroList(); if(!l.length)return null; if(_whIdx==null){ var doy=Math.floor((Date.now()-Date.UTC(new Date().getFullYear(),0,0))/864e5); _whIdx=doy%l.length; } _whIdx=((_whIdx%l.length)+l.length)%l.length; return {q:l[_whIdx],idx:_whIdx,total:l.length}; }
+/* UX-R4 HOTFIX: günlük hero seçimi STABİL ID-HASH ile — dayOfYear%list.length KALDIRILDI.
+   Aynı takvim günü, kaynak (legacy/sharded), sıralama ve aktivasyon-zamanından BAĞIMSIZ
+   olarak aynı söz id'sini üretir. Firestore dönüş sırasına ve list.length'e bağlı değil. */
+function _wqDailySeed(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function _wqHashId(id,seed){ var s=String(id)+'|'+String(seed), h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; } // FNV-1a
+function _wqDailyPick(){
+  var l=_wqHeroList(); if(!l.length)return null;
+  var seed=_wqDailySeed(), best=null, bs=-1;
+  for(var i=0;i<l.length;i++){ var sc=_wqHashId(l[i].id,seed); if(sc>bs||(sc===bs&&best&&String(l[i].id)<String(best.id))){ bs=sc; best=l[i]; } }
+  return best;
+}
+/* Aktivasyon penceresinde otoriter kaynak henüz hazır değil → placeholder; sharded VEYA
+   settled-legacy (loading değil) → hazır. WQ_STORE'a doğrudan erişmez (yalnız public accessor). */
+function _wqHeroReady(){
+  if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded())return true;
+  var st=(typeof wisdomStoreStatus==='function')?wisdomStoreStatus():null;
+  if(st&&st.loading===true)return false;
+  return true;
+}
+function _wqHeroPick(){
+  var l=_wqHeroList(); if(!l.length)return null;
+  if(_whIdx==null){ var daily=_wqDailyPick(), di=0; if(daily){ for(var i=0;i<l.length;i++){ if(String(l[i].id)===String(daily.id)){ di=i; break; } } } _whIdx=di; }
+  _whIdx=((_whIdx%l.length)+l.length)%l.length;
+  return {q:l[_whIdx],idx:_whIdx,total:l.length};
+}
+/* Aktivasyon-esnası sakin placeholder (role=status, sistem ikonu + açık metin, spinner/
+   modal/toast/layout-shift YOK, responsive, reduced-motion güvenli). */
+function _wqHeroLoadingHtml(){
+  return '<div id="wisdom_hero" class="wq-hero" role="status" aria-live="polite" style="max-width:64ch;margin:6px auto 30px;padding:30px 20px;text-align:center">'+
+    '<div style="font-size:9.5px;letter-spacing:.22em;color:var(--t3);font-weight:600;text-transform:uppercase;margin-bottom:14px">Günün Bilgeliği</div>'+
+    '<p style="font-size:13.5px;color:var(--t3);line-height:1.6;margin:0">'+ic('brain',15,'var(--t3)')+' Bilgelik arşivi hazırlanıyor…</p></div>';
+}
+/* Sınırlı, kendini-sonlandıran izleyici: aktivasyon bitince hero'yu BİR kez re-render eder.
+   Kalıcı listener/durum/tarayıcı-deposu/bulut-yazımı YOK (bounded setTimeout, ~24s tavan). */
+var _wqHeroWatching=false;
+function _wqHeroWatch(){
+  if(_wqHeroWatching||typeof setTimeout!=='function')return;
+  _wqHeroWatching=true; var tries=0;
+  var tick=function(){ tries++;
+    if(_wqHeroReady()){ _wqHeroWatching=false; if(typeof renderWisdomQuotes==='function'&&typeof tab!=='undefined'&&tab==='wisdom')renderWisdomQuotes(); return; }
+    if(tries>=30){ _wqHeroWatching=false; return; }
+    setTimeout(tick,800);
+  };
+  setTimeout(tick,800);
+}
 function wqHeroHtml(){
+  if(!_wqHeroReady()){ _wqHeroWatch(); return _wqHeroLoadingHtml(); }
   var p=_wqHeroPick(); if(!p)return '';
   var q=p.q, id=U.esc(String(q.id));
   /* UX-R1.5: kitap-okuyucu hero — kartsız/kenarlıksız, 64ch merkezli okuma ölçüsü,
