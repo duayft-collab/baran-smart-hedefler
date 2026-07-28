@@ -144,6 +144,14 @@ describe('PART 7 — Quiet insights panel', () => {
     assert.ok(/Bugünün En Önemli İşi/.test(h));          // MIT still primary
     assert.equal((h.match(/btn btn-p[^"]*"[^>]*openGoalDetail/g) || []).length, 1); // still one primary
   });
+  test('10b. insights panel HTML is tag-balanced (no unclosed div → no horizontal collapse)', () => {
+    const S = createSandbox();
+    boot(S, [goal(1, { deadline: past(2) }), goal(2, { deadline: farFuture(), priority: { level: 'p3', weight: 3 } })]);
+    const p = S.execOsInsightsHtml();
+    assert.equal((p.match(/<div/g) || []).length, (p.match(/<\/div>/g) || []).length, 'panel <div> must be balanced');
+    const full = S.dailyWorkspaceHtml();
+    assert.equal((full.match(/<div/g) || []).length, (full.match(/<\/div>/g) || []).length, 'workspace <div> must be balanced');
+  });
 });
 
 describe('Engine reuse + memoization', () => {

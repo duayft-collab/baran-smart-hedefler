@@ -144,7 +144,7 @@ function _osRow(icon,label,text,why,color){
   h+='<div style="flex:1;min-width:0"><p style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--t3)">'+_ose(label)+'</p>';
   h+='<p style="font-size:13px;color:var(--t1);font-weight:600;margin-top:1px">'+_ose(text)+'</p>';
   if(why)h+='<p style="font-size:11px;color:var(--t3);margin-top:2px">'+_ose(why)+'</p>';
-  h+='</div>';
+  h+='</div></div>';   /* iç metin bloğu + satır dış sarmalayıcısı — ikisi de kapanır */
   return h;
 }
 function execOsInsightsHtml(){
