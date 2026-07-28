@@ -104,22 +104,19 @@ describe('Category filter simplification', () => {
 });
 
 describe('Compact primary statistics', () => {
-  test('11. main screen shows at most 4 primary summary cards', () => {
+  test('11. primary summary is a compact typographic line (UX-R1.5: no dashboard cards)', () => {
     const sbx = createSandbox(); seed(sbx);
     const screen = screenHtml(sbx);
-    // count primary summary cards: the stat block uses min-width:90px cards
-    const primaryCards = (screen.match(/min-width:90px/g) || []).length;
-    assert.ok(primaryCards <= 4, 'more than 4 primary summary cards: ' + primaryCards);
-    assert.equal(primaryCards, 4);
+    // UX-R1.5: kartlı 4-box kaldırıldı → ince tipografik özet satırı (kutu/kenarlık yok)
+    assert.equal((screen.match(/min-width:90px/g) || []).length, 0, 'boxed stat cards should be removed');
   });
-  test('12. primary summary shows Total / Favorites / Active / Pinned (not Passive/Reflected)', () => {
+  test('12. primary summary shows total/favorites/active/pinned before search (not Passive/Reflected)', () => {
     const sbx = createSandbox(); seed(sbx);
     const screen = screenHtml(sbx);
-    // extract the primary stat block region (before the search input)
     const region = screen.split('wq_search')[0];
-    ['Toplam', 'Favori', 'Aktif', 'Sabit'].forEach(l => assert.ok(region.indexOf('>' + l + '<') >= 0, 'missing primary stat: ' + l));
-    assert.equal(region.indexOf('>Pasif<'), -1, 'Passive should not be a primary card');
-    assert.equal(region.indexOf('>Beni düşündüren<'), -1, 'Reflected should not be a primary card');
+    ['söz', 'favori', 'aktif', 'sabit'].forEach(l => assert.ok(region.indexOf(l) >= 0, 'missing primary stat: ' + l));
+    assert.equal(region.indexOf('>Pasif<'), -1, 'Passive should not be primary');
+    assert.equal(region.indexOf('Beni düşündüren'), -1, 'Reflected should not be primary');
   });
   test('13. statistics calculations unchanged (wqStats + wdStats)', () => {
     const sbx = createSandbox(); seed(sbx);

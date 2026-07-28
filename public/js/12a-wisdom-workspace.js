@@ -28,7 +28,8 @@ var WWS_NAV=[
   ['dashboard','Panel','chart'],['coach','Koç','bulb'],['learning','Öğrenme','book'],
   ['knowledge','Bilgi','brain'],['analytics','Analitik','chart'],['executive','Yönetici','briefcase'],
   ['search','Arama','search'],['collections','Koleksiyonlar','layers'],['settings','Ayarlar','gear'],
-  ['intel','Yönetici Zekâsı','briefcase'] // WISDOM-P11: Executive Intelligence bölümü (12b, typeof-guard'lı)
+  ['intel','Yönetici Zekâsı','briefcase'], // WISDOM-P11: Executive Intelligence bölümü (12b, typeof-guard'lı)
+  ['kos','Kurumsal Harita','grid'] // WISDOM-P12: Enterprise Knowledge OS bölümü (12c, typeof-guard'lı)
 ];
 window.WWS_NAV=WWS_NAV;
 var _wwsSection='dashboard', _wwsFocus=false, _wwsQuery='';
@@ -240,6 +241,7 @@ function _wwsSectionInner(sec){
   if(sec==='search')return _wwsSearchHtml();
   if(sec==='collections')return _wwCall('wkgKnowledgeCenterHtml');
   if(sec==='intel')return (typeof weiDashboardHtml==='function')?weiDashboardHtml():'<p style="font-size:11px;color:var(--t3)">Yönetici Zekâsı kullanılamıyor.</p>';
+  if(sec==='kos')return (typeof wkosKnowledgeOsHtml==='function')?wkosKnowledgeOsHtml():'<p style="font-size:11px;color:var(--t3)">Kurumsal Bilgi Haritası kullanılamıyor.</p>';
   if(sec==='settings')return (typeof wpPreferencesSheetHtml==='function')?wpPreferencesSheetHtml():'<p style="font-size:11px;color:var(--t3)">Kişiselleştirme tercihleri sonraki fazda (P9) eklenecek. Şimdilik gösterim ayarları alttaki panellerden yönetilir.</p>';
   return '';
 }

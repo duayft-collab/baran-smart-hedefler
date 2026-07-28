@@ -215,6 +215,76 @@ function wqSetFilter(v){ wqFilterMode=v; renderWisdomQuotes(); }
 function wqSetCat(c){ wqCat=(wqCat===c?'':c); renderWisdomQuotes(); }
 function wqSetLang(v){ wqLang=v; renderWisdomQuotes(); }
 window.wqSetQuery=wqSetQuery;window.wqSetFilter=wqSetFilter;window.wqSetCat=wqSetCat;window.wqSetLang=wqSetLang;
+/* ─────────────────────────────────────────────────────────────────────────
+   WISDOM-UXR1: Minimalist bilgi mimarisi.
+   Varsayılan ekran sakin bir okuma deneyimidir: üstte "Günün Bilgeliği" hero
+   (birincil odak) + kompakt özet + arama/filtre + kütüphane. TÜM ağır analitik/
+   araç panelleri (P4–P12) tek katlanabilir "Araçlar ve İçgörüler" bölümünde,
+   varsayılan KAPALI. Yeni veri/işlev/motor YOK; yalnız yeniden düzenleme.
+   ───────────────────────────────────────────────────────────────────────── */
+var _whIdx=null;
+function _wqHeroList(){ var l=(typeof wqList==='function'?wqList():[]).filter(function(q){return q&&q.active!==false&&String(q.quote==null?'':q.quote).trim();}); return (typeof wqSort==='function')?wqSort(l):l; }
+function _wqHeroPick(){ var l=_wqHeroList(); if(!l.length)return null; if(_whIdx==null){ var doy=Math.floor((Date.now()-Date.UTC(new Date().getFullYear(),0,0))/864e5); _whIdx=doy%l.length; } _whIdx=((_whIdx%l.length)+l.length)%l.length; return {q:l[_whIdx],idx:_whIdx,total:l.length}; }
+function wqHeroHtml(){
+  var p=_wqHeroPick(); if(!p)return '';
+  var q=p.q, id=U.esc(String(q.id));
+  /* UX-R1.5: kitap-okuyucu hero — kartsız/kenarlıksız, 64ch merkezli okuma ölçüsü,
+     büyük tipografi, cömert boşluk. Kategori pill değil ince üstbaşlık; sözle
+     hiçbir şey yarışmaz (~%75 görsel dikkat). */
+  var h='<div id="wisdom_hero" class="wq-hero" style="max-width:64ch;margin:6px auto 30px;padding:24px 20px 10px;text-align:center">';
+  h+='<div style="font-size:9.5px;letter-spacing:.22em;color:var(--t3);font-weight:600;text-transform:uppercase;margin-bottom:24px">Günün Bilgeliği'+(q.category?(' &middot; '+U.esc(q.category)):'')+'</div>';
+  h+='<p class="wq-hero-quote" style="font-size:clamp(19px,4.2vw,26px);line-height:1.62;font-weight:500;color:var(--t);margin:0 0 22px;word-break:break-word">'+U.esc(q.quote)+'</p>';
+  if(q.author)h+='<p style="font-size:14px;font-weight:600;color:var(--blue);margin:0">'+U.esc(q.author)+'</p>';
+  h+='<div style="display:flex;gap:2px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:26px">';
+  h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:36px;height:36px;font-size:19px;line-height:1" title="Önceki" aria-label="Önceki söz" onclick="wqHeroNav(-1)">&lsaquo;</button>';
+  h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:36px;height:36px" data-id="'+id+'" onclick="wqToggleFav(this.dataset.id)" title="Favori" aria-label="Favori">'+ic('star',15,q.favorite?'var(--orange)':'var(--t3)')+'</button>';
+  h+='<button class="btn btn-g btn-sm wq-hero-btn" style="color:var(--t3)" data-id="'+id+'" onclick="wqHeroCopy(this.dataset.id)" title="Kopyala" aria-label="Kopyala">Kopyala</button>';
+  h+='<button class="btn btn-g btn-sm wq-hero-btn" style="color:var(--t3)" data-id="'+id+'" onclick="wqHeroShare(this.dataset.id)" title="Paylaş" aria-label="Paylaş">Paylaş</button>';
+  h+='<button class="btn btn-g btn-ic wq-hero-btn" style="width:36px;height:36px;font-size:19px;line-height:1" title="Sonraki" aria-label="Sonraki söz" onclick="wqHeroNav(1)">&rsaquo;</button>';
+  h+='</div>';
+  h+='<div style="font-size:9px;color:var(--t3);margin-top:12px;letter-spacing:.05em">'+(p.idx+1)+' / '+p.total+'</div>';
+  h+='</div>';
+  return h;
+}
+window.wqHeroHtml=wqHeroHtml;
+/* UX-R2: sunum cilası — pseudo-class/media inline style ile yapılamaz, tek scoped
+   <style> bloğu enjekte edilir (renderWisdomQuotes'ta bir kez). Hover/:focus-visible,
+   ≥36px dokunma hedefi, prev/next için prefers-reduced-motion-korumalı ≤150ms geçiş. */
+function wqUxStyleHtml(){
+  return '<style id="wq-ux-style">'+
+    '.wq-hero-btn{background:transparent;min-height:36px;transition:background .12s ease,color .12s ease}'+
+    '.wq-hero-btn:hover{background:var(--s2)}'+
+    '.wq-hero-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}'+
+    '@media (prefers-reduced-motion: no-preference){.wq-hero{animation:wqHeroFade 140ms ease}@keyframes wqHeroFade{from{opacity:.4}to{opacity:1}}}'+
+    '@media (prefers-reduced-motion: reduce){.wq-hero{animation:none}}'+
+    '</style>';
+}
+window.wqUxStyleHtml=wqUxStyleHtml;
+function wqHeroNav(d){ var l=_wqHeroList(); if(!l.length)return; if(_whIdx==null)_wqHeroPick(); _whIdx=((_whIdx+d)%l.length+l.length)%l.length; var el=(typeof ge==='function')?ge('wisdom_hero'):null; if(el&&el.parentNode){ el.outerHTML=wqHeroHtml(); } else if(typeof renderWisdomQuotes==='function'&&tab==='wisdom'){ renderWisdomQuotes(); } }
+window.wqHeroNav=wqHeroNav;
+function wqHeroCopy(id){ var q=(typeof wqById==='function')?wqById(id):null; if(!q)return; var t=String(q.quote||'')+(q.author?' — '+q.author:''); try{ if(typeof navigator!=='undefined'&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t); }catch(e){} if(typeof wqToast==='function')wqToast('Panoya kopyalandı'); }
+window.wqHeroCopy=wqHeroCopy;
+function wqHeroShare(id){ var q=(typeof wqById==='function')?wqById(id):null; if(!q)return; var t=String(q.quote||'')+(q.author?' — '+q.author:''); try{ if(typeof navigator!=='undefined'&&navigator.share){ navigator.share({text:t}); return; } }catch(e){} wqHeroCopy(id); }
+window.wqHeroShare=wqHeroShare;
+/* Ağır paneller tek katlanabilir bölümde (varsayılan kapalı; açık durum re-render'da korunur). */
+var WISDOM_TOOLS_OPEN=false; window.WISDOM_TOOLS_OPEN=false;
+function wisdomToolsHtml(){
+  var inner='';
+  inner+=(typeof wwsWorkspaceHtml==='function'?wwsWorkspaceHtml():''); // P10 birleşik çalışma alanı
+  inner+=(typeof werEntryPointHtml==='function'?werEntryPointHtml():''); // P8 yönetici incelemesi
+  inner+=(typeof wkgKnowledgeCenterHtml==='function'?wkgKnowledgeCenterHtml():''); // P5 bilgi merkezi
+  inner+=(typeof wcoCoachPanelHtml==='function'?wcoCoachPanelHtml():''); // P6 koç
+  inner+=(typeof wiaExecutiveInsightCenterHtml==='function'?wiaExecutiveInsightCenterHtml():''); // P7 içgörü
+  inner+=(typeof wlcLearningSectionHtml==='function'?wlcLearningSectionHtml():''); // P4 öğrenme
+  inner+=(typeof wisdomStatsPanelHtml==='function'?wisdomStatsPanelHtml():''); // P3a istatistik
+  if(typeof wisdomDisplayPanelHtml==='function')inner+=wisdomDisplayPanelHtml(); // D10.2 gösterim ayarları
+  if(!inner)return '';
+  return '<details id="wisdom_tools"'+(window.WISDOM_TOOLS_OPEN?' open':'')+' style="margin-bottom:14px;max-width:100%" ontoggle="window.WISDOM_TOOLS_OPEN=this.open">'+
+    '<summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--t2);padding:8px 4px">'+ic('layers',13,'var(--t3)')+' Araçlar, Analitik ve İçgörüler</summary>'+
+    '<div style="margin-top:10px">'+inner+'</div></details>';
+}
+window.wisdomToolsHtml=wisdomToolsHtml;
+
 function renderWisdomQuotes(){
   var st=wqStats();
   var h='<div class="fade"><div class="sh"><div><h1 class="sh-t">Özlü Sözler</h1><p class="sh-sub">Kişisel özlü söz kütüphanen. Hedeflerden ve notlardan bağımsız.</p></div>';
@@ -223,22 +293,11 @@ function renderWisdomQuotes(){
   h+=(typeof wisdomIoButtonsHtml==='function'?wisdomIoButtonsHtml():''); // D10.3: içe/dışa aktarma butonları (additive)
   h+=(typeof wisdomMigrationButtonHtml==='function'?wisdomMigrationButtonHtml():'')+'</div>'; // D10.6.1: admin-only Öz Sözler→Özlü Sözler taşıma butonu (additive, non-admin='')
   h+=(typeof wisdomStatusLineHtml==='function'?wisdomStatusLineHtml():''); // SG-SHARD-P2: salt-okunur bulut-depolama durum satırı (yalnız migration/hata; normal legacy'de '')
-  // istatistik
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">';
-  /* QUOTES-CONSOLIDATION-P1 Step 5A: birincil özet 4 kutu (Toplam/Favori/Aktif/Sabit).
-     Pasif ve Beni-düşündüren durum filtreleriyle erişilebilir; türetilmiş gösterim
-     istatistikleri katlı Gösterim Ayarları panelindedir. wqStats hesabı DEĞİŞMEDİ. */
-  [['Toplam',st.total],['Favori',st.favorites],['Aktif',st.active],['Sabit',st.pinned]].forEach(function(x){
-    h+='<div class="card" style="padding:8px 12px;flex:1;min-width:90px"><p style="font-size:10px;color:var(--t3)">'+x[0]+'</p><p style="font-size:18px;font-weight:800">'+x[1]+'</p></div>';});
-  h+='</div>';
-  h+=(typeof wwsWorkspaceHtml==='function'?wwsWorkspaceHtml():''); // WISDOM-P10: Bilgi Çalışma Alanı — P4–P8 birleşik hub (sol nav + ana bölüm + sağ bağlam + arama + odak; türetilmiş, salt-okunur, 0 write). Mevcut paneller korunur (ek katman).
-  h+=(typeof werEntryPointHtml==='function'?werEntryPointHtml():''); // WISDOM-P8: Yönetici İncelemesi kompakt giriş noktası → sekmeli workspace (türetilmiş, salt-okunur, 0 write)
-  h+=(typeof wkgKnowledgeCenterHtml==='function'?wkgKnowledgeCenterHtml():''); // WISDOM-P5: Bilgi Merkezi (koleksiyonlar + uzmanlık + radar + Knowledge Score; salt-okunur)
-  h+=(typeof wcoCoachPanelHtml==='function'?wcoCoachPanelHtml():''); // WISDOM-P6: Bilgi Koçu (bağlamsal öneriler + neden-önemli; türetilmiş, salt-okunur, 0 write)
-  h+=(typeof wiaExecutiveInsightCenterHtml==='function'?wiaExecutiveInsightCenterHtml():''); // WISDOM-P7: Yönetici İçgörü Merkezi (analytics + boşluklar + yansıma + haftalık + öneriler + timeline; türetilmiş, salt-okunur, 0 write)
-  h+=(typeof wlcLearningSectionHtml==='function'?wlcLearningSectionHtml():''); // WISDOM-P4: Öğrenme Merkezi (Günün Öğretisi + dashboard + ilerleme + kategoriler; salt-okunur)
-  h+=(typeof wisdomStatsPanelHtml==='function'?wisdomStatsPanelHtml():''); // SG-SHARD-P3a: türetilmiş kütüphane istatistik paneli (salt-okunur, wqList üzerinden)
-  if(typeof wisdomDisplayPanelHtml==='function')h+=wisdomDisplayPanelHtml(); // D10.2: gösterim/rotasyon ayar paneli (additive)
+  // WISDOM-UXR1: sakin okuma merkezi — birincil odak, ekranın görsel merkezi
+  h+=(typeof wqUxStyleHtml==='function'?wqUxStyleHtml():''); // UX-R2: scoped stil (hover/focus-visible/reduced-motion)
+  h+=wqHeroHtml();
+  // UX-R1.5: kartlı 4-box → ince tipografik özet satırı (dashboard hissi kaldırıldı; kenarlık/kutu yok). Pasif/Beni-düşündüren durum filtreleriyle erişilir; türetilmiş gösterim istatistikleri katlı panelde. wqStats DEĞİŞMEDİ.
+  h+='<p style="font-size:10.5px;color:var(--t3);text-align:center;margin-bottom:20px;letter-spacing:.02em">'+st.total+' söz &middot; '+st.favorites+' favori &middot; '+st.active+' aktif &middot; '+st.pinned+' sabit</p>';
   // arama + durum filtresi
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">';
   h+='<input class="inp" id="wq_search" style="max-width:280px" placeholder="Sözlerde ara..." value="'+U.esc(wqQuery)+'" oninput="wqSetQuery(this.value)">';
@@ -254,6 +313,8 @@ function renderWisdomQuotes(){
   if(cats.length){ h+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">';
     cats.forEach(function(c){var a=wqCat===c; h+='<button class="btn btn-sm" style="background:'+(a?'var(--blue)':'var(--s2)')+';color:'+(a?'#fff':'var(--t2)')+'" data-c="'+U.esc(c)+'" onclick="wqSetCat(this.dataset.c)">'+U.esc(c)+'</button>';});
     h+='</div>'; }
+  // WISDOM-UXR1: ağır analitik/araç panelleri (P4–P12) tek katlanabilir bölümde, varsayılan kapalı → sakin varsayılan görünüm. İçerik DOM'da kalır (işlev korunur); açık durum WISDOM_TOOLS_OPEN ile re-render'da korunur.
+  h+=wisdomToolsHtml();
   h+='<div id="wq_list"></div></div>';
   sh('pinner',h);
   _wqRenderList();

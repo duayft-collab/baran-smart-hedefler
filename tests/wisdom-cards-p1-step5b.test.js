@@ -124,13 +124,16 @@ describe('Regression (screen still wired)', () => {
     assert.ok(/wqSetFilter\(/.test(screen));
     assert.ok(/wqSetCat\(/.test(screen));
   });
-  test('27-28. display panel collapsed + 4 primary stats unchanged', () => {
+  test('27-28. display panel collapsed + primary summary present (UX-R1.5: typographic, no cards)', () => {
     const sbx = createSandbox();
     sbx.D.wisdomQuotes = [FULL];
     sbx.tab = 'wisdom'; sbx.renderWisdomQuotes();
     const screen = sbx.__getElements()['pinner'].innerHTML;
     assert.ok(/<details class="card"/.test(screen), 'display panel not a details');
-    assert.equal((screen.match(/min-width:90px/g) || []).length, 4);
+    // UX-R1.5: kartlı 4-box → ince tipografik özet satırı (kutu yok)
+    assert.equal((screen.match(/min-width:90px/g) || []).length, 0);
+    const region = screen.split('wq_search')[0];
+    ['söz', 'favori', 'aktif', 'sabit'].forEach(l => assert.ok(region.indexOf(l) >= 0, l));
   });
   test('29. dashboard quote still sources from wisdomQuotes', () => {
     const sbx = createSandbox();
