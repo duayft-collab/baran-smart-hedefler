@@ -18,7 +18,8 @@ window.WISDOM_BATCH_SIZE = WISDOM_BATCH_SIZE;
 var WQ_STORE = new Map();
 var WQ_STORE_STATE = { loaded:false, loading:false, sharded:false, error:null, count:0, checksum:null, lastLoadAt:null,
   activationChecked:false, activationReady:false, activationReason:null,   // P2.1: boot read-transition
-  source:'legacy', fallbackReason:null, fallbackCount:0, lastFallbackAt:null, lastSuccessfulRead:null }; // P3d: resilience (runtime; Firestore'a YAZILMAZ)
+  source:'legacy', fallbackReason:null, fallbackCount:0, lastFallbackAt:null, lastSuccessfulRead:null, // P3d: resilience
+  metaCount:null }; // P3b-2: bilinen meta.count (drift senkronu için; runtime)
 window.WQ_STORE = WQ_STORE; window.WQ_STORE_STATE = WQ_STORE_STATE;
 
 function wisdomStoreCol(uid){
@@ -153,6 +154,7 @@ function wisdomDualSet(record){
     var i=D.wisdomQuotes.map(function(q){return String(q.id);}).indexOf(String(record.id));
     if(i>=0)D.wisdomQuotes[i]=record; else D.wisdomQuotes.push(record);
     if(typeof save==='function')save();
+    if(typeof wisdomSyncMetaCount==='function')wisdomSyncMetaCount(); // P3b-2: ekleme count'u değiştirdiyse meta.count senkronla
     return {ok:true,id:String(record.id)};
   },function(e){ return {ok:false,reason:'collection_failed',error:String((e&&e.message)||e)}; });
 }
@@ -162,13 +164,14 @@ function wisdomDualDelete(id){
     if(!res||!res.ok)return {ok:false,reason:'collection_failed'};
     if(Array.isArray(D.wisdomQuotes))D.wisdomQuotes=D.wisdomQuotes.filter(function(q){return String(q.id)!==String(id);});
     if(typeof save==='function')save();
+    if(typeof wisdomSyncMetaCount==='function')wisdomSyncMetaCount(); // P3b-2: silme count'u değiştirdi → meta.count senkronla
     return {ok:true,id:String(id)};
   },function(e){ return {ok:false,reason:'collection_failed',error:String((e&&e.message)||e)}; });
 }
 window.wisdomDualApply=wisdomDualApply; window.wisdomDualSet=wisdomDualSet; window.wisdomDualDelete=wisdomDualDelete;
 
 /* ── Test/geçiş yardımcıları (P1'de üretimde ÇAĞRILMAZ) ── */
-function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; WQ_STORE_STATE._selfHealed=false; WQ_STORE_STATE._activationScheduled=false; WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.fallbackCount=0; WQ_STORE_STATE.lastFallbackAt=null; WQ_STORE_STATE.lastSuccessfulRead=null; }
+function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; WQ_STORE_STATE._selfHealed=false; WQ_STORE_STATE._activationScheduled=false; WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.fallbackCount=0; WQ_STORE_STATE.lastFallbackAt=null; WQ_STORE_STATE.lastSuccessfulRead=null; WQ_STORE_STATE.metaCount=null; }
 function wisdomStoreSetSharded(v){ WQ_STORE_STATE.sharded=!!v; } // P2 boot doğrulama sonrası açar; P1'de yalnız test
 function _wisdomStoreSeed(records,sharded){ WQ_STORE.clear(); (Array.isArray(records)?records:[]).forEach(function(r){ if(_wqsValidId(r))WQ_STORE.set(String(r.id),r); }); WQ_STORE_STATE.loaded=true; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=WQ_STORE.size; WQ_STORE_STATE.sharded=!!sharded; }
 window.wisdomStoreReset=wisdomStoreReset; window.wisdomStoreSetSharded=wisdomStoreSetSharded; window._wisdomStoreSeed=_wisdomStoreSeed;

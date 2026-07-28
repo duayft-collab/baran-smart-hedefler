@@ -79,13 +79,15 @@ describe('Legacy fallback (gate not passed)', () => {
     assert.equal((await S.wisdomBootActivate()).reason, 'gate_failed');
     assert.equal(S.wisdomStoreIsSharded(), false);
   });
-  test('4. count mismatch (post-load) => legacy (count_mismatch)', async () => {
+  test('4. P3b-2: count drift (collection valid) => ACTIVATES + self-heals (not legacy)', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
     await seedMigrated(S, [wq('a'), wq('b')]);
-    S.CLOUD.db._cols['users/u/app'].get('wisdomMeta').count = 99; // koleksiyon 2, meta 99
+    S.CLOUD.db._cols['users/u/app'].get('wisdomMeta').count = 99; // bayat meta count
     const r = await S.wisdomBootActivate();
-    assert.equal(r.reason, 'count_mismatch'); // P3b: count kapıda, checksum değil
-    assert.equal(S.wisdomStoreIsSharded(), false);
+    assert.equal(r.ok, true); assert.equal(r.countOk, false); // count farkı BLOKE ETMEZ
+    assert.equal(S.wisdomStoreIsSharded(), true);
+    assert.equal(S.wqList().length, 2); // koleksiyon otorite
+    assert.equal(S.WQ_STORE_STATE._selfHealed, true); // meta.count self-heal
   });
   test('5. P3b: checksum mismatch => activation PROCEEDS (count-based), not legacy', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
@@ -97,13 +99,13 @@ describe('Legacy fallback (gate not passed)', () => {
     assert.equal(S.wisdomStoreIsSharded(), true);
     assert.equal(S.WQ_STORE_STATE._selfHealed, true); // self-heal tetiklendi (reason self-heal sonrası 'ready' olabilir)
   });
-  test('6. post-load count mismatch (collection drifted) => legacy', async () => {
+  test('6. P3b-2: collection drifted (record removed) => activates on collection (authority)', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a'), wq('b')];
     await seedMigrated(S, [wq('a'), wq('b')]);
-    // meta/manifest tutarlı ama koleksiyondan bir kayıt sil → yükleme sonrası count uyuşmaz
-    S.CLOUD.db._cols['users/u/wisdomQuotes'].delete('b');
+    S.CLOUD.db._cols['users/u/wisdomQuotes'].delete('b'); // koleksiyon 1, meta 2
     const r = await S.wisdomBootActivate();
-    assert.equal(r.reason, 'count_mismatch'); assert.equal(S.wisdomStoreIsSharded(), false);
+    assert.equal(r.ok, true); assert.equal(S.wisdomStoreIsSharded(), true);
+    assert.equal(S.wqList().length, 1); // koleksiyon otorite (1 kayıt)
   });
   test('7. collection load error => legacy', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
@@ -177,7 +179,7 @@ describe('UX status line (read-transition)', () => {
     S.WQ_STORE_STATE.activationReason = 'verifying';
     assert.match(S.wisdomStatusLineHtml(), /Bulut doğrulanıyor/);
     S.WQ_STORE_STATE.activationReason = 'metadata_update'; S.WQ_STORE_STATE.activationReady = true;
-    assert.match(S.wisdomStatusLineHtml(), /Metadata güncelleniyor/);
+    assert.match(S.wisdomStatusLineHtml(), /metadata güncelleniyor/);
     S.WQ_STORE_STATE.activationReason = 'ready';
     assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi hazır/);
     S.WQ_STORE_STATE.activationReady = false; S.WQ_STORE_STATE.activationReason = 'count_mismatch';

@@ -73,13 +73,13 @@ describe('Fallback recording on activation (via boot activate)', () => {
     assert.ok(S.WQ_STORE_STATE.lastSuccessfulRead > 0);
     assert.equal(S.wisdomShouldFallback(), false);
   });
-  test('6. count mismatch => FALLBACK recorded (legacy, reason, count++)', async () => {
+  test('6. GENUINE failure (empty collection) => FALLBACK recorded (legacy, reason, count++)', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('legacy')];
-    await seedMigrated(S, [wq('a'), wq('b')], 99); // meta.count 99, koleksiyon 2 → count_mismatch
+    await seedMigrated(S, [], 0); // boş koleksiyon → empty_cache (gerçek fallback; P3b-2: count drift artık fallback DEĞİL)
     const r = await S.wisdomBootActivate();
-    assert.equal(r.reason, 'count_mismatch');
+    assert.equal(r.reason, 'empty_cache');
     assert.equal(S.WQ_STORE_STATE.source, 'legacy');
-    assert.equal(S.WQ_STORE_STATE.fallbackReason, 'count_mismatch');
+    assert.equal(S.WQ_STORE_STATE.fallbackReason, 'empty_cache');
     assert.equal(S.WQ_STORE_STATE.fallbackCount, 1);
     assert.ok(S.WQ_STORE_STATE.lastFallbackAt > 0);
     assert.equal(S.wisdomShouldFallback(), true);
@@ -151,8 +151,10 @@ describe('Static guards', () => {
   });
   test('G3. fallback recorded only post-gate in 02c (real fallback)', () => {
     const mig = fs.readFileSync(path.join(ROOT, 'js', '02c-wisdom-migration.js'), 'utf8');
-    assert.match(mig, /_wexFallback\('count_mismatch'\)/);
+    // P3b-2: count_mismatch artık fallback değil (self-heal). Gerçek fallback'ler:
     assert.match(mig, /_wexFallback\('load_failed'\)/);
+    assert.match(mig, /_wexFallback\('empty_cache'\)/);
+    assert.equal(/_wexFallback\('count_mismatch'\)/.test(mig), false); // count_mismatch fallback KALDIRILDI
     // no_migration/gate_failed dallarında fallback YOK
     const noMig = mig.slice(mig.indexOf("activationReason='no_migration'"), mig.indexOf("activationReason='no_migration'") + 90);
     assert.equal(/_wexFallback/.test(noMig), false);

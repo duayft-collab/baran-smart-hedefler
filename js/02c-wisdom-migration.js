@@ -171,19 +171,22 @@ function wisdomBootActivate(){
       // P3d: kapı geçtikten SONRA başarısızlık = gerçek FALLBACK (koleksiyon bekleniyordu ama açılamadı)
       if(!lr||!lr.ok||WQ_STORE_STATE.error){ WQ_STORE_STATE.activationReason='load_failed'; _wexFallback('load_failed'); return {ok:false,reason:'load_failed'}; }
       if(WQ_STORE.size===0){ WQ_STORE_STATE.activationReason='empty_cache'; _wexFallback('empty_cache'); return {ok:false,reason:'empty_cache'}; }
-      if(WQ_STORE.size!==m.count){ WQ_STORE_STATE.activationReason='count_mismatch'; _wexFallback('count_mismatch'); return {ok:false,reason:'count_mismatch'}; }
-      // ── COUNT DOĞRU → AKTİVE ET. İçerik checksum'ı (volatile hariç) yalnız WARNING + self-heal. ──
+      // ── P3b-2: KOLEKSİYON OTORİTE. Temiz yüklendi + boş değil → count farkı BLOKE ETMEZ.
+      //    Count ve/veya checksum farklıysa aktive et + tek yazma ile self-heal. ──
+      WQ_STORE_STATE.metaCount=m.count;
+      var countOk=(WQ_STORE.size===m.count);
       return wisdomContentChecksum().then(function(cs){
         var checksumOk=(cs.hash===m.checksum);
         wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true;
-        WQ_STORE_STATE.activationReason=checksumOk?'ready':'metadata_update';
+        WQ_STORE_STATE.activationReason=(checksumOk&&countOk)?'ready':'metadata_update';
         WQ_STORE_STATE.source='sharded'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.lastSuccessfulRead=Date.now(); // P3d: primary aktif
-        if(!checksumOk)_wexSelfHealMeta(cs.hash); // yalnız gerçekten farklıysa; tek yazma
-        return {ok:true,count:WQ_STORE.size,checksumOk:checksumOk};
-      },function(){ // checksum hesaplanamadı → yine de count-based aktive
-        wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true; WQ_STORE_STATE.activationReason='ready';
+        if(!checksumOk||!countOk)_wexSelfHealMeta(checksumOk?null:cs.hash, countOk?null:WQ_STORE.size); // count ve/veya checksum tek yazma
+        return {ok:true,count:WQ_STORE.size,checksumOk:checksumOk,countOk:countOk};
+      },function(){ // checksum hesaplanamadı → yine de count-based aktive (+ count self-heal gerekirse)
+        wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true; WQ_STORE_STATE.activationReason=countOk?'ready':'metadata_update';
         WQ_STORE_STATE.source='sharded'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.lastSuccessfulRead=Date.now();
-        return {ok:true,count:WQ_STORE.size,checksumOk:null};
+        if(!countOk)_wexSelfHealMeta(null, WQ_STORE.size);
+        return {ok:true,count:WQ_STORE.size,checksumOk:null,countOk:countOk};
       });
     });
   }).catch(function(e){ WQ_STORE_STATE.activationReason='error'; _wexFallback('error'); return {ok:false,reason:'error',error:String((e&&e.message)||e)}; });
@@ -191,22 +194,43 @@ function wisdomBootActivate(){
 /* P3d: gerçek fallback kaydı (yalnız kapı geçtikten sonra oluşan hata). runtime; 0 write. */
 function _wexFallback(reason){ WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=reason; WQ_STORE_STATE.fallbackCount=(WQ_STORE_STATE.fallbackCount||0)+1; WQ_STORE_STATE.lastFallbackAt=Date.now(); }
 window.wisdomBootActivate=wisdomBootActivate;
-/* Self-heal (P3b): count doğru + checksum farklıysa meta.checksum'ı arka planda tek
-   batch ile güncelle. Yalnız farklıysa çağrılır + oturumda tek sefer (_selfHealed). */
-function _wexSelfHealMeta(newChecksum){
+/* Self-heal (P3b/P3b-2): checksum ve/veya count farklıysa meta+manifest'i arka planda tek
+   batch ile güncelle. Yalnız verilen alanlar yazılır. Oturumda tek sefer (_selfHealed). */
+function _wexSelfHealMeta(newChecksum,newCount){
   if(WQ_STORE_STATE._selfHealed)return; if(typeof CLOUD==='undefined'||!CLOUD.db)return;
   var meta=_wmMetaDoc(), mig=_wmMigDoc(); if(!meta)return;
+  var mp={updatedAt:Date.now()}, gp={updatedAt:Date.now()}, changed=false;
+  if(newChecksum){ mp.checksum=newChecksum; gp.sourceChecksum=newChecksum; gp.targetChecksum=newChecksum; changed=true; }
+  if(newCount!=null){ mp.count=newCount; gp.total=newCount; gp.migratedCount=newCount; WQ_STORE_STATE.metaCount=newCount; changed=true; }
+  if(!changed)return;
   WQ_STORE_STATE._selfHealed=true;
   try{
     if(typeof CLOUD.db.batch==='function'){
       var b=CLOUD.db.batch();
-      b.set(meta,{checksum:newChecksum,count:WQ_STORE.size,updatedAt:Date.now()},{merge:true});
-      if(mig)b.set(mig,{sourceChecksum:newChecksum,targetChecksum:newChecksum,updatedAt:Date.now()},{merge:true});
+      b.set(meta,mp,{merge:true});
+      if(mig)b.set(mig,gp,{merge:true});
       b.commit().then(function(){WQ_STORE_STATE.activationReason='ready';}).catch(function(){});
-    } else { meta.set({checksum:newChecksum,count:WQ_STORE.size,updatedAt:Date.now()},{merge:true}).then(function(){WQ_STORE_STATE.activationReason='ready';}).catch(function(){}); }
+    } else { meta.set(mp,{merge:true}).then(function(){WQ_STORE_STATE.activationReason='ready';}).catch(function(){}); }
   }catch(e){}
 }
 window._wexSelfHealMeta=_wexSelfHealMeta;
+/* P3b-2: dual-write add/delete sonrası meta.count senkronu (yalnız sharded + count değiştiyse).
+   Koleksiyon ACK sonrası çağrılır; değişmediyse yazma yok (idempotent). _selfHealed'e bağlı DEĞİL. */
+function wisdomSyncMetaCount(){
+  if(typeof CLOUD==='undefined'||!CLOUD.db)return; if(!(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded()))return;
+  var size=(typeof WQ_STORE!=='undefined')?WQ_STORE.size:0;
+  if(size===WQ_STORE_STATE.metaCount)return; // stored count ile aynı → yazma yok
+  var meta=_wmMetaDoc(), mig=_wmMigDoc(); if(!meta)return;
+  WQ_STORE_STATE.metaCount=size;
+  try{
+    if(typeof CLOUD.db.batch==='function'){ var b=CLOUD.db.batch();
+      b.set(meta,{count:size,updatedAt:Date.now()},{merge:true});
+      if(mig)b.set(mig,{total:size,migratedCount:size,updatedAt:Date.now()},{merge:true});
+      b.commit().catch(function(){});
+    } else meta.set({count:size,updatedAt:Date.now()},{merge:true}).catch(function(){});
+  }catch(e){}
+}
+window.wisdomSyncMetaCount=wisdomSyncMetaCount;
 
 /* Bounded hazır-bekleme (realtime listener DEĞİL): auth hazır olunca tek sefer aktive et. */
 function wisdomBootActivateWhenReady(){
@@ -251,7 +275,7 @@ function wisdomStatusLineHtml(){
     backup_failed:{i:'csq',c:'var(--red)',t:'Güvenli yedek oluşturulamadı. Taşıma başlatılmadı.'},
     act_checking:{i:'ref',c:'var(--blue)',t:'Bulut arşivi hazırlanıyor'},
     act_verifying:{i:'ref',c:'var(--orange)',t:'Bulut doğrulanıyor'},
-    act_metadata:{i:'ref',c:'var(--blue)',t:'Metadata güncelleniyor'},
+    act_metadata:{i:'ref',c:'var(--blue)',t:'Bulut arşivi doğrulandı, metadata güncelleniyor'},
     act_ready:{i:'chk',c:'var(--green)',t:'Bulut arşivi hazır'},
     act_failed:{i:'csq',c:'var(--orange)',t:'Yerel arşiv kullanılıyor'} }[kind];
   var icn=(typeof ic==='function')?ic(M.i,13,M.c):'';

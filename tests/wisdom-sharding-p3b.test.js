@@ -129,12 +129,13 @@ describe('Legacy fallback preserved', () => {
     assert.equal(S.wisdomStoreIsSharded(), false);
     assert.ok(['empty_cache', 'count_mismatch'].indexOf(r.reason) >= 0);
   });
-  test('11. count mismatch => legacy', async () => {
+  test('11. P3b-2: count drift => activates on collection (authority), not legacy', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
     await seed(S, [wq('a'), wq('b')], 'match');
     S.CLOUD.db._cols['users/u/wisdomQuotes'].delete('b'); // koleksiyon 1, meta 2
     const r = await S.wisdomBootActivate();
-    assert.equal(r.reason, 'count_mismatch'); assert.equal(S.wisdomStoreIsSharded(), false);
+    assert.equal(r.ok, true); assert.equal(r.countOk, false);
+    assert.equal(S.wisdomStoreIsSharded(), true); assert.equal(S.wqList().length, 1);
   });
   test('12. load error => legacy', async () => {
     const S = createSandbox(); S.D.wisdomQuotes = [wq('a')];
@@ -152,7 +153,7 @@ describe('UX status line (P3b states)', () => {
     const S = createSandbox();
     S.WQ_STORE_STATE.activationReason = 'checking'; assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi hazırlanıyor/);
     S.WQ_STORE_STATE.activationReason = 'verifying'; assert.match(S.wisdomStatusLineHtml(), /Bulut doğrulanıyor/);
-    S.WQ_STORE_STATE.activationReason = 'metadata_update'; assert.match(S.wisdomStatusLineHtml(), /Metadata güncelleniyor/);
+    S.WQ_STORE_STATE.activationReason = 'metadata_update'; assert.match(S.wisdomStatusLineHtml(), /metadata güncelleniyor/);
     S.WQ_STORE_STATE.activationReason = 'ready'; S.WQ_STORE_STATE.activationReady = true; assert.match(S.wisdomStatusLineHtml(), /Bulut arşivi hazır/);
     S.WQ_STORE_STATE.activationReady = false; S.WQ_STORE_STATE.activationReason = 'load_failed'; assert.match(S.wisdomStatusLineHtml(), /Yerel arşiv kullanılıyor/);
   });
@@ -170,7 +171,7 @@ describe('Static guards', () => {
     const fn = MIG_SRC.slice(MIG_SRC.indexOf('function wisdomBootActivate('), MIG_SRC.indexOf('window.wisdomBootActivate='));
     // checksum karşılaştırması var ama BLOKE eden 'checksum_mismatch' reason'ı YOK
     assert.equal(/checksum_mismatch/.test(fn), false);
-    assert.match(fn, /WQ_STORE\.size!==m\.count/); // count kapısı
+    assert.match(fn, /WQ_STORE\.size===m\.count/); // P3b-2: count hesaplanır (countOk) ama BLOKE ETMEZ
     assert.match(fn, /wisdomContentChecksum\(\)/); // içerik checksum warning
   });
   test('G2. self-heal only on mismatch + once + no realtime listener', () => {
