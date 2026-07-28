@@ -231,6 +231,7 @@ function renderWisdomQuotes(){
   [['Toplam',st.total],['Favori',st.favorites],['Aktif',st.active],['Sabit',st.pinned]].forEach(function(x){
     h+='<div class="card" style="padding:8px 12px;flex:1;min-width:90px"><p style="font-size:10px;color:var(--t3)">'+x[0]+'</p><p style="font-size:18px;font-weight:800">'+x[1]+'</p></div>';});
   h+='</div>';
+  h+=(typeof wlcLearningSectionHtml==='function'?wlcLearningSectionHtml():''); // WISDOM-P4: Öğrenme Merkezi (Günün Öğretisi + dashboard + ilerleme + kategoriler; salt-okunur)
   h+=(typeof wisdomStatsPanelHtml==='function'?wisdomStatsPanelHtml():''); // SG-SHARD-P3a: türetilmiş kütüphane istatistik paneli (salt-okunur, wqList üzerinden)
   if(typeof wisdomDisplayPanelHtml==='function')h+=wisdomDisplayPanelHtml(); // D10.2: gösterim/rotasyon ayar paneli (additive)
   // arama + durum filtresi
