@@ -16,6 +16,7 @@ function screenOf(S, quotes) {
   S.D.wisdomQuotes = quotes || [wq('a'), wq('b'), wq('c')];
   S.D.goals = []; S.D.decisions = []; S.D.principles = []; S.D.relations = [];
   if (typeof S.wisdomStoreReset === 'function') S.wisdomStoreReset();
+  S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: sharding-öncesi paket; lifecycle'ı SETTLED'a sabitle
   S.tab = 'wisdom';
   S.renderWisdomQuotes();
   return S.__getElements()['pinner'].innerHTML;
@@ -23,6 +24,7 @@ function screenOf(S, quotes) {
 function heroOf(S) {
   S.D.wisdomQuotes = [wq('a')];
   if (typeof S.wisdomStoreReset === 'function') S.wisdomStoreReset();
+  S.WQ_STORE_STATE.activationReason = 'no_migration';
   return S.wqHeroHtml();
 }
 
@@ -110,7 +112,7 @@ describe('Reading comfort (long quotes, no clipping/overflow)', () => {
   test('12. long quote: no fixed height, no truncation, word-break wraps', () => {
     const S = createSandbox();
     S.D.wisdomQuotes = [wq('long', { quote: 'Bu çok uzun bir söz. '.repeat(40) })];
-    S.wisdomStoreReset();
+    S.wisdomStoreReset(); S.WQ_STORE_STATE.activationReason = 'no_migration';
     const h = S.wqHeroHtml();
     const qStyle = (h.match(/class="wq-hero-quote" style="([^"]*)"/) || [])[1] || '';
     assert.ok(qStyle, 'quote element present');

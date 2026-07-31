@@ -16,6 +16,7 @@ function screenOf(S, quotes) {
   S.D.wisdomQuotes = quotes || [wq('a'), wq('b'), wq('c')];
   S.D.goals = []; S.D.decisions = []; S.D.principles = []; S.D.relations = [];
   if (typeof S.wisdomStoreReset === 'function') S.wisdomStoreReset();
+  S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: lifecycle'ı SETTLED'a sabitle
   S.tab = 'wisdom';
   S.renderWisdomQuotes();
   return S.__getElements()['pinner'].innerHTML;
@@ -23,6 +24,7 @@ function screenOf(S, quotes) {
 function heroOf(S, over) {
   S.D.wisdomQuotes = [wq('a', over)];
   if (typeof S.wisdomStoreReset === 'function') S.wisdomStoreReset();
+  S.WQ_STORE_STATE.activationReason = 'no_migration';
   return S.wqHeroHtml();
 }
 

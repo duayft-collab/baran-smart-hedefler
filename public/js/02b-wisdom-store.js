@@ -16,11 +16,23 @@ window.WISDOM_BATCH_SIZE = WISDOM_BATCH_SIZE;
 
 /* ── Tek runtime cache + durum (tamamı runtime; Firestore'a YAZILMAZ) ── */
 var WQ_STORE = new Map();
-var WQ_STORE_STATE = { loaded:false, loading:false, sharded:false, error:null, count:0, checksum:null, lastLoadAt:null,
+var WQ_STORE_STATE = { loaded:false, loading:false, sharded:false, error:null, errorCode:null, count:0, checksum:null, lastLoadAt:null,
   activationChecked:false, activationReady:false, activationReason:null,   // P2.1: boot read-transition
   source:'legacy', fallbackReason:null, fallbackCount:0, lastFallbackAt:null, lastSuccessfulRead:null, // P3d: resilience
-  metaCount:null }; // P3b-2: bilinen meta.count (drift senkronu için; runtime)
+  metaCount:null, // P3b-2: bilinen meta.count (drift senkronu için; runtime)
+  retrying:false, _retryPending:false, retryAttempt:0, retryExhausted:false, _retryTimer:null, // P0-LOAD: sınırlı otomatik yeniden deneme (runtime)
+  _activationInFlight:false, _loadInFlight:false }; // P0-LOAD: tek-uçuş korumaları (runtime)
 window.WQ_STORE = WQ_STORE; window.WQ_STORE_STATE = WQ_STORE_STATE;
+
+/* ── GEÇİCİ tanılama loglaması (INSTRUCTION 2, P0). window.WQ_DEBUG_LOAD=true ile
+   açılır; varsayılan KAPALI. Söz İÇERİĞİ/kişisel veri ASLA loglanmaz — yalnız
+   zaman damgası/durum/sayaç/hata-kodu. Doğrulama sonrası KALDIRILACAK/false bırakılacak. ── */
+window.WQ_DEBUG_LOAD = window.WQ_DEBUG_LOAD===true; // varsayılan false; test/manuel debug ile açılır
+function _wqLog(){
+  if(!window.WQ_DEBUG_LOAD)return;
+  try{ console.log.apply(console,['[WQ-LOAD]'].concat(Array.prototype.slice.call(arguments))); }catch(e){}
+}
+window._wqLog=_wqLog;
 
 function wisdomStoreCol(uid){
   if(typeof CLOUD==='undefined'||!CLOUD.db)return null;
@@ -68,20 +80,27 @@ window.wisdomContentChecksum=wisdomContentChecksum;
 /* ── Yükleme: koleksiyonu cache'e al (bilinmeyen alan KORUNUR; normalize YOK) ──
    DB yoksa/hata → loaded=false → sharded false kalır → legacy fallback.
    HİÇBİR boot akışına bağlı DEĞİL (P1). Realtime listener KULLANMAZ (tek get()). */
+var _wqLoadPromise=null; // P0-LOAD: tek-uçuş — eşzamanlı çağrılar aynı promise'i paylaşır
 function wisdomStoreLoad(uid){
-  WQ_STORE_STATE.error=null; WQ_STORE_STATE.loading=true;
+  if(_wqLoadPromise)return _wqLoadPromise; // tek-uçuş koruması (wisdomStoreLoad eşzamanlı çağrı korumalı)
+  var t0=Date.now();
+  WQ_STORE_STATE.error=null; WQ_STORE_STATE.errorCode=null; WQ_STORE_STATE.loading=true; WQ_STORE_STATE._loadInFlight=true;
   var col=wisdomStoreCol(uid);
-  if(!col){ WQ_STORE_STATE.loading=false; WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.count=0; return Promise.resolve({ok:false,reason:'no_db'}); }
-  return col.get().then(function(snap){
+  if(!col){ WQ_STORE_STATE.loading=false; WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.count=0; WQ_STORE_STATE._loadInFlight=false; return Promise.resolve({ok:false,reason:'no_db'}); }
+  _wqLog('firestore_request_start');
+  _wqLoadPromise=col.get().then(function(snap){
     WQ_STORE.clear();
     snap.forEach(function(doc){ var d=doc.data()||{}; if(d.id==null)d.id=doc.id; WQ_STORE.set(String(d.id),d); });
     WQ_STORE_STATE.loaded=true; WQ_STORE_STATE.count=WQ_STORE.size; WQ_STORE_STATE.lastLoadAt=Date.now();
+    _wqLog('firestore_request_done','durationMs',Date.now()-t0,'count',WQ_STORE.size);
     return wisdomStoreChecksum().then(function(cs){ WQ_STORE_STATE.checksum=cs.hash; },function(){ WQ_STORE_STATE.checksum=null; })
       .then(function(){ WQ_STORE_STATE.loading=false; return {ok:true,count:WQ_STORE.size,checksum:WQ_STORE_STATE.checksum}; });
   }).catch(function(e){
-    WQ_STORE_STATE.loading=false; WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.error=String((e&&e.message)||e||'error'); WQ_STORE_STATE.count=0;
-    return {ok:false,reason:'error',error:WQ_STORE_STATE.error};
-  });
+    WQ_STORE_STATE.loading=false; WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.error=String((e&&e.message)||e||'error'); WQ_STORE_STATE.errorCode=(e&&e.code)||null; WQ_STORE_STATE.count=0;
+    _wqLog('firestore_request_error','durationMs',Date.now()-t0,'code',WQ_STORE_STATE.errorCode);
+    return {ok:false,reason:'error',error:WQ_STORE_STATE.error,errorCode:WQ_STORE_STATE.errorCode};
+  }).then(function(res){ _wqLoadPromise=null; WQ_STORE_STATE._loadInFlight=false; return res; });
+  return _wqLoadPromise;
 }
 window.wisdomStoreLoad=wisdomStoreLoad;
 
@@ -171,7 +190,8 @@ function wisdomDualDelete(id){
 window.wisdomDualApply=wisdomDualApply; window.wisdomDualSet=wisdomDualSet; window.wisdomDualDelete=wisdomDualDelete;
 
 /* ── Test/geçiş yardımcıları (P1'de üretimde ÇAĞRILMAZ) ── */
-function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; WQ_STORE_STATE._selfHealed=false; WQ_STORE_STATE._activationScheduled=false; WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.fallbackCount=0; WQ_STORE_STATE.lastFallbackAt=null; WQ_STORE_STATE.lastSuccessfulRead=null; WQ_STORE_STATE.metaCount=null; }
+function wisdomStoreReset(){ WQ_STORE.clear(); WQ_STORE_STATE.loaded=false; WQ_STORE_STATE.loading=false; WQ_STORE_STATE.sharded=false; WQ_STORE_STATE.error=null; WQ_STORE_STATE.errorCode=null; WQ_STORE_STATE.count=0; WQ_STORE_STATE.checksum=null; WQ_STORE_STATE.lastLoadAt=null; WQ_STORE_STATE.activationChecked=false; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason=null; WQ_STORE_STATE._selfHealed=false; WQ_STORE_STATE._activationScheduled=false; WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.fallbackCount=0; WQ_STORE_STATE.lastFallbackAt=null; WQ_STORE_STATE.lastSuccessfulRead=null; WQ_STORE_STATE.metaCount=null;
+  if(typeof _wqCancelRetry==='function')_wqCancelRetry(); WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false; WQ_STORE_STATE.retryAttempt=0; WQ_STORE_STATE.retryExhausted=false; WQ_STORE_STATE._retryTimer=null; WQ_STORE_STATE._activationInFlight=false; WQ_STORE_STATE._loadInFlight=false; _wqLoadPromise=null; }
 function wisdomStoreSetSharded(v){ WQ_STORE_STATE.sharded=!!v; } // P2 boot doğrulama sonrası açar; P1'de yalnız test
 function _wisdomStoreSeed(records,sharded){ WQ_STORE.clear(); (Array.isArray(records)?records:[]).forEach(function(r){ if(_wqsValidId(r))WQ_STORE.set(String(r.id),r); }); WQ_STORE_STATE.loaded=true; WQ_STORE_STATE.error=null; WQ_STORE_STATE.count=WQ_STORE.size; WQ_STORE_STATE.sharded=!!sharded; }
 window.wisdomStoreReset=wisdomStoreReset; window.wisdomStoreSetSharded=wisdomStoreSetSharded; window._wisdomStoreSeed=_wisdomStoreSeed;

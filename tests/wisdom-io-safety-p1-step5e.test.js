@@ -273,6 +273,7 @@ describe('Regression', () => {
     const s = createSandbox();
     s.D.wisdomQuotes = [{ id: 'w1', quote: 'Kart', author: 'A', category: 'Odak', active: true, favorite: false, pinned: false, reflected: false, priority: 0, language: 'tr', source: '', tags: [], notes: '', updatedAt: 'x' }];
     s.wqQuery = ''; s.wqFilterMode = 'all'; s.wqCat = ''; s.wqLang = '';
+    s.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: lifecycle'ı SETTLED'a sabitle
     s._wqRenderList();
     const html = s.__getElements()['wq_list'].innerHTML;
     assert.ok(/<details/i.test(html));

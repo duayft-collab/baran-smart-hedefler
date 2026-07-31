@@ -98,6 +98,7 @@ function handleAuthChange(user){
     if(typeof clearNoteDraft==='function'){clearNoteDraft();noteEditGid=null;} // FAZ-4.1: logout'ta taslak temizle
     if(typeof gnClearDraft==='function')gnClearDraft(); // FAZ-6: logout'ta genel not taslagi temizle
     if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1: logout'ta söz taslagi temizle
+    if(typeof _wqCancelRetry==='function')_wqCancelRetry(); // P0-LOAD: logout'ta bekleyen wisdom yeniden-deneme zamanlayıcısını iptal et
     if(typeof pClearDraft==='function')pClearDraft(); // D10.5.1: logout'ta ilke taslagi temizle
     CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
     updateAuthButton(null);

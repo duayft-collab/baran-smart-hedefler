@@ -11,6 +11,10 @@ const { createSandbox } = require('./harness.js');
 function cardHtml(sbx, quotes) {
   sbx.D.wisdomQuotes = quotes;
   sbx.wqQuery = ''; sbx.wqFilterMode = 'all'; sbx.wqCat = ''; sbx.wqLang = '';
+  // P0-LOAD: bu test paketi wisdom sharding'den önce yazıldı — CLOUD/aktivasyon hiç
+  // kurulmaz. Lifecycle'ı gerçekçi bir SETTLED durumuna sabitle (aksi halde yeni
+  // RC-3 koruması "henüz ayarlanmadı" diyip iskelet gösterir, kart içeriği asla oluşmaz).
+  sbx.WQ_STORE_STATE.activationReason = 'no_migration';
   sbx._wqRenderList();
   const el = sbx.__getElements()['wq_list'];
   return el ? el.innerHTML : '';

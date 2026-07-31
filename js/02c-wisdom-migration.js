@@ -150,14 +150,112 @@ function wisdomMigrationCanShard(){
 }
 window.wisdomMigrationCanShard=wisdomMigrationCanShard;
 
-/* ══ BOOT READ-TRANSITION ACTIVATION (P2.1) — GATED. Migration tamamlanıp doğrulandıysa
-   sharded read'i boot'ta güvenli+kalıcı aktive eder. Realtime listener YOK (tek get()).
-   Migration BAŞLATMAZ, WRITE YAPMAZ, throw ETMEZ. Kapı geçmezse legacy fallback korunur.
-   Auth öncesi ve oturumda ikinci çağrı no-op. ══ */
+/* ══ P0-LOAD (INSTRUCTION 2): AÇIK YAŞAM-DÖNGÜSÜ DURUM MAKİNESİ ══
+   wqLifecycleState() TEK yetkili kaynak — hero ve liste ikisi de bunu okur (RC-1/RC-3
+   düzeltmesi). Saf/türetilmiş: mevcut activationReason (zaten açık bir enum) + retry
+   sayaçları + D.wisdomQuotes uzunluğu üzerinden hesaplanır; ayrı/çakışan bir alan
+   TUTULMAZ (tek kaynak, kayma riski yok). 9 durum: idle/waiting_auth/activating/
+   loading/retrying/ready/empty/settled_legacy/error. */
+var WQ_LC={IDLE:'idle',WAITING_AUTH:'waiting_auth',ACTIVATING:'activating',LOADING:'loading',
+  RETRYING:'retrying',READY:'ready',EMPTY:'empty',SETTLED_LEGACY:'settled_legacy',ERROR:'error'};
+window.WQ_LC=WQ_LC;
+function wqLifecycleState(){
+  var ss=WQ_STORE_STATE;
+  if(ss.retrying)return WQ_LC.RETRYING;
+  if(ss.retryExhausted)return WQ_LC.ERROR;
+  var ar=ss.activationReason;
+  if(ar==null)return ss._activationScheduled?WQ_LC.WAITING_AUTH:WQ_LC.IDLE;
+  if(ar==='no_auth')return WQ_LC.WAITING_AUTH;
+  if(ar==='checking')return WQ_LC.ACTIVATING;
+  if(ar==='verifying')return WQ_LC.LOADING;
+  if(ar==='ready'||ar==='metadata_update'){
+    if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded()&&WQ_STORE.size===0)return WQ_LC.EMPTY; // savunma; pratikte erişilmez (empty_cache kapısı önce yakalar)
+    return WQ_LC.READY;
+  }
+  if(ar==='load_failed'||ar==='error')return WQ_LC.ERROR;
+  // no_db / no_migration / gate_failed / empty_cache / no_auth_timeout → legacy'ye yerleşti (kasıtlı)
+  var legacyLen=Array.isArray(D.wisdomQuotes)?D.wisdomQuotes.length:0;
+  return legacyLen===0?WQ_LC.EMPTY:WQ_LC.SETTLED_LEGACY;
+}
+window.wqLifecycleState=wqLifecycleState;
+
+/* ══ Sınırlı otomatik yeniden deneme (RC-2). Yalnız GEÇİCİ hatalarda; en fazla 3 deneme,
+   800ms→2000ms→5000ms taban + ±%20 jitter. Kalıcı hatalar (izin reddi/geçersiz
+   yapılandırma) ASLA yeniden denenmez. Tek zincir (retrying bayrağı yinelenen
+   zamanlamayı engeller); zamanlayıcı iptal edilebilir (_wqCancelRetry, dispose). ══ */
+var WQ_RETRY_MAX=3, WQ_RETRY_BASE_DELAYS=[800,2000,5000];
+function _wqRetryDelay(attempt){
+  var base=WQ_RETRY_BASE_DELAYS[Math.min(Math.max(attempt,1)-1,WQ_RETRY_BASE_DELAYS.length-1)];
+  var jitter=base*0.2;
+  return Math.round(base-jitter+Math.random()*jitter*2); // taban ±%20
+}
+window._wqRetryDelay=_wqRetryDelay;
+var _WQ_PERMANENT_CODES={'permission-denied':1,'unauthenticated':1,'invalid-argument':1,'not-found':1,'failed-precondition':1};
+function _wqClassifyError(err){
+  var code=(err&&err.code)||'';
+  if(_WQ_PERMANENT_CODES[code])return 'permanent';
+  var msg=String((err&&err.message)||err||'').toLowerCase();
+  if(/permission|unauthenticated|invalid.argument/.test(msg))return 'permanent';
+  return 'transient'; // network/timeout/unavailable/aborted/bilinmeyen → iyimser: sınır içinde yeniden dene
+}
+window._wqClassifyError=_wqClassifyError;
+function wisdomActivationRetryStatus(){ return {attempt:WQ_STORE_STATE.retryAttempt||0,max:WQ_RETRY_MAX,retrying:!!WQ_STORE_STATE.retrying,exhausted:!!WQ_STORE_STATE.retryExhausted}; }
+window.wisdomActivationRetryStatus=wisdomActivationRetryStatus;
+function _wqCancelRetry(){
+  if(WQ_STORE_STATE._retryTimer!=null&&typeof clearTimeout==='function'){ try{clearTimeout(WQ_STORE_STATE._retryTimer);}catch(e){} }
+  WQ_STORE_STATE._retryTimer=null; WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false;
+}
+window._wqCancelRetry=_wqCancelRetry;
+/* triggerReason: 'load_failed'|'error' — yalnız geçici sınıflandırılan hatalarda çağrılır.
+   retrying: TÜM deneme dizisi boyunca true kalır (UI sürekliliği — deneme aralarında
+   ACTIVATING/LOADING'e geri kaymaz). _retryPending: yalnız bir zamanlayıcı SAYARKEN true
+   — yinelenen-zincir koruması BUNA bakar (retrying'e bakarsa 2. başarısızlıkta kilitlenir). */
+function _wqScheduleRetry(triggerReason){
+  if(WQ_STORE_STATE._retryPending)return; // zaten bekleyen bir zamanlayıcı var → yinelenen zincir YOK
+  var attempt=(WQ_STORE_STATE.retryAttempt||0)+1;
+  if(attempt>WQ_RETRY_MAX){ WQ_STORE_STATE.retryExhausted=true; WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false; return; }
+  WQ_STORE_STATE.retryAttempt=attempt; WQ_STORE_STATE.retrying=true; WQ_STORE_STATE._retryPending=true;
+  var delay=_wqRetryDelay(attempt);
+  _wqLog('retry_scheduled','attempt',attempt,'delayMs',delay,'trigger',triggerReason);
+  if(typeof setTimeout!=='function'){ WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false; return; } // test/ortam güvencesi
+  WQ_STORE_STATE._retryTimer=setTimeout(function(){
+    WQ_STORE_STATE._retryTimer=null; WQ_STORE_STATE._retryPending=false; // zamanlayıcı ateşlendi → artık "bekleyen" değil (yeni başarısızlık yeniden zamanlayabilir)
+    WQ_STORE_STATE.activationChecked=false; // kasıtlı sıfırlama: yalnız planlı retry burada yapar
+    wisdomBootActivate();
+  },delay);
+  // Node ortamında (test) bekleyen retry zamanlayıcısı süreci/işlemi canlı tutmasın —
+  // kimse sonucu beklemiyorsa dosya/işlem normal şekilde çıkabilir. Tarayıcıda unref yok
+  // (typeof guard); zamanlayıcı davranışı HER İKİ ortamda da birebir aynı kalır.
+  if(WQ_STORE_STATE._retryTimer&&typeof WQ_STORE_STATE._retryTimer.unref==='function')WQ_STORE_STATE._retryTimer.unref();
+}
+window._wqScheduleRetry=_wqScheduleRetry;
+/* Kullanıcı tetikli manuel yeniden deneme (ERROR durumunda liste/hero butonu). */
+function wqManualRetryLoad(){
+  WQ_STORE_STATE.retryExhausted=false; WQ_STORE_STATE.retryAttempt=0; WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false;
+  WQ_STORE_STATE.activationChecked=false;
+  return wisdomBootActivate().then(function(r){
+    if(typeof tab!=='undefined'&&tab==='wisdom'&&typeof renderWisdomQuotes==='function')renderWisdomQuotes();
+    return r;
+  });
+}
+window.wqManualRetryLoad=wqManualRetryLoad;
+
+/* ══ BOOT READ-TRANSITION ACTIVATION (P2.1, P0-LOAD genişletildi) — GATED. Migration
+   tamamlanıp doğrulandıysa sharded read'i boot'ta güvenli+kalıcı aktive eder. Realtime
+   listener YOK (tek get()). Migration BAŞLATMAZ, WRITE YAPMAZ, throw ETMEZ. Kapı
+   geçmezse legacy fallback korunur. Auth öncesi ve oturumda ikinci çağrı no-op.
+   Eşzamanlı çağrılar _activationInFlight ile TEK zincire indirgenir (single-flight). ══ */
 function wisdomBootActivate(){
   if(WQ_STORE_STATE.activationChecked)return Promise.resolve({ok:false,reason:'already_checked'}); // oturumda tek kez
-  if(typeof CLOUD==='undefined'||!CLOUD.db||!CLOUD.uid)return Promise.resolve({ok:false,reason:'no_auth'}); // auth öncesi: işaretleme, tekrar denenebilir
+  if(WQ_STORE_STATE._activationInFlight)return Promise.resolve({ok:false,reason:'in_flight'}); // eşzamanlı ikinci çağrı → no-op
+  if(typeof CLOUD==='undefined'||!CLOUD.db||!CLOUD.uid){ if(WQ_STORE_STATE.activationReason==null)WQ_STORE_STATE.activationReason='no_auth'; return Promise.resolve({ok:false,reason:'no_auth'}); } // auth öncesi: işaretleme, tekrar denenebilir
+  WQ_STORE_STATE._activationInFlight=true;
+  return _wisdomBootActivateInner().then(function(r){ WQ_STORE_STATE._activationInFlight=false; return r; },
+                                          function(e){ WQ_STORE_STATE._activationInFlight=false; return {ok:false,reason:'error',error:String((e&&e.message)||e)}; });
+}
+function _wisdomBootActivateInner(){
   WQ_STORE_STATE.activationChecked=true; WQ_STORE_STATE.activationReady=false; WQ_STORE_STATE.activationReason='checking';
+  _wqLog('activation_start');
   var meta=_wmMetaDoc(), mig=_wmMigDoc();
   if(!meta||!mig){ WQ_STORE_STATE.activationReason='no_db'; return Promise.resolve({ok:false,reason:'no_db'}); }
   return Promise.all([meta.get(),mig.get()]).then(function(res){
@@ -169,7 +267,14 @@ function wisdomBootActivate(){
     WQ_STORE_STATE.activationReason='verifying';
     return wisdomStoreLoad().then(function(lr){
       // P3d: kapı geçtikten SONRA başarısızlık = gerçek FALLBACK (koleksiyon bekleniyordu ama açılamadı)
-      if(!lr||!lr.ok||WQ_STORE_STATE.error){ WQ_STORE_STATE.activationReason='load_failed'; _wexFallback('load_failed'); return {ok:false,reason:'load_failed'}; }
+      if(!lr||!lr.ok||WQ_STORE_STATE.error){
+        WQ_STORE_STATE.activationReason='load_failed'; _wexFallback('load_failed');
+        var cls=_wqClassifyError({code:WQ_STORE_STATE.errorCode,message:WQ_STORE_STATE.error});
+        if(cls==='transient'&&(WQ_STORE_STATE.retryAttempt||0)<WQ_RETRY_MAX)_wqScheduleRetry('load_failed');
+        else { WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false; WQ_STORE_STATE.retryExhausted=true; }
+        return {ok:false,reason:'load_failed'};
+      }
+      WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false; // bu deneme (ilk veya retry) veriye ulaştı → retry döngüsü kapanır
       if(WQ_STORE.size===0){ WQ_STORE_STATE.activationReason='empty_cache'; _wexFallback('empty_cache'); return {ok:false,reason:'empty_cache'}; }
       // ── P3b-2: KOLEKSİYON OTORİTE. Temiz yüklendi + boş değil → count farkı BLOKE ETMEZ.
       //    Count ve/veya checksum farklıysa aktive et + tek yazma ile self-heal. ──
@@ -180,16 +285,24 @@ function wisdomBootActivate(){
         wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true;
         WQ_STORE_STATE.activationReason=(checksumOk&&countOk)?'ready':'metadata_update';
         WQ_STORE_STATE.source='sharded'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.lastSuccessfulRead=Date.now(); // P3d: primary aktif
+        _wqLog('settled','source','sharded','count',WQ_STORE.size);
         if(!checksumOk||!countOk)_wexSelfHealMeta(checksumOk?null:cs.hash, countOk?null:WQ_STORE.size); // count ve/veya checksum tek yazma
         return {ok:true,count:WQ_STORE.size,checksumOk:checksumOk,countOk:countOk};
       },function(){ // checksum hesaplanamadı → yine de count-based aktive (+ count self-heal gerekirse)
         wisdomStoreSetSharded(true); WQ_STORE_STATE.activationReady=true; WQ_STORE_STATE.activationReason=countOk?'ready':'metadata_update';
         WQ_STORE_STATE.source='sharded'; WQ_STORE_STATE.fallbackReason=null; WQ_STORE_STATE.lastSuccessfulRead=Date.now();
+        _wqLog('settled','source','sharded','count',WQ_STORE.size);
         if(!countOk)_wexSelfHealMeta(null, WQ_STORE.size);
         return {ok:true,count:WQ_STORE.size,checksumOk:null,countOk:countOk};
       });
     });
-  }).catch(function(e){ WQ_STORE_STATE.activationReason='error'; _wexFallback('error'); return {ok:false,reason:'error',error:String((e&&e.message)||e)}; });
+  }).catch(function(e){
+    WQ_STORE_STATE.activationReason='error'; _wexFallback('error');
+    var cls=_wqClassifyError(e);
+    if(cls==='transient'&&(WQ_STORE_STATE.retryAttempt||0)<WQ_RETRY_MAX)_wqScheduleRetry('error');
+    else { WQ_STORE_STATE.retrying=false; WQ_STORE_STATE._retryPending=false; WQ_STORE_STATE.retryExhausted=true; }
+    return {ok:false,reason:'error',error:String((e&&e.message)||e)};
+  });
 }
 /* P3d: gerçek fallback kaydı (yalnız kapı geçtikten sonra oluşan hata). runtime; 0 write. */
 function _wexFallback(reason){ WQ_STORE_STATE.source='legacy'; WQ_STORE_STATE.fallbackReason=reason; WQ_STORE_STATE.fallbackCount=(WQ_STORE_STATE.fallbackCount||0)+1; WQ_STORE_STATE.lastFallbackAt=Date.now(); }
@@ -240,8 +353,8 @@ function wisdomBootActivateWhenReady(){
   var iv=setInterval(function(){
     tries++;
     var ready=typeof CLOUD!=='undefined'&&CLOUD.ready&&CLOUD.db&&CLOUD.uid&&CLOUD.user&&!CLOUD.user.isAnonymous;
-    if(ready){ clearInterval(iv); WQ_STORE_STATE._activationScheduled=false; wisdomBootActivate(); }
-    else if(tries>=max){ clearInterval(iv); WQ_STORE_STATE._activationScheduled=false; } // auth gelmedi → legacy
+    if(ready){ clearInterval(iv); WQ_STORE_STATE._activationScheduled=false; _wqLog('auth_ready'); wisdomBootActivate(); }
+    else if(tries>=max){ clearInterval(iv); WQ_STORE_STATE._activationScheduled=false; WQ_STORE_STATE.activationReason='no_auth_timeout'; } // auth gelmedi → kesin legacy (P0-LOAD: artık IDLE'da asılı kalmaz)
   },500);
 }
 window.wisdomBootActivateWhenReady=wisdomBootActivateWhenReady;

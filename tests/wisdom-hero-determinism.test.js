@@ -48,6 +48,7 @@ describe('Deterministic daily pick (id-hash, not length-modulo)', () => {
   test('5. two reload simulations return the same hero quote', () => {
     const S = createSandbox();
     setList(S, [wq('a'), wq('b'), wq('c'), wq('d')]);
+    S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: lifecycle'ı SETTLED'a sabitle
     S._whIdx = null; const h1 = heroQuoteText(S);
     S._whIdx = null; const h2 = heroQuoteText(S);
     assert.equal(h1, h2);
@@ -63,6 +64,7 @@ describe('Deterministic daily pick (id-hash, not length-modulo)', () => {
   });
   test('7. empty list is safe', () => {
     const S = createSandbox(); setList(S, []);
+    S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: lifecycle'ı SETTLED (genuinely-empty)'a sabitle
     assert.equal(S._wqDailyPick(), null);
     assert.equal(S.wqHeroHtml(), '');
   });
@@ -73,7 +75,7 @@ describe('Activation placeholder (no silent fallback pick)', () => {
     const S = createSandbox();
     setList(S, [wq('a'), wq('b')]);
     S.setTimeout = function () { return 0; }; // bounded watcher timer no-op
-    S.WQ_STORE_STATE.loading = true;
+    S.WQ_STORE_STATE.activationReason = 'verifying'; // P0-LOAD: gerçekçi LOADING durumu (wisdomBootActivate yükleme öncesi bunu ayarlar)
     const h = S.wqHeroHtml();
     assert.ok(/role="status"/.test(h));
     assert.ok(/hazırlanıyor/.test(h));
@@ -84,9 +86,9 @@ describe('Activation placeholder (no silent fallback pick)', () => {
     const S = createSandbox();
     setList(S, [wq('a'), wq('b'), wq('c')]);
     S.setTimeout = function () { return 0; };
-    S.WQ_STORE_STATE.loading = true;
+    S.WQ_STORE_STATE.activationReason = 'verifying'; // P0-LOAD: LOADING
     S.wqHeroHtml(); // placeholder, _whIdx null
-    S.WQ_STORE_STATE.loading = false;
+    S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: gerçekçi SETTLED geçişi (yalnız loading=false değil)
     const h = S.wqHeroHtml();
     assert.ok(/wq-hero-quote/.test(h));
     const daily = S._wqDailyPick().id;
@@ -94,7 +96,7 @@ describe('Activation placeholder (no silent fallback pick)', () => {
   });
   test('10. placeholder is reduced-motion safe (no animation/spinner/modal)', () => {
     const S = createSandbox();
-    setList(S, [wq('a')]); S.setTimeout = function () { return 0; }; S.WQ_STORE_STATE.loading = true;
+    setList(S, [wq('a')]); S.setTimeout = function () { return 0; }; S.WQ_STORE_STATE.activationReason = 'verifying';
     const h = S.wqHeroHtml();
     assert.equal(/animation:|@keyframes|spinner|class="modal"/.test(h), false);
     assert.ok(/max-width:6\dch/.test(h)); // responsive, no fixed width
@@ -109,6 +111,7 @@ describe('Manual navigation & actions preserved', () => {
   });
   test('12. Favorite/Copy/Share remain wired + position indicator', () => {
     const S = createSandbox(); setList(S, [wq('a'), wq('b')]);
+    S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: lifecycle'ı SETTLED'a sabitle
     const h = S.wqHeroHtml();
     ['wqToggleFav', 'wqHeroCopy', 'wqHeroShare', 'wqHeroNav(-1)', 'wqHeroNav(1)'].forEach(a => assert.ok(h.indexOf(a) >= 0, a));
     assert.ok(/\d+ \/ \d+/.test(h), 'position indicator');

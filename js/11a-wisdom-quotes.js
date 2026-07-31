@@ -270,10 +270,11 @@ function _wqDailyPick(){
 /* Aktivasyon penceresinde otoriter kaynak henüz hazır değil → placeholder; sharded VEYA
    settled-legacy (loading değil) → hazır. WQ_STORE'a doğrudan erişmez (yalnız public accessor). */
 function _wqHeroReady(){
-  if(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded())return true;
-  var st=(typeof wisdomStoreStatus==='function')?wisdomStoreStatus():null;
-  if(st&&st.loading===true)return false;
-  return true;
+  // P0-LOAD (RC-1 düzeltmesi): "loading!==true" ASLA tek başına "hazır" kanıtı sayılmaz.
+  // Tek yetkili kaynak wqLifecycleState(); hazır = yalnız 4 SETTLED durumdan biri.
+  if(typeof wqLifecycleState!=='function')return true; // motor yoksa eski davranış (güvenli varsayılan)
+  var s=wqLifecycleState();
+  return s==='ready'||s==='empty'||s==='settled_legacy'||s==='error';
 }
 function _wqHeroPick(){
   var l=_wqHeroList(); if(!l.length)return null;
@@ -296,7 +297,7 @@ function _wqHeroWatch(){
   _wqHeroWatching=true; var tries=0;
   var tick=function(){ tries++;
     if(_wqHeroReady()){ _wqHeroWatching=false; if(typeof renderWisdomQuotes==='function'&&typeof tab!=='undefined'&&tab==='wisdom')renderWisdomQuotes(); return; }
-    if(tries>=30){ _wqHeroWatching=false; return; }
+    if(tries>=65){ _wqHeroWatching=false; return; } // P0-LOAD: ~52sn tavan — auth-bekleme(~20sn)+3 sınırlı retry backoff'unu (~10sn) güvenle kapsar
     setTimeout(tick,800);
   };
   setTimeout(tick,800);
@@ -500,16 +501,39 @@ function renderWisdomQuotes(){
   _wqRenderList();
 }
 window.renderWisdomQuotes=renderWisdomQuotes;
+/* P0-LOAD (RC-3 düzeltmesi): sakin, düzen-kaymayan iskelet — mevcut placeholder ile
+   aynı görsel dil (kart yok, spinner/modal/toast yok, responsive, role=status). */
+function _wqListSkeletonHtml(text,icon){
+  return '<div role="status" aria-live="polite" style="padding:36px 20px;text-align:center;color:var(--t3)">'+ic(icon,18,'var(--t3)')+'<p style="font-size:12.5px;margin-top:10px;line-height:1.5">'+U.esc(text)+'</p></div>';
+}
+function _wqErrorBannerHtml(){
+  return '<div role="status" aria-live="polite" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;margin-bottom:10px;border-radius:8px;background:var(--s2);font-size:11.5px;color:var(--t2)">'+
+    '<span style="display:flex;align-items:center;gap:7px">'+ic('csq',13,'var(--orange)')+'Arşiv güncellenemedi.</span>'+
+    '<button class="btn btn-s btn-sm" onclick="if(typeof wqManualRetryLoad===\'function\')wqManualRetryLoad()">'+ic('ref',12)+' Yeniden Dene</button></div>';
+}
 function _wqRenderList(){
   var box=ge('wq_list'); if(!box)return;
+  var _st=(typeof wqLifecycleState==='function')?wqLifecycleState():'ready'; // RC-3: liste hero ile AYNI tek yetkili kaynağı okur
+  if(_st==='idle'||_st==='waiting_auth'||_st==='activating'||_st==='loading'){
+    box.innerHTML=_wqListSkeletonHtml('Bilgelik arşivi hazırlanıyor…','ref'); return; // ayarlanmamış/beklemedeki durumda ASLA "Henüz söz yok"
+  }
+  if(_st==='retrying'){
+    var _rs=(typeof wisdomActivationRetryStatus==='function')?wisdomActivationRetryStatus():{attempt:0,max:3};
+    box.innerHTML=_wqListSkeletonHtml('Arşiv yüklenemedi. Otomatik olarak yeniden deneniyor… (Deneme '+_rs.attempt+'/'+_rs.max+')','csq'); return;
+  }
   var list=wqSort(wqFilter(wqList(),wqQuery,wqFilterMode,wqCat,wqLang)); var h='';
   var filtering=wqQuery.trim()||wqFilterMode!=='all'||wqCat||wqLang;
   if(filtering)h+='<p style="font-size:11px;color:var(--t3);margin-bottom:8px">'+list.length+' sonuç</p>';
   if(!list.length){
+    if(_st==='error'&&!filtering){
+      h+='<div class="card" style="padding:44px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">'+ic('csq',30,'var(--orange)')+'<p style="font-weight:700;font-size:15px">Arşiv şu an yüklenemiyor.</p><button class="btn btn-p" onclick="if(typeof wqManualRetryLoad===\'function\')wqManualRetryLoad()">'+ic('ref',13)+' Yeniden Dene</button></div>';
+      box.innerHTML=h; return;
+    }
     var msg=filtering?'Ölçütlere uygun söz yok.':'Henüz söz yok.';
     h+='<div class="card" style="padding:44px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">'+ic('qt',30,'var(--t3)')+'<p style="font-weight:700;font-size:15px">'+msg+'</p>'+((!filtering)?'<button class="btn btn-p" onclick="openWqForm()">'+ic('plus',13)+' İlk sözünü ekle</button>':'')+'</div>';
     box.innerHTML=h; return;
   }
+  if(_st==='error')h+=_wqErrorBannerHtml(); // kayıtlar mevcut → yalnız küçük, engellemeyen şerit
   h+='<div style="display:flex;flex-direction:column;gap:8px">';
   list.forEach(function(w){ var id=U.esc(String(w.id));
     /* QUOTES-CONSOLIDATION-P1 Step 5B: kompakt kart. Varsayılan görünür = göstergeler +

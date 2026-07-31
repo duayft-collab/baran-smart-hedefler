@@ -16,6 +16,7 @@ function boot(S, quotes) {
   S.D.wisdomQuotes = quotes || [wq('a', { quote: 'liderlik' }), wq('b', { quote: 'satış' }), wq('c')];
   S.D.goals = [{ id: 1, title: 'liderlik', status: 'active' }]; S.D.decisions = []; S.D.principles = []; S.D.relations = [];
   if (typeof S.wisdomStoreReset === 'function') S.wisdomStoreReset();
+  S.WQ_STORE_STATE.activationReason = 'no_migration'; // P0-LOAD: lifecycle'ı SETTLED'a sabitle
   S.tab = 'wisdom';
 }
 function pin(S) { return S.__getElements()['pinner'].innerHTML; }
