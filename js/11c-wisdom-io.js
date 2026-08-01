@@ -183,7 +183,7 @@ function wqExportCSV(){
 }
 
 /* ── İÇE AKTARMA ── */
-var WQ_IMPORT={items:null,stats:null};   // önizleme durumu (geçici)
+var WQ_IMPORT={items:null,stats:null,_applying:null};   // önizleme durumu (geçici); _applying: tek-uçuş guard (runtime)
 
 /* Yapılandırılmış hata mesajları (Türkçe). code stabil/makine-okunur. */
 var WQ_ERR_MSG={
@@ -330,13 +330,71 @@ async function _wqReplaceWithBackup(st){
   return {aborted:false,backupId:bk.id,added:added};
 }
 
+/* ══ SG-IMPORT-SHARD-P0: SHARDED-AWARE İÇE AKTARMA YAZMA YOLU ══
+   Kök neden: okuma yolu sharded (wqList→WQ_STORE) ama _wqCommitImport yalnız legacy
+   D.wisdomQuotes'a yazıyordu → sharded modda içe aktarılan sözler GÖRÜNMÜYOR (sessiz
+   kısmi import). Sharded modda: koleksiyona wisdomStoreBatchWrite ile yaz (WQ_STORE
+   cache güncellenir) → legacy mirror → save → meta-count senkronu → görünürlük doğrula.
+   Yalnız sharded yazımı BAŞARILI olursa yan etki oluşur (batch fail → 0 mutasyon). ══ */
+function _wqCommitImportSharded(mode,st){
+  var toAdd=(mode==='all')?st.items.map(function(x){return x.q;}):st.items.filter(function(x){return !x.dup;}).map(function(x){return x.q;});
+  // ID çakışma önleme: hem sharded görünüm hem legacy dizi id'lerine karşı (çift kaynak).
+  var existing={}; wqList().forEach(function(q){existing[q.id]=1;}); (Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]).forEach(function(q){existing[q.id]=1;});
+  toAdd.forEach(function(q){ if(!q.id||existing[q.id]||/^wq-legacy-/.test(String(q.id))){ q.id=newWqId(); } existing[q.id]=1; });
+  var skipped=(mode==='skip')?(st.dupExisting||0):0;
+  if(!toAdd.length){ WQ_IMPORT.items=null;WQ_IMPORT.stats=null; if(typeof closeModal==='function')closeModal();
+    wqToast('Eklenecek yeni söz yok'+(skipped?' ('+skipped+' yinelenen atlandı)':''));
+    return Promise.resolve({ok:true,stage:'done',added:0,skipped:skipped,target:'sharded',visible:wqList().length,metaSync:'skipped'}); }
+  // 1) SHARDED batch yazımı (koleksiyon + WQ_STORE cache). Başarısızsa SIFIR yan etki.
+  return Promise.resolve().then(function(){ return wisdomStoreBatchWrite(toAdd); })
+    .then(function(res){ return res; }, function(e){ return {ok:false,error:String((e&&e.message)||e)}; })
+    .then(function(res){
+      if(!res||!res.ok){
+        wqToast('İçe aktarma başarısız — bulut arşivine yazılamadı (batch: '+((res&&res.error)||'bilinmeyen')+'). Hiçbir kayıt eklenmedi; tekrar deneyebilirsiniz.',true);
+        return {ok:false,stage:'batch_write',added:0,target:'sharded'};   // legacy/cache DOKUNULMADI
+      }
+      // 2) legacy mirror (yedek uyumluluğu) — YALNIZ sharded yazımı başarılıysa
+      if(!Array.isArray(D.wisdomQuotes))D.wisdomQuotes=[];
+      toAdd.forEach(function(q){ D.wisdomQuotes.push(q); });
+      // 3) save (legacy + state) — sharded yazımından SONRA
+      if(typeof save==='function')save();
+      // 4) meta-count senkronu (await + durum raporu)
+      return Promise.resolve().then(function(){ return (typeof wisdomImportSyncMeta==='function')?wisdomImportSyncMeta():'skipped'; },function(){return 'failed';})
+        .then(function(metaSync){
+          // 5) yazma-sonrası GÖRÜNÜRLÜK doğrulaması (başarı YALNIZ görünürlük teyidinden sonra)
+          var allVisible=toAdd.every(function(q){ return typeof wqById==='function'&&!!wqById(q.id); });
+          var visible=wqList().length;
+          if(!allVisible){ wqToast('İçe aktarma tamamlandı ama bazı kayıtlar henüz görünmüyor — lütfen sayfayı yenileyin.',true);
+            return {ok:false,stage:'visibility',added:toAdd.length,target:'sharded',metaSync:metaSync,visible:visible}; }
+          WQ_IMPORT.items=null;WQ_IMPORT.stats=null; if(typeof closeModal==='function')closeModal();
+          wqToast(toAdd.length+' söz içe aktarıldı → Bulut Arşivi'+(skipped?' ('+skipped+' yinelenen atlandı)':'')+' · görünür: '+visible+(metaSync==='failed'?' · uyarı: meta sayaç senkronu başarısız (arka planda düzeltilir)':''));
+          if(typeof render==='function')render();
+          return {ok:true,stage:'done',added:toAdd.length,skipped:skipped,target:'sharded',visible:visible,metaSync:metaSync};
+        });
+    });
+}
+/* Sharded modda replace: bu fazda otomatik bulut silme YOK. Yazma öncesi BLOKE + açık mesaj.
+   Asla sessizce legacy diziye düşmez (mevcut sessiz-kısmi-import buggının önlenmesi). */
+function _wqBlockShardedReplace(){
+  wqToast('Bulut arşivinde "Tümünü değiştir" bu sürümde desteklenmiyor — tüm bulut arşivini değiştirmek ayrı, korumalı bir geçiş (migrasyon) akışı gerektirir. Lütfen "Yinelenenleri atla" veya "Hepsini ekle" kullanın.',true);
+  return Promise.resolve({aborted:true,reason:'sharded_replace_blocked'});
+}
 /* Uygula: mode = 'skip' (yinelenenleri atla) | 'all' (hepsini ekle) | 'replace' (tümünü değiştir).
-   append (skip/all) = mevcut atomik snap+save davranışı, ZORUNLU yedek YOK.
-   replace = yıkıcı → yalnız doğrulanmış `before_import` yedekten sonra yazar (Promise döner). */
+   Sharded modda append → koleksiyona yazar (görünür); replace → bloke. Non-sharded değişmedi.
+   Tek-uçuş: aynı anda ikinci submit (WQ_IMPORT._applying) yeni yazma başlatmaz (çift-yazım önlenir). */
 function wqImportApply(mode){
   var st=WQ_IMPORT.stats; if(!st||!st.items){ wqToast('Önce dosya seçin',true); return; }
-  if(mode==='replace'){ return _wqReplaceWithBackup(st); }
-  return _wqCommitImport(mode,st);
+  if(WQ_IMPORT._applying)return WQ_IMPORT._applying;   // tek-uçuş: bekleyen bir uygulama var
+  var sharded=(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded());
+  if(mode==='replace'){
+    if(sharded)return _wqBlockShardedReplace();          // 0 yazma
+    return _wqReplaceWithBackup(st);                     // non-sharded: değişmedi
+  }
+  if(sharded){
+    var p=_wqCommitImportSharded(mode,st).then(function(r){ WQ_IMPORT._applying=null; return r; },function(e){ WQ_IMPORT._applying=null; throw e; });
+    WQ_IMPORT._applying=p; return p;
+  }
+  return _wqCommitImport(mode,st);                        // non-sharded: mevcut sync davranış (değişmedi)
 }
 
 /* Dosya metnini algıla + ayrıştır (JSON önce, değilse CSV). */
@@ -358,7 +416,11 @@ function wqImportShowPreview(stats,fmt){
   WQ_IMPORT.stats=stats;
   var e=function(v){return U.esc(v);};
   var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><h2 style="font-size:17px;font-weight:800">İçe Aktarma Önizleme</h2><button class="btn btn-g btn-ic" style="width:30px;height:30px" onclick="wqImportCancel()">'+ic('x',14)+'</button></div>';
-  h+='<p style="font-size:12px;color:var(--t3);margin-bottom:10px">Biçim: <b>'+e((fmt||'').toUpperCase())+'</b></p>';
+  // SG-IMPORT-SHARD-P0 UX: hedef depo şeffaf gösterilir (kullanıcı yazımdan ÖNCE nereye
+  // gideceğini görür; sharded modda replace'in neden kapalı olduğu açıklanır).
+  var _shard=(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded());
+  var _tgtLabel=_shard?'Bulut Arşivi (sharded)':'Yerel Arşiv';
+  h+='<p style="font-size:12px;color:var(--t3);margin-bottom:10px">Biçim: <b>'+e((fmt||'').toUpperCase())+'</b> · Hedef depo: <b style="color:'+(_shard?'var(--blue)':'var(--t2)')+'">'+e(_tgtLabel)+'</b></p>';
   // özet kartları
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">';
   [['Toplam',stats.total,'var(--t2)'],['Geçerli',stats.valid,'var(--blue)'],['Eklenecek',stats.newCount,'var(--green)'],['Atlanacak',stats.dupExisting+stats.dupInFile,'var(--orange)'],['Hatalı',stats.invalidCount,'var(--red)'],['Uyarılı',stats.warnCount,'var(--orange)'],['Metin sorunu',stats.trIssues||0,'var(--orange)']].forEach(function(x){
@@ -392,7 +454,13 @@ function wqImportShowPreview(stats,fmt){
   h+='<div style="display:flex;flex-direction:column;gap:8px">';
   h+='<button class="btn btn-p" onclick="wqImportApply(\'skip\')"'+(stats.newCount?'':' disabled')+'>Yinelenenleri atla, '+stats.newCount+' yeni söz ekle</button>';
   h+='<button class="btn btn-g" onclick="wqImportApply(\'all\')"'+(stats.valid?'':' disabled')+'>Hepsini ekle ('+stats.valid+' geçerli söz, kopyalar dahil)</button>';
-  h+='<button class="btn btn-g" style="color:var(--red)" onclick="wqImportApply(\'replace\')"'+(stats.valid?'':' disabled')+'>Tümünü değiştir (mevcut '+wqList().length+' söz silinir)</button>';
+  // SG-IMPORT-SHARD-P0: sharded modda "Tümünü değiştir" DEVRE DIŞI (bulut arşivi toplu silme ayrı korumalı faz).
+  if(_shard){
+    h+='<button class="btn btn-g" style="color:var(--t3)" disabled title="Bulut arşivinde desteklenmiyor">Tümünü değiştir — Bulut arşivinde kullanılamaz</button>';
+    h+='<p style="font-size:10.5px;color:var(--orange);margin:0">'+ic('csq',11,'var(--orange)')+' Bulut arşivinde tüm sözleri değiştirmek ayrı, korumalı bir geçiş akışı gerektirir. Şimdilik "atla" veya "hepsini ekle" kullanın.</p>';
+  } else {
+    h+='<button class="btn btn-g" style="color:var(--red)" onclick="wqImportApply(\'replace\')"'+(stats.valid?'':' disabled')+'>Tümünü değiştir (mevcut '+wqList().length+' söz silinir)</button>';
+  }
   h+='</div>';
   h+='<p style="font-size:11px;color:var(--t3);margin-top:10px">Yalnız geçerli kayıtlar uygulanır. Geri almak için üst menüden Geri Al kullanılabilir.</p>';
   if(typeof showModal==='function')showModal(h);
@@ -434,6 +502,7 @@ window.wqParseBool=wqParseBool;window.wqBoolOut=wqBoolOut;window.wqTagsOut=wqTag
 window.wqToCsvRow=wqToCsvRow;window.wqFromCsvRow=wqFromCsvRow;
 window.wqExportJSON=wqExportJSON;window.wqExportCSV=wqExportCSV;
 window.wqImportAnalyze=wqImportAnalyze;window.wqImportApply=wqImportApply;window.wqParseImportText=wqParseImportText;
+window._wqCommitImportSharded=_wqCommitImportSharded;window._wqBlockShardedReplace=_wqBlockShardedReplace;
 window.wqImportOpen=wqImportOpen;window.wqImportCancel=wqImportCancel;window.wisdomIoButtonsHtml=wisdomIoButtonsHtml;
 window.wqCsvGuardFormula=wqCsvGuardFormula;window.wqCsvDeguard=wqCsvDeguard;window.wqValidateImportRow=wqValidateImportRow;
 window.wqImportShowPreview=wqImportShowPreview;window.WQ_ERR_MSG=WQ_ERR_MSG;

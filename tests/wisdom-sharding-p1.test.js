@@ -167,11 +167,23 @@ describe('Read-only / no-mutation guarantees', () => {
 
 describe('Static guards (mandatory)', () => {
   test('G1. no production write wired (no boot/CRUD/import call of store writes)', () => {
-    const files = ['js/11a-wisdom-quotes.js', 'js/11b-wisdom-display.js', 'js/12-render-boot.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'];
+    // NOT: 11c-wisdom-io.js SG-IMPORT-SHARD-P0'da sharded içe aktarma için wisdomStoreBatchWrite
+    // KULLANIR (izinli, GATED — aşağıda G1b doğrular); listeden çıkarıldı (04-backup/06-restore ile aynı desen).
+    const files = ['js/11a-wisdom-quotes.js', 'js/11b-wisdom-display.js', 'js/12-render-boot.js', 'js/11q-wisdom-experience.js'];
     files.forEach(function (f) {
       const t = fs.readFileSync(path.join(ROOT, f), 'utf8');
       assert.equal(/wisdomStoreSet\s*\(|wisdomStoreUpdate\s*\(|wisdomStoreDelete\s*\(|wisdomStoreBatchWrite\s*\(|wisdomStoreLoad\s*\(|wisdomStoreSetSharded\s*\(/.test(t), false, f);
     });
+  });
+  test('G1b. import sharded write is GATED behind wisdomStoreIsSharded() (no ungated store write in 11c)', () => {
+    const io = fs.readFileSync(path.join(ROOT, 'js', '11c-wisdom-io.js'), 'utf8');
+    // wisdomStoreBatchWrite yalnız _wqCommitImportSharded içinde çağrılır; o da wqImportApply'da
+    // wisdomStoreIsSharded() kapısının ardından route edilir → kapısız store yazımı yok.
+    assert.ok(/wisdomStoreIsSharded\s*\(\)/.test(io), '11c must branch on sharded state before any store write');
+    const apply = io.slice(io.indexOf('function wqImportApply('), io.indexOf('function wqImportApply(') + 700);
+    assert.match(apply, /wisdomStoreIsSharded\s*\(\)/, 'wqImportApply must gate the sharded commit path');
+    // legacy/append-write helpers (11c) sharded-store yazma primitiflerini doğrudan çağırmaz
+    assert.equal(/wisdomStoreSet\s*\(|wisdomStoreUpdate\s*\(|wisdomStoreDelete\s*\(/.test(io), false, 'no per-doc store writes in importer');
   });
   test('G2. no migration / import linkage in store (no such calls)', () => {
     assert.equal(/_wqCommitImport\s*\(|wqImportApply\s*\(|wqImportAnalyze\s*\(|migrat[a-zA-Z]*\s*\(/.test(STORE_SRC), false);
@@ -210,7 +222,9 @@ describe('Static guards (mandatory)', () => {
     // 02b, 11a, 11b harici wisdom-store bağlantısı yok
     // NOT: 04-backup.js P2'de sharded rehydrate için wisdomStore* okur (izinli); listeden çıkarıldı.
     // NOT: 06-restore/11-restore P3c'de sharded restore için genişledi (izinli); listeden çıkarıldı.
-    ['js/02-sync.js', 'js/11c-wisdom-io.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
+    // NOT: 11c-wisdom-io.js SG-IMPORT-SHARD-P0'da sharded içe aktarma yazımı için wisdomStore* KULLANIR
+    //      (izinli, GATED — G1b doğrular); listeden çıkarıldı.
+    ['js/02-sync.js', 'js/11q-wisdom-experience.js'].forEach(function (f) {
       assert.equal(/wisdomStore|WQ_STORE/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), false, f);
     });
   });

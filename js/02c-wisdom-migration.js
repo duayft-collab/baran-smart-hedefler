@@ -344,6 +344,26 @@ function wisdomSyncMetaCount(){
   }catch(e){}
 }
 window.wisdomSyncMetaCount=wisdomSyncMetaCount;
+/* AWAIT-edilebilir meta-count senkronu (import raporlaması için). wisdomSyncMetaCount ile
+   aynı hedefi (meta.count = koleksiyon boyutu) yazar, ama sonucu bildirir:
+   'ok' | 'skipped' (bulut yok / sharded değil / meta doc yok) | 'failed' (yazma reddi).
+   İmport, yazma-sonrası tutarlılığı rapor edebilsin diye await eder + hatayı yakalar. */
+function wisdomImportSyncMeta(){
+  if(typeof CLOUD==='undefined'||!CLOUD.db)return Promise.resolve('skipped');
+  if(!(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded()))return Promise.resolve('skipped');
+  var size=(typeof WQ_STORE!=='undefined')?WQ_STORE.size:0;
+  var meta=_wmMetaDoc(), mig=_wmMigDoc(); if(!meta)return Promise.resolve('skipped');
+  WQ_STORE_STATE.metaCount=size;
+  try{
+    if(typeof CLOUD.db.batch==='function'){ var b=CLOUD.db.batch();
+      b.set(meta,{count:size,updatedAt:Date.now()},{merge:true});
+      if(mig)b.set(mig,{total:size,migratedCount:size,updatedAt:Date.now()},{merge:true});
+      return b.commit().then(function(){return 'ok';},function(){return 'failed';});
+    }
+    return meta.set({count:size,updatedAt:Date.now()},{merge:true}).then(function(){return 'ok';},function(){return 'failed';});
+  }catch(e){ return Promise.resolve('failed'); }
+}
+window.wisdomImportSyncMeta=wisdomImportSyncMeta;
 
 /* Bounded hazır-bekleme (realtime listener DEĞİL): auth hazır olunca tek sefer aktive et. */
 function wisdomBootActivateWhenReady(){
