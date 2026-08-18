@@ -189,6 +189,37 @@ describe('Sharded replace is blocked (zero writes)', () => {
   });
 });
 
+describe('Legacy mirror dedup (INSTRUCTION 7 — no hidden duplicates)', () => {
+  test('L1. mirror does NOT duplicate content already present in legacy as orphans (id differs)', async () => {
+    // Simulate the production state: legacy already holds an orphan of the imported content
+    // (left by the historical buggy import) under a DIFFERENT id than what we import.
+    const { S } = shardedSandbox([wq('sh1')]);
+    S.D.wisdomQuotes = [{ id: 'ozs-orphan', quote: 'Bulut sözü', author: 'Y', category: 'Genel', active: true, language: 'tr' }];
+    analyzeAndStage(S, [wq('new1', { quote: 'Bulut sözü', author: 'Y' })]); // same content as the orphan
+    await S.wqImportApply('all');
+    const norm = s => String(s || '').toLocaleLowerCase('tr').replace(/\s+/g, ' ').trim();
+    const legCopies = S.D.wisdomQuotes.filter(q => norm(q.quote) === norm('Bulut sözü') && norm(q.author) === norm('Y')).length;
+    assert.equal(legCopies, 1, 'legacy must keep a single copy of the content (no mirror duplicate)');
+    // sharded store still received the record (visible)
+    assert.ok(S.wqList().some(q => q.quote === 'Bulut sözü'), 'record visible in sharded store');
+  });
+  test('L2. mirror does NOT duplicate by id already present in legacy', async () => {
+    const { S } = shardedSandbox([wq('sh1')]);
+    S.D.wisdomQuotes = [{ id: 'dup-id', quote: 'Eski içerik', author: 'Z', category: 'Genel', active: true, language: 'tr' }];
+    analyzeAndStage(S, [wq('dup-id', { quote: 'Yeni içerik farklı', author: 'Q' })]);
+    await S.wqImportApply('all');
+    const idCopies = S.D.wisdomQuotes.filter(q => String(q.id) === 'dup-id').length;
+    assert.equal(idCopies, 1, 'legacy must not hold two records with the same id');
+  });
+  test('L3. clean legacy: mirror still adds new records (regression guard)', async () => {
+    const { S } = shardedSandbox([wq('sh1')]);
+    S.D.wisdomQuotes = []; // clean legacy
+    analyzeAndStage(S, [wq('n1', { quote: 'Tamamen yeni' }), wq('n2', { quote: 'Bir diğeri' })]);
+    await S.wqImportApply('all');
+    assert.equal(S.D.wisdomQuotes.length, 2, 'clean legacy still receives the mirror');
+  });
+});
+
 describe('Single-flight: repeated submit does not double-write', () => {
   test('10. two concurrent wqImportApply calls do not create duplicate writes', async () => {
     const { S } = shardedSandbox([wq('sh1')]);
@@ -212,6 +243,33 @@ describe('Success reporting completeness', () => {
     assert.equal(res.skipped, 1);
     assert.equal(res.target, 'sharded');
     assert.equal(res.visible, S.wqList().length);
+  });
+});
+
+describe('Import hygiene: attribution-conflict warning (INSTRUCTION 8 Phase 3)', () => {
+  function boot(S, existing) { S.D.wisdomQuotes = existing; S.D.goals = []; S.D.decisions = []; S.D.principles = []; S.D.relations = []; S.wisdomStoreReset(); }
+  test('A1. same quote text + DIFFERENT author → non-blocking ATTRIBUTION_CONFLICT warning (still importable)', () => {
+    const S = createSandbox();
+    boot(S, [wq('e1', { quote: 'Cesaret ilk adım', author: 'Yanlış Çeviri Metni' })]);
+    const st = S.wqImportAnalyze([wq('n1', { quote: 'Cesaret ilk adım', author: 'Spencer Johnson' })], 'json');
+    assert.equal(st.invalidCount, 0, 'not blocking');
+    assert.equal(st.newCount, 1, 'still counted as new/importable');
+    const conflict = st.warnings.find(w => w.code === 'ATTRIBUTION_CONFLICT');
+    assert.ok(conflict, 'attribution-conflict warning present');
+    assert.ok(/Yanlış Çeviri Metni/.test(conflict.rawValuePreview) && /Spencer Johnson/.test(conflict.rawValuePreview), 'shows existing + incoming author');
+  });
+  test('A2. same quote text + SAME author → DUPLICATE_CONTENT (not attribution conflict)', () => {
+    const S = createSandbox();
+    boot(S, [wq('e1', { quote: 'Aynı söz', author: 'Aynı Yazar' })]);
+    const st = S.wqImportAnalyze([wq('n1', { quote: 'Aynı söz', author: 'Aynı Yazar' })], 'json');
+    assert.equal(st.dupExisting, 1);
+    assert.equal(st.warnings.some(w => w.code === 'ATTRIBUTION_CONFLICT'), false);
+  });
+  test('A3. unique quote text → no attribution warning', () => {
+    const S = createSandbox();
+    boot(S, [wq('e1', { quote: 'Tamamen farklı', author: 'X' })]);
+    const st = S.wqImportAnalyze([wq('n1', { quote: 'Bambaşka bir söz', author: 'Y' })], 'json');
+    assert.equal(st.warnings.some(w => w.code === 'ATTRIBUTION_CONFLICT'), false);
   });
 });
 

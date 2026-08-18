@@ -196,6 +196,7 @@ var WQ_ERR_MSG={
   INVALID_BOOLEAN:'Geçersiz evet/hayır değeri, "hayır" varsayıldı.', INVALID_PRIORITY:'Geçersiz öncelik, 0 varsayıldı.',
   INVALID_DATE:'Geçersiz tarih, temizlendi.', DUPLICATE_CONTENT:'Aynı söz+yazar zaten mevcut.',
   DUPLICATE_ID:'Aynı ID mevcut, yeni ID atanacak.', DUPLICATE_IN_FILE:'Dosya içinde tekrarlanan söz.',
+  ATTRIBUTION_CONFLICT:'Aynı söz metni farklı yazarla mevcut — olası atıf çakışması (gözden geçirin).',
   INVALID_JSON:'Geçersiz JSON.', INVALID_CSV:'Geçersiz CSV.', MISSING_HEADER:'Başlık satırı eksik.',
   // Step 5E metin-kalitesi kodları (engelleyici = error, gözden geçirilebilir = warning)
   UNICODE_REPLACEMENT_CHAR:'Bozuk Unicode (replacement karakteri) içeriyor.',
@@ -235,6 +236,13 @@ function wqValidateImportRow(raw,rowNumber){
   return {quote:normalizeWisdomQuote(raw,rowNumber),errors:errors,warnings:warnings};
 }
 
+/* Phase 3: aynı söz METNİ mevcut ama YAZAR farklı → mevcut yazarı döndür (atıf çakışması);
+   yoksa null. wqIsDuplicate (quote+author) eşleşmesi olanlar zaten DUPLICATE_CONTENT sayılır. */
+function _wqAttributionConflict(quote,author){
+  var nq=_wqNorm(quote), na=_wqNorm(author);
+  var m=(typeof wqList==='function'?wqList():[]).filter(function(x){ return _wqNorm(x.quote)===nq && _wqNorm(x.author)!==na; })[0];
+  return m?String(m.author||''):null;
+}
 /* Ham girdi listesi → yapılandırılmış önizleme (rowNumber'lı hata/uyarı + dedup). fmt: 'csv'|'json'. */
 function wqImportAnalyze(rawList,fmt){
   var base=(fmt==='csv')?2:1;                            // CSV: başlık=1, ilk veri=2. JSON: 1-tabanlı.
@@ -251,7 +259,17 @@ function wqImportAnalyze(rawList,fmt){
     seen[key]=1;
     var isExisting=wqIsDuplicate(q.quote,q.author,null);
     if(isExisting){ dupExisting++; warnings.push(_wqErr(rn,'quote','DUPLICATE_CONTENT','warning',q.quote)); }
-    else newCount++;
+    else {
+      newCount++;
+      // INSTRUCTION 8 Phase 3: aynı söz METNİ farklı yazarla mevcutsa → engellemeyen atıf-çakışması
+      // uyarısı (mevcut + gelen yazar gösterilir). Sessiz birleştirme/üzerine-yazma YOK; import edilir.
+      var _confAuthor=_wqAttributionConflict(q.quote,q.author);
+      if(_confAuthor!=null){
+        // _wqErr'in 40-char kırpması iki yazarı kesmesin → doğrudan kur (her yazar ≤40 char).
+        warnings.push({rowNumber:rn,field:'author',code:'ATTRIBUTION_CONFLICT',message:WQ_ERR_MSG.ATTRIBUTION_CONFLICT,severity:'warning',
+          rawValuePreview:'mevcut: '+String(_confAuthor||'(boş)').slice(0,40)+' · gelen: '+String(q.author||'(boş)').slice(0,40)});
+      }
+    }
     if(q.id&&typeof wqById==='function'&&wqById(q.id))warnings.push(_wqErr(rn,'id','DUPLICATE_ID','warning',q.id));
     items.push({q:q,dup:isExisting,rowNumber:rn});
   });
@@ -353,9 +371,18 @@ function _wqCommitImportSharded(mode,st){
         wqToast('İçe aktarma başarısız — bulut arşivine yazılamadı (batch: '+((res&&res.error)||'bilinmeyen')+'). Hiçbir kayıt eklenmedi; tekrar deneyebilirsiniz.',true);
         return {ok:false,stage:'batch_write',added:0,target:'sharded'};   // legacy/cache DOKUNULMADI
       }
-      // 2) legacy mirror (yedek uyumluluğu) — YALNIZ sharded yazımı başarılıysa
+      // 2) legacy mirror (yedek uyumluluğu) — YALNIZ sharded yazımı başarılıysa.
+      // INSTRUCTION 7: legacy'ye karşı DEDUP (id VE quote+author). Eski bug'dan kalan
+      // yetim (orphan) kayıtlar legacy'de mevcutsa, mirror aynı içeriği İKİNCİ kez EKLEMEZ
+      // → görünmez legacy içerik-duplikasyonu önlenir. Sharded store yazımı etkilenmez.
       if(!Array.isArray(D.wisdomQuotes))D.wisdomQuotes=[];
-      toAdd.forEach(function(q){ D.wisdomQuotes.push(q); });
+      var _legId={}, _legCk={};
+      D.wisdomQuotes.forEach(function(x){ _legId[String(x.id)]=1; _legCk[_wqNorm(x.quote)+'||'+_wqNorm(x.author)]=1; });
+      toAdd.forEach(function(q){
+        var ck=_wqNorm(q.quote)+'||'+_wqNorm(q.author);
+        if(_legId[String(q.id)]||_legCk[ck])return;   // legacy'de id veya içerik zaten var → mirror atla
+        _legId[String(q.id)]=1; _legCk[ck]=1; D.wisdomQuotes.push(q);
+      });
       // 3) save (legacy + state) — sharded yazımından SONRA
       if(typeof save==='function')save();
       // 4) meta-count senkronu (await + durum raporu)
