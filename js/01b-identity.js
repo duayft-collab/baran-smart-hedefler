@@ -268,8 +268,55 @@ async function pilRevoke(loginUid){
   }catch(e){ return {ok:false, reason:'write_failed', error:String((e&&e.message)||e)}; }
 }
 
+/* Capture the CURRENT authenticated login's identity. This is the ONLY sanctioned
+   source of a member uid: the second login signs in, this returns its real Firebase
+   uid, and the owner uses that uid to enroll. The uid is NEVER derived from an email. */
+function pilCaptureLoginIdentity(){
+  if(typeof CLOUD==='undefined' || !CLOUD.user || !CLOUD.uid) return {ok:false, reason:'not_authenticated'};
+  return {ok:true, uid:CLOUD.uid, email:(CLOUD.user.email||null), isAnonymous:!!CLOUD.user.isAnonymous, capturedAt:Date.now()};
+}
+
+/* Enroll a second login as a MEMBER of the canonical owner. Fail-closed and
+   admin/owner-gated (Firestore Rules enforce the admin claim; this adds the
+   orchestration + validation): the member uid must be a real uid (not an email),
+   the canonical owner must already have an ACTIVE self-entry, the member cannot be
+   the owner, the role must be known, and an existing entry is never silently
+   overwritten (allowReenroll required). Writes data only — it does NOT flip the
+   feature flag or change any runtime path. */
+async function pilEnrollMember(memberUid, opts){
+  opts = opts || {};
+  if(typeof CLOUD==='undefined' || !CLOUD.db) return {ok:false, reason:'no_db'};
+  if(!memberUid || typeof memberUid!=='string') return {ok:false, reason:'invalid_member_uid'};
+  if(memberUid.indexOf('@')>=0) return {ok:false, reason:'uid_looks_like_email'};  // never derive a uid from an email
+  var ownerUid = opts.ownerUid || _pilLoginUid();
+  if(!ownerUid) return {ok:false, reason:'no_owner'};
+  if(memberUid===ownerUid) return {ok:false, reason:'member_is_owner'};             // use pilEnrollOwner for the owner
+  var role = opts.role || 'viewer';
+  if(!PIL_ROLE_PRESETS[role]) return {ok:false, reason:'unknown_role'};
+  // fail-closed: the canonical owner must already be an active self-owner, else the
+  // member would resolve to an inactive/absent owner and be denied.
+  var ownerEntry;
+  try{ var os=await CLOUD.db.collection('ownershipMap').doc(ownerUid).get(); ownerEntry = os&&os.exists?(os.data()||null):null; }
+  catch(e){ return {ok:false, reason:'owner_read_failed'}; }
+  if(!ownerEntry || ownerEntry.status!=='active' || ownerEntry.ownerUid!==ownerUid) return {ok:false, reason:'owner_not_enrolled'};
+  // no silent overwrite of an existing enrollment
+  var existing;
+  try{ var es=await CLOUD.db.collection('ownershipMap').doc(memberUid).get(); existing = es&&es.exists?(es.data()||null):null; }
+  catch(e){ return {ok:false, reason:'member_read_failed'}; }
+  if(existing && !opts.allowReenroll) return {ok:false, reason:'already_enrolled', existing:existing};
+  var doc = pilBuildEnrollment({ loginUid:memberUid, ownerUid:ownerUid, role:role, modules:opts.modules,
+    organizationId:(opts.organizationId!==undefined?opts.organizationId:(ownerEntry.organizationId||null)),
+    permissions:opts.permissions });
+  try{ await CLOUD.db.collection('ownershipMap').doc(memberUid).set(doc); }
+  catch(e){ return {ok:false, reason:'write_failed', error:String((e&&e.message)||e)}; }
+  try{ var vs=await CLOUD.db.collection('ownershipMap').doc(memberUid).get(); if(!vs||!vs.exists) return {ok:false, reason:'verify_failed'}; }
+  catch(e){ return {ok:false, reason:'verify_read_failed'}; }
+  return {ok:true, memberUid:memberUid, ownerUid:ownerUid, role:role, entry:doc};
+}
+
 if(typeof window!=='undefined'){
   window.IDENTITY=IDENTITY;
+  window.pilCaptureLoginIdentity=pilCaptureLoginIdentity; window.pilEnrollMember=pilEnrollMember;
   window.PIL_CAPS=PIL_CAPS; window.PIL_MODULES=PIL_MODULES; window.PIL_ROLE_PRESETS=PIL_ROLE_PRESETS;
   window.pilPermissionsFromRole=pilPermissionsFromRole;
   window.personalContext=personalContext; window.personalOwnerUid=personalOwnerUid;
