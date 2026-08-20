@@ -347,14 +347,15 @@ function updateAuthButton(user){
   if(!btn)return;
   if(user&&!user.isAnonymous){
     btn.textContent=user.displayName||user.email||'Google bağlı';
-    btn.title=(user.email||'Google hesabı')+' bağlı';
-    btn.disabled=true;
-    btn.style.opacity='.85';
+    btn.title=(user.email||'Google hesabı')+' — hesap menüsü (çıkış / değiştir)';
+    btn.disabled=false;                 // enabled: click opens the user menu (logout / switch)
+    btn.style.opacity='1';
   }else{
     btn.textContent='Google ile bağla';
     btn.title='Verileri Google hesabına bağla';
     btn.disabled=false;
     btn.style.opacity='1';
+    if(typeof closeUserMenu==='function')closeUserMenu();
   }
 }
 function localStamp(){return Number(localStorage.getItem('fu7_cloud_ts')||0);}

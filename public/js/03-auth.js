@@ -113,8 +113,10 @@ function handleAuthChange(user){
     if(typeof wqClearDraft==='function')wqClearDraft(); // D10.1: logout'ta söz taslagi temizle
     if(typeof _wqCancelRetry==='function')_wqCancelRetry(); // P0-LOAD: logout'ta bekleyen wisdom yeniden-deneme zamanlayıcısını iptal et
     if(typeof pClearDraft==='function')pClearDraft(); // D10.5.1: logout'ta ilke taslagi temizle
+    if(typeof _authClearRuntimeCaches==='function')_authClearRuntimeCaches(); // PIL + Wisdom cache + listener + timers: hiçbir eski hesap durumu kalmaz
     CLOUD.user=null;CLOUD.uid=null;CLOUD.ready=false;
     updateAuthButton(null);
+    if(typeof closeUserMenu==='function')closeUserMenu();
     if(typeof resetAdminUI==='function')resetAdminUI(); // FAZ-5B: logout'ta admin cubugu kaldir
     return;
   }
@@ -161,6 +163,89 @@ async function connectGoogle(){
   }
 }
 window.connectGoogle=connectGoogle;
+
+/* ── Logout / Switch-account flow ──────────────────────────────────────────
+   No user-facing logout existed; this adds one plus a clean switch flow. A
+   thorough runtime-cache clear guarantees no account's data leaks into the next. */
+
+/* Clear ALL per-session runtime state: Personal Identity cache, Wisdom cache,
+   realtime listener, and pending sync/wisdom timers. Idempotent; safe to call
+   from both the explicit logout and the onAuthStateChanged(null) path. */
+function _authClearRuntimeCaches(){
+  if(typeof CLOUD!=='undefined'){
+    CLOUD.personalEntry=null; CLOUD.personalOwnerActive=null; CLOUD.personalResolveReason=null; // PIL cache
+    if(CLOUD.retryTimer){clearTimeout(CLOUD.retryTimer);CLOUD.retryTimer=null;}                 // pending sync timer
+    CLOUD.pendingMutation=null; CLOUD.conflict=null; CLOUD.flushing=false;
+  }
+  if(typeof _wqCancelRetry==='function')_wqCancelRetry();     // wisdom retry timers
+  if(typeof wisdomStoreReset==='function')wisdomStoreReset(); // wisdom cache (WQ_STORE)
+  if(typeof stopDocListener==='function')stopDocListener();   // realtime listener
+}
+window._authClearRuntimeCaches=_authClearRuntimeCaches;
+
+/* Full logout: clear caches, Firebase signOut, return to the logged-out (login) UI.
+   No stale state remains. onAuthStateChanged(null) also runs and re-clears (idempotent). */
+async function logoutAccount(){
+  if(typeof closeUserMenu==='function')closeUserMenu();
+  if(typeof CLOUD==='undefined'||!CLOUD.auth)return {ok:false,reason:'no_auth'};
+  _authClearRuntimeCaches();
+  try{ await CLOUD.auth.signOut(); }
+  catch(e){ return {ok:false,reason:'signout_failed',error:String((e&&e.message)||e)}; }
+  if(typeof updateAuthButton==='function')updateAuthButton(null); // redirect to login state
+  if(typeof render==='function')render();
+  return {ok:true};
+}
+window.logoutAccount=logoutAccount;
+
+/* Switch account: log out fully, then immediately restart Google sign-in. connectGoogle
+   forces prompt:'select_account' so the chooser ALWAYS appears — the previous account is
+   never silently reused. */
+async function switchAccount(){
+  var r=await logoutAccount();
+  if(!r||!r.ok)return r;
+  if(typeof connectGoogle==='function'){
+    return connectGoogle().then(function(){return {ok:true,switched:true};},
+                              function(){return {ok:false,reason:'signin_failed'};});
+  }
+  return {ok:false,reason:'no_signin'};
+}
+window.switchAccount=switchAccount;
+
+/* Top-right user menu: signed-in email + Switch + Logout. */
+function _authEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function userMenuHtml(){
+  var email=(typeof CLOUD!=='undefined'&&CLOUD.user&&CLOUD.user.email)||'';
+  var e=_authEsc(email);
+  return '<div class="um-email" title="'+e+'">'+e+'</div>'+
+    '<button type="button" class="um-item" onclick="switchAccount()">Google Hesabını Değiştir</button>'+
+    '<button type="button" class="um-item" onclick="logoutAccount()">Çıkış Yap</button>';
+}
+function _userMenuEl(){
+  var el=document.getElementById('user-menu');
+  if(!el && document.createElement){
+    el=document.createElement('div'); el.id='user-menu';
+    el.style.cssText='position:absolute;top:46px;right:12px;z-index:1000;display:none;min-width:190px;'+
+      'background:var(--bg1,#fff);border:1px solid var(--bd,#ddd);border-radius:10px;'+
+      'box-shadow:0 8px 24px rgba(0,0,0,.14);padding:6px;font-size:12px';
+    if(document.body&&document.body.appendChild)document.body.appendChild(el);
+  }
+  return el;
+}
+function toggleUserMenu(){
+  var el=_userMenuEl(); if(!el)return;
+  var open=el.style.display && el.style.display!=='none';
+  if(open){ el.style.display='none'; return; }
+  el.innerHTML=userMenuHtml(); el.style.display='block';
+}
+function closeUserMenu(){ var el=document.getElementById('user-menu'); if(el)el.style.display='none'; }
+window.userMenuHtml=userMenuHtml; window.toggleUserMenu=toggleUserMenu; window.closeUserMenu=closeUserMenu;
+
+/* Single auth-button dispatcher: open the user menu when signed in, else start sign-in. */
+function onAuthButtonClick(){
+  if(typeof CLOUD!=='undefined'&&CLOUD.user&&!CLOUD.user.isAnonymous){ if(typeof toggleUserMenu==='function')toggleUserMenu(); }
+  else if(typeof connectGoogle==='function'){ connectGoogle(); }
+}
+window.onAuthButtonClick=onAuthButtonClick;
 
 async function initCloud(){
   setSync('connecting');

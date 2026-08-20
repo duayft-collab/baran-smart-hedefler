@@ -127,7 +127,7 @@ if(srch)srch.addEventListener('input',function(){searchQ=srch.value;renderPage()
 var themeBtn=document.getElementById('theme-btn');
 if(themeBtn)themeBtn.addEventListener('click',toggleDark);
 var googleAuthBtn=document.getElementById('google-auth-btn');
-if(googleAuthBtn)googleAuthBtn.addEventListener('click',connectGoogle);
+if(googleAuthBtn)googleAuthBtn.addEventListener('click',(typeof onAuthButtonClick==='function')?onAuthButtonClick:connectGoogle); // signed in → user menu (logout/switch); else → sign-in
 
 /* Boot */
 applyTheme();
