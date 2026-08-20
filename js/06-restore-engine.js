@@ -13,11 +13,11 @@ async function restorePrecheck(backupId,opts){
   }
   if(!backupId)return restoreErr('BACKUP_NOT_FOUND','Yedek kimliği yok');
   var metaSnap;
-  try{metaSnap=await backupsRef(CLOUD.uid).doc(backupId).get();}
+  try{metaSnap=await backupsRef((typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid)).doc(backupId).get();} // PIL: owner-scoped
   catch(e){return restoreErr('PRECHECK_FAILED','Yedek okunamadı');}
   if(!metaSnap.exists)return restoreErr('BACKUP_NOT_FOUND','Yedek bulunamadı');
   var m=metaSnap.data()||{};
-  if(m.createdByUid&&m.createdByUid!==CLOUD.uid)return restoreErr('WRONG_USER','Yedek bu hesaba ait değil');
+  if(m.createdByUid&&m.createdByUid!==(typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid))return restoreErr('WRONG_USER','Yedek bu hesaba ait değil'); // PIL: backups belong to the OWNER (flag OFF → CLOUD.uid, identical)
   if(m.status!=='complete')return restoreErr('BACKUP_INCOMPLETE','Yedek tamamlanmamış');
   var sv=Number(m.schemaVersion||0);
   if(sv>SCHEMA_VERSION)return restoreErr('FUTURE_SCHEMA','Yedek şeması bu sürümden yeni');
@@ -46,8 +46,8 @@ async function prepareRestore(backupId){
     var badCode=mapBackupStatusToCode(v.status);
     if(badCode)throw restoreErr(badCode,'Yedek uygun değil: '+v.status);
     var lp=await loadBackupPayload(backupId);          // {payload,meta} (Corrupted/Incomplete/Future reddeder)
-    if(lp.meta&&lp.meta.createdByUid&&lp.meta.createdByUid!==CLOUD.uid)
-      throw restoreErr('WRONG_USER','Yedek bu hesaba ait değil');
+    if(lp.meta&&lp.meta.createdByUid&&lp.meta.createdByUid!==(typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid))
+      throw restoreErr('WRONG_USER','Yedek bu hesaba ait değil'); // PIL: owner-scoped
     var current=JSON.parse(JSON.stringify(D));         // mevcut canonical snapshot
     transitionRestore('PREVIEW');
     var preview=buildRestorePreview(current,lp.payload,
@@ -105,6 +105,9 @@ async function executeRestore(operationId){
     return restoreResult('error',{error:restoreErr('INVALID_STATE','Uygulama için onay aşaması gerekli: '+RESTORE.state)});
   if(!RS.confirmed)
     return restoreResult('error',{error:restoreErr('NOT_CONFIRMED','Önce onay gerekli')});
+  // PIL module-scoped: a Viewer may PREVIEW but not APPLY a restore (flag OFF/owner → allowed).
+  if(typeof personalCan==='function'&&!personalCan('archive','restore'))
+    return restoreResult('error',{error:restoreErr('FORBIDDEN','Bu hesabın geri yükleme yetkisi yok')});
   // Yeniden precheck (fail-closed, oturum modunda)
   var pc=await restorePrecheck(RS.backupId,{session:true});
   if(pc){failRestoreSession(new Error(pc.message));buildRestoreReport('failed',{errorCode:pc.code});resetRestoreSession();var _r=RESTORE_LAST_REPORT;RS=null;return restoreResult('error',{error:pc,report:_r});}
@@ -209,7 +212,7 @@ async function verifyRestoreOutcome(operationId){
   if(!RS.restoreMutationId)
     return restoreResult('error',{error:restoreErr('INVALID_STATE','Doğrulanacak commit yok')});
   var doc;
-  try{doc=await stateRef(CLOUD.uid).get();}
+  try{doc=await stateRef((typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid)).get();} // PIL: owner-scoped
   catch(e){return restoreResult('uncertain',{outcome:'uncertain',error:restoreErr('VERIFY_READ_FAILED',e.message)});}
   var d=doc.exists?(doc.data()||{}):{};
   var serverRev=Number(d.revision||0);

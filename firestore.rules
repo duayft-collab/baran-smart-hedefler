@@ -1,8 +1,84 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    /* ── Personal Identity Layer registry ──────────────────────────────────
+       ownershipMap/{loginUid} enrolls a login into a canonical owner with a
+       module-scoped `permissions` object. Writable ONLY by a server-set admin
+       custom claim → a member can never enroll itself or raise its own rights
+       (no self-elevation). A login may read only its OWN mapping. */
+    match /ownershipMap/{loginUid} {
+      allow read: if request.auth != null && request.auth.uid == loginUid;
+      // Enroll / re-enroll / revoke = admin custom claim ONLY (server-set) → a member
+      // can never enroll itself or raise its own rights (no self-elevation).
+      allow create, delete: if request.auth != null && request.auth.token.admin == true;
+      // Full mutation (ownerUid/role/permissions/status/audit) = admin only. A member
+      // may update ONLY its own login-audit timestamps and nothing else.
+      allow update: if request.auth != null && (
+           request.auth.token.admin == true
+        || (request.auth.uid == loginUid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['lastLoginAt','lastOwnerResolutionAt']))
+      );
+    }
+
+    function pilEntry(uid) {
+      return get(/databases/$(database)/documents/ownershipMap/$(uid)).data;
+    }
+    function pilEnrolled(uid) {
+      return exists(/databases/$(database)/documents/ownershipMap/$(uid));
+    }
+    /* Caller is a member of target owner's data: either it IS the owner, or its
+       active mapping resolves to that owner. Absent mapping → only self (below). */
+    function pilMember(caller, owner) {
+      return caller == owner
+        || (pilEnrolled(caller)
+            && pilEntry(caller).status == 'active'
+            && pilEntry(caller).ownerUid == owner);
+    }
+    /* Module-scoped capability: permissions[module][cap] must be exactly true.
+       The owner acting on its own data always passes without a registry read. */
+    function pilCan(caller, owner, module, cap) {
+      return caller == owner
+        || (pilMember(caller, owner)
+            && pilEntry(caller).permissions[module][cap] == true);
+    }
+
+    match /users/{userId} {
+
+      /* Default: a login fully owns its OWN tree. With NO registry docs present
+         this is the ONLY rule that ever matches → behavior is identical to the
+         pre-PIL single-user model (least-privilege, no cross-user access). */
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      /* Shared personal data: a member reaches ONLY these paths of the owner's
+         tree (never the whole tree), and only for the module capability granted.
+         Reads/writes are split so a Viewer (read-only) is denied writes in Rules,
+         not merely in the UI. */
+      match /app/state {
+        allow read:   if request.auth != null && pilCan(request.auth.uid, userId, 'state', 'read');
+        allow write:  if request.auth != null && pilCan(request.auth.uid, userId, 'state', 'write');
+      }
+      match /app/wisdomMeta {
+        allow read:   if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'read');
+        allow write:  if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'write');
+      }
+      match /app/wisdomMigration {
+        allow read:   if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'read');
+        allow write:  if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'write');
+      }
+      match /wisdomQuotes/{doc} {
+        allow read:            if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'read');
+        allow create, update:  if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'write');
+        allow delete:          if request.auth != null && pilCan(request.auth.uid, userId, 'wisdom', 'delete');
+      }
+      match /backups/{doc=**} {
+        allow read:    if request.auth != null && pilCan(request.auth.uid, userId, 'archive', 'read');
+        allow create:  if request.auth != null && pilCan(request.auth.uid, userId, 'archive', 'backup');
+        allow delete:  if request.auth != null && pilCan(request.auth.uid, userId, 'archive', 'restore');
+      }
     }
   }
 }

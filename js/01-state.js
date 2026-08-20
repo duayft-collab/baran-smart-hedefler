@@ -387,7 +387,7 @@ function samePayloadAsLocal(payload){
   try{return canonicalStringify(buildStateFromPayload(payload))===canonicalStringify(D);}
   catch(e){console.warn('[SYNC] Payload karşılaştırılamadı',e);return false;}
 }
-function stateRef(uid){return CLOUD.db.collection('users').doc(uid).collection('app').doc('state');}
+function stateRef(uid){var u=uid||(typeof personalOwnerUid==='function'?personalOwnerUid():(typeof CLOUD!=='undefined'&&CLOUD.uid));if(!u)return null;return CLOUD.db.collection('users').doc(u).collection('app').doc('state');} // PIL: null owner (fail-closed) → null ref
 /* ── Pending mutation ──────────────────────────────────────────────────────
    CLOUD.revision YALNIZ dogrulanmis sunucu revision'ini temsil eder.
    Yerel kayitta asla erken artirilmaz; yalniz basarili commit sonrasi guncellenir. */

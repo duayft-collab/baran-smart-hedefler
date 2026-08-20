@@ -148,7 +148,8 @@ async function createBackup(reason,options){
     if(!okBefore)throw new Error('Geri yükleme sırasında yedek oluşturulamaz');
   }
   assertCanBackup();
-  var uid=CLOUD.uid;
+  if(typeof personalCan==='function'&&!personalCan('archive','backup'))throw new Error('Bu hesabın yedekleme yetkisi yok'); // PIL module-scoped (flag OFF/owner → allowed)
+  var uid=(typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid); // PIL: backups belong to the OWNER (flag OFF → CLOUD.uid, identical)
 
   var payload=JSON.parse(JSON.stringify(options.payload||D));      // derin snapshot
   /* Wisdom Sharding P2: sharded aktifse wisdomQuotes payload'a KOLEKSİYONDAN rehydrate
@@ -193,7 +194,7 @@ async function createBackup(reason,options){
     backupVersion:BACKUP_VERSION, manifestVersion:BACKUP_VERSION,
     schemaVersion:SCHEMA_VERSION, appVersion:APP_VERSION,
     createdAt:firebase.firestore.FieldValue.serverTimestamp(), createdAtClient:now,
-    createdByUid:uid, createdByDeviceId:deviceId(),
+    createdByUid:uid, createdByDeviceId:deviceId(), // createdByUid = OWNER (ownership); createdBy below = login (audit)
     reason:reason,
     label:sanitizeText(options.label,BACKUP.LABEL_MAX),
     note:sanitizeText(options.note,BACKUP.NOTE_MAX),
@@ -206,6 +207,8 @@ async function createBackup(reason,options){
     previousBackupHash:prev?prev.plainSha256:null,
     status:'complete'
   };
+  var _pm=(typeof personalWriteMeta==='function')?personalWriteMeta('create'):null; // PIL audit (null when off → no fields)
+  if(_pm){ meta.createdBy=_pm.createdBy; meta.createdByEmail=_pm.createdByEmail; }
   meta.labelLower=meta.label.toLowerCase();
   meta.noteLower=meta.note.toLowerCase();
   await backupsRef(uid).doc(id).set(meta);
@@ -236,7 +239,7 @@ function backupClass(m){
 }
 async function rotateBackups(){
   if(!CLOUD.uid)return {deleted:0};
-  var uid=CLOUD.uid;
+  var uid=(typeof personalOwnerUid==="function"?personalOwnerUid():CLOUD.uid); // PIL: owner-scoped
   var q=await backupsRef(uid).orderBy('createdAtClient','desc').get();
   var all=[];
   q.forEach(function(d){var m=d.data()||{};if(m.status==='complete')all.push(Object.assign({id:d.id},m));});
@@ -296,7 +299,7 @@ async function rotateBackups(){
 /* ── D2: orphan temizligi ────────────────────────────────────────────────── */
 async function cleanupOrphanBackups(){
   if(!CLOUD.uid)return {cleaned:0};
-  var uid=CLOUD.uid,now=Date.now(),cleaned=0,keep=[];
+  var uid=(typeof personalOwnerUid==="function"?personalOwnerUid():CLOUD.uid),now=Date.now(),cleaned=0,keep=[];
   var list=stagingList();
   for(var i=0;i<list.length;i++){
     var e=list[i];
@@ -318,7 +321,7 @@ async function cleanupOrphanBackups(){
 async function listBackups(options){
   options=options||{};
   if(!CLOUD.uid)throw new Error('Bulut bağlantısı hazır değil');
-  var q=await backupsRef(CLOUD.uid).orderBy('createdAtClient','desc')
+  var q=await backupsRef((typeof personalOwnerUid==="function"?personalOwnerUid():CLOUD.uid)).orderBy('createdAtClient','desc')
     .limit(options.limit||30).get();
   var out=[];
   q.forEach(function(d){
@@ -363,7 +366,7 @@ function scoreHealth(r){
 async function verifyBackup(backupId,options){
   options=options||{};
   if(!CLOUD.uid)throw new Error('Bulut bağlantısı hazır değil');
-  var uid=CLOUD.uid,r={id:backupId,checkedAt:Date.now()};
+  var uid=(typeof personalOwnerUid==="function"?personalOwnerUid():CLOUD.uid),r={id:backupId,checkedAt:Date.now()};
   var metaSnap=await backupsRef(uid).doc(backupId).get();
   if(!metaSnap.exists){r.incomplete=true;r.error='Metadata bulunamadı';
     return Object.assign(r,scoreHealth(r));}

@@ -1,5 +1,5 @@
 function commitMutation(m){
-  var ref=stateRef(CLOUD.uid),uid=CLOUD.uid,dev=deviceId();
+  var ref=stateRef((typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid)),uid=CLOUD.uid,dev=deviceId(); // PIL: write to OWNER doc; audit stamp stays the login uid
   return CLOUD.db.runTransaction(function(t){
     return t.get(ref).then(function(doc){
       var d=doc.exists?(doc.data()||{}):null;
@@ -8,7 +8,7 @@ function commitMutation(m){
       if(d&&d.lastMutationId&&d.lastMutationId===m.id)return {status:'duplicate',revision:serverRev};
       // schemaVersion 2 belgesinde revision yok -> 0 kabul edilir, geriye uyumlu
       if(serverRev!==m.expectedRevision)return {status:'conflict',serverData:d,serverRevision:serverRev};
-      t.set(ref,{
+      var _wdoc={
         payload:m.payload,
         updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
         revision:serverRev+1,
@@ -17,7 +17,13 @@ function commitMutation(m){
         lastMutationId:m.id,
         schemaVersion:SCHEMA_VERSION,
         clientUpdatedAt:m.createdAt // debug amacli
-      },{merge:true});
+      };
+      // PIL audit: when a MEMBER writes the shared owner doc, record the login email
+      // (updatedByUid already carries the login uid). No-op when sharing is off.
+      if(typeof IDENTITY!=='undefined'&&IDENTITY.sharingEnabled&&typeof personalContext==='function'){
+        var _pc=personalContext(); if(_pc&&_pc.isMember)_wdoc.updatedByEmail=_pc.loginEmail||null;
+      }
+      t.set(ref,_wdoc,{merge:true});
       return {status:'ok',revision:serverRev+1};
     });
   });

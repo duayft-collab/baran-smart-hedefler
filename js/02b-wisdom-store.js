@@ -36,7 +36,7 @@ window._wqLog=_wqLog;
 
 function wisdomStoreCol(uid){
   if(typeof CLOUD==='undefined'||!CLOUD.db)return null;
-  var u=uid||CLOUD.uid; if(!u)return null;
+  var u=uid||(typeof personalOwnerUid==='function'?personalOwnerUid():CLOUD.uid); if(!u)return null; // PIL: owner-scoped (flag OFF → CLOUD.uid, identical)
   return CLOUD.db.collection('users').doc(u).collection('wisdomQuotes');
 }
 
@@ -157,6 +157,9 @@ window.wisdomStoreDelete=wisdomStoreDelete; window.wisdomStoreBatchWrite=wisdomS
    (P3'e kadar). Idempotent (id bazlı). Toplu 4987 import bu yolu ASLA kullanmaz. ══ */
 function wisdomDualApply(id,patch){
   if(!wisdomStoreIsSharded())return Promise.resolve({ok:false,reason:'not_sharded'});
+  if(typeof personalCan==='function'&&!personalCan('wisdom','write'))return Promise.resolve({ok:false,reason:'forbidden'}); // PIL module-scoped (flag OFF/owner → true)
+  var _am=(typeof personalWriteMeta==='function')?personalWriteMeta('update'):null; // PIL audit (null when off → no fields)
+  if(_am)patch=Object.assign({},patch||{},_am);
   return wisdomStoreUpdate(id,patch).then(function(res){
     if(!res||!res.ok)return {ok:false,reason:'collection_failed'};       // legacy DEĞİŞMEZ
     var w=(Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]).filter(function(q){return String(q.id)===String(id);})[0];
@@ -167,6 +170,9 @@ function wisdomDualApply(id,patch){
 function wisdomDualSet(record){
   if(!wisdomStoreIsSharded())return Promise.resolve({ok:false,reason:'not_sharded'});
   if(!_wqsValidId(record))return Promise.resolve({ok:false,reason:'MISSING_ID'});
+  if(typeof personalCan==='function'&&!personalCan('wisdom','write'))return Promise.resolve({ok:false,reason:'forbidden'}); // PIL module-scoped
+  var _am=(typeof personalWriteMeta==='function')?personalWriteMeta('create'):null; // PIL audit (null when off)
+  if(_am)record=Object.assign({},record,_am);
   return wisdomStoreSet(record).then(function(res){
     if(!res||!res.ok)return {ok:false,reason:'collection_failed'};
     if(!Array.isArray(D.wisdomQuotes))D.wisdomQuotes=[];
@@ -179,6 +185,7 @@ function wisdomDualSet(record){
 }
 function wisdomDualDelete(id){
   if(!wisdomStoreIsSharded())return Promise.resolve({ok:false,reason:'not_sharded'});
+  if(typeof personalCan==='function'&&!personalCan('wisdom','delete'))return Promise.resolve({ok:false,reason:'forbidden'}); // PIL module-scoped
   return wisdomStoreDelete(id).then(function(res){
     if(!res||!res.ok)return {ok:false,reason:'collection_failed'};
     if(Array.isArray(D.wisdomQuotes))D.wisdomQuotes=D.wisdomQuotes.filter(function(q){return String(q.id)!==String(id);});

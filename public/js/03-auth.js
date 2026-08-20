@@ -1,8 +1,21 @@
 async function bootstrapUser(user){
   CLOUD.ready=false;
+  await pilResolveOnAuth(user); // PIL: resolve canonical owner ONCE (no-op + no fetch when sharing off)
+  // PIL fail-closed: with sharing ON, if ownership cannot be resolved (not enrolled,
+  // revoked member, inactive owner, corrupt permissions) refuse access — no data read,
+  // no listener, no owner guess. Skipped entirely when sharing is OFF (byte-identical).
+  if(typeof IDENTITY!=='undefined'&&IDENTITY.sharingEnabled){
+    var _pilCtx=personalContext();
+    if(_pilCtx.denied){
+      console.warn('[PIL] Erişim reddedildi (fail-closed):',_pilCtx.deniedReason);
+      stopDocListener(); CLOUD.ready=false;
+      if(typeof setSync==='function')setSync('error');
+      return;
+    }
+  }
   CLOUD.revision=localRevision();
   CLOUD.pendingMutation=loadPending(); // sayfa yenilemesinde korunan bekleyen degisiklik
-  var ref=stateRef(user.uid);
+  var ref=stateRef(personalOwnerUid()); // PIL: read OWNER doc (flag OFF → user.uid, identical)
   var snap=await ref.get();
   var remote=snap.exists?snap.data():null;
   var remoteRev=remote?Number(remote.revision||0):0;
@@ -13,12 +26,12 @@ async function bootstrapUser(user){
     if(remoteRev===CLOUD.pendingMutation.expectedRevision){
       CLOUD.revision=remoteRev;
       console.log('[SYNC] Bekleyen değişiklik geri yüklendi, gönderiliyor.');
-      if(!user.isAnonymous)startDocListener(user.uid);
+      if(!user.isAnonymous)startDocListener(personalOwnerUid());
       flushPending();
       return;
     }
     CLOUD.revision=remoteRev;
-    if(!user.isAnonymous)startDocListener(user.uid);
+    if(!user.isAnonymous)startDocListener(personalOwnerUid());
     enterConflict(remote,CLOUD.pendingMutation); // sunucu ilerlemis
     return;
   }
@@ -52,7 +65,7 @@ async function bootstrapUser(user){
       CLOUD.ready=true;
       if(samePayloadAsLocal(remote.payload)){
         // D: sunucu ve yerel ayni. Yazma yok, revision artmaz, mutationId uretilmez.
-        if(!user.isAnonymous)startDocListener(user.uid);
+        if(!user.isAnonymous)startDocListener(personalOwnerUid());
         else console.log('[SYNC] Anonim oturum, gerçek zamanlı listener kurulmadı');
         console.log('[SYNC] Açılışta yerel ve bulut aynı. revision:',CLOUD.revision);
         setSync(navigator.onLine?'ok':'offline');
@@ -60,7 +73,7 @@ async function bootstrapUser(user){
       }
       // E: ayni revision farkli icerik -> hangisinin dogru oldugu bilinemez
       console.warn('[SYNC] Aynı revision, farklı içerik. Kullanıcı kararı isteniyor.');
-      if(!user.isAnonymous)startDocListener(user.uid);
+      if(!user.isAnonymous)startDocListener(personalOwnerUid());
       enterConflict(remote,newPendingMutation());
       return;
     }else{
@@ -68,7 +81,7 @@ async function bootstrapUser(user){
       CLOUD.revision=remoteRev;
       CLOUD.ready=true;
       CLOUD.pendingMutation=newPendingMutation();savePending();
-      if(!user.isAnonymous)startDocListener(user.uid);
+      if(!user.isAnonymous)startDocListener(personalOwnerUid());
       flushPending();
       return;
     }
@@ -77,14 +90,14 @@ async function bootstrapUser(user){
     CLOUD.revision=0;
     CLOUD.ready=true;
     CLOUD.pendingMutation=newPendingMutation();savePending();
-    if(!user.isAnonymous)startDocListener(user.uid);
+    if(!user.isAnonymous)startDocListener(personalOwnerUid());
     flushPending();
     return;
   }
 
   CLOUD.ready=true;
   // Listener yalnizca Google kullanicisi icin. Anonim oturumda kurulmaz.
-  if(!user.isAnonymous)startDocListener(user.uid);
+  if(!user.isAnonymous)startDocListener(personalOwnerUid());
   else console.log('[SYNC] Anonim oturum, gerçek zamanlı listener kurulmadı');
   setSync(navigator.onLine?'ok':'offline');
 }

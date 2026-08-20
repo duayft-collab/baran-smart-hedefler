@@ -411,6 +411,7 @@ function _wqBlockShardedReplace(){
    Tek-uçuş: aynı anda ikinci submit (WQ_IMPORT._applying) yeni yazma başlatmaz (çift-yazım önlenir). */
 function wqImportApply(mode){
   var st=WQ_IMPORT.stats; if(!st||!st.items){ wqToast('Önce dosya seçin',true); return; }
+  if(typeof personalCan==='function'&&!personalCan('wisdom','import')){ wqToast('Bu hesabın içe aktarma yetkisi yok',true); return; } // PIL module-scoped (flag OFF/owner → allowed)
   if(WQ_IMPORT._applying)return WQ_IMPORT._applying;   // tek-uçuş: bekleyen bir uygulama var
   var sharded=(typeof wisdomStoreIsSharded==='function'&&wisdomStoreIsSharded());
   if(mode==='replace'){

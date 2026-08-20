@@ -22,8 +22,8 @@ function wisdomMigrationStatus(){ return JSON.parse(JSON.stringify(WISDOM_MIGRAT
 window.wisdomMigrationStatus=wisdomMigrationStatus;
 
 function _wmLegacy(){ return Array.isArray(D.wisdomQuotes)?D.wisdomQuotes:[]; }
-function _wmMetaDoc(uid){ var u=uid||(typeof CLOUD!=='undefined'&&CLOUD.uid); if(typeof CLOUD==='undefined'||!CLOUD.db||!u)return null; return CLOUD.db.collection('users').doc(u).collection('app').doc('wisdomMeta'); }
-function _wmMigDoc(uid){ var u=uid||(typeof CLOUD!=='undefined'&&CLOUD.uid); if(typeof CLOUD==='undefined'||!CLOUD.db||!u)return null; return CLOUD.db.collection('users').doc(u).collection('app').doc('wisdomMigration'); }
+function _wmMetaDoc(uid){ var u=uid||(typeof personalOwnerUid==='function'?personalOwnerUid():(typeof CLOUD!=='undefined'&&CLOUD.uid)); if(typeof CLOUD==='undefined'||!CLOUD.db||!u)return null; return CLOUD.db.collection('users').doc(u).collection('app').doc('wisdomMeta'); } // PIL: owner-scoped (flag OFF → CLOUD.uid)
+function _wmMigDoc(uid){ var u=uid||(typeof personalOwnerUid==='function'?personalOwnerUid():(typeof CLOUD!=='undefined'&&CLOUD.uid)); if(typeof CLOUD==='undefined'||!CLOUD.db||!u)return null; return CLOUD.db.collection('users').doc(u).collection('app').doc('wisdomMigration'); } // PIL: owner-scoped
 function _wmPersistManifest(){ var d=_wmMigDoc(); if(!d)return Promise.resolve(); try{ return d.set(wisdomMigrationStatus()).catch(function(){}); }catch(e){ return Promise.resolve(); } }
 
 /* wq-legacy-* / eksik / boş id → yeni benzersiz id. Diğerleri korunur (idempotency için). */

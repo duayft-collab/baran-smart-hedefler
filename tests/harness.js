@@ -93,6 +93,7 @@ function createSandbox() {
   // Load order matters: config -> state -> auth (canonicalStringify/BACKUP) -> backup -> diff -> restore UI bits
   run(src('js/00-config.js'), '00-config.js');
   run(src('js/01-state.js'), '01-state.js');
+  run(src('js/01b-identity.js'), '01b-identity.js');
   run(src('js/03-auth.js'), '03-auth.js');
   run(src('js/02-sync.js'), '02-sync.js');
   run(src('js/02b-wisdom-store.js'), '02b-wisdom-store.js');
