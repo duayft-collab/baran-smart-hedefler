@@ -183,14 +183,34 @@ function _authClearRuntimeCaches(){
 }
 window._authClearRuntimeCaches=_authClearRuntimeCaches;
 
-/* Full logout: clear caches, Firebase signOut, return to the logged-out (login) UI.
-   No stale state remains. onAuthStateChanged(null) also runs and re-clears (idempotent). */
+/* Clear the LOCAL per-account app-state (D + its localStorage persistence). Called ONLY
+   on an explicit user logout — never on the passive onAuthStateChanged(null), which fires
+   on normal boot for users who never sign in (they must keep their local data). Without
+   this, switching into an empty account would push the previous account's leftover D into
+   it (cross-account contamination). Device id and language prefs are preserved. */
+function _authClearLocalState(){
+  try{
+    localStorage.removeItem('fu7');                 // D blob
+    localStorage.removeItem('fu7_rev');
+    localStorage.removeItem('fu7_cloud_ts');
+    localStorage.removeItem('fu7_pending_mutation');
+    localStorage.removeItem('fu7_conflict_backup');
+  }catch(e){}
+  if(typeof INIT!=='undefined'){ D = JSON.parse(JSON.stringify(INIT)); } // fresh empty state in memory
+  if(typeof CLOUD!=='undefined'){ CLOUD.revision=0; }
+}
+window._authClearLocalState=_authClearLocalState;
+
+/* Full logout: clear runtime caches + local app-state, Firebase signOut, return to the
+   logged-out (login) UI. No stale state remains, and the next account starts clean.
+   onAuthStateChanged(null) also runs and re-clears runtime caches (idempotent). */
 async function logoutAccount(){
   if(typeof closeUserMenu==='function')closeUserMenu();
   if(typeof CLOUD==='undefined'||!CLOUD.auth)return {ok:false,reason:'no_auth'};
   _authClearRuntimeCaches();
   try{ await CLOUD.auth.signOut(); }
   catch(e){ return {ok:false,reason:'signout_failed',error:String((e&&e.message)||e)}; }
+  _authClearLocalState();                          // explicit logout → wipe local account data (no cross-account leak)
   if(typeof updateAuthButton==='function')updateAuthButton(null); // redirect to login state
   if(typeof render==='function')render();
   return {ok:true};

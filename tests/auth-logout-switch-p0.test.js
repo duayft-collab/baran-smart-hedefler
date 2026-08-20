@@ -45,6 +45,33 @@ describe('logoutAccount', () => {
   });
 });
 
+describe('logout clears LOCAL app-state (cross-account leak guard)', () => {
+  test('explicit logout wipes D + localStorage so no previous-account data survives', async () => {
+    const sb = makeSandbox('A', 'a@x.com');
+    sb.D.wisdomQuotes = [{id:'leak1', quote:'owner-local-secret', author:'y'}];
+    sb.D.goals = [{id:999, title:'OWNER PRIVATE GOAL'}];
+    sb.localStorage.setItem('fu7', JSON.stringify(sb.D));
+    sb.localStorage.setItem('fu7_rev', '7');
+    sb.localStorage.setItem('fu7_pending_mutation', '{"id":"m"}');
+    sb.CLOUD.revision = 7;
+    await sb.logoutAccount();
+    assert.equal(sb.localStorage.getItem('fu7'), null, 'fu7 cleared');
+    assert.equal(sb.localStorage.getItem('fu7_rev'), null, 'fu7_rev cleared');
+    assert.equal(sb.localStorage.getItem('fu7_pending_mutation'), null, 'pending cleared');
+    assert.ok(!(sb.D.wisdomQuotes||[]).some(function(w){return w.id==='leak1';}), 'owner local wisdom gone');
+    assert.ok(!(sb.D.goals||[]).some(function(g){return g.title==='OWNER PRIVATE GOAL';}), 'owner private goal gone');
+    assert.equal(sb.CLOUD.revision, 0, 'revision reset');
+  });
+  test('passive onAuthStateChanged(null) does NOT wipe local state (local-only users keep data on boot)', () => {
+    const sb = makeSandbox('A', 'a@x.com');
+    sb.D.goals = [{id:888, title:'LOCAL ONLY GOAL'}];
+    sb.localStorage.setItem('fu7', JSON.stringify(sb.D));
+    sb.handleAuthChange(null);                       // passive sign-out signal (e.g. initial boot / token expiry)
+    assert.notEqual(sb.localStorage.getItem('fu7'), null, 'fu7 preserved on passive null');
+    assert.ok((sb.D.goals||[]).some(function(g){return g.title==='LOCAL ONLY GOAL';}), 'local goal preserved');
+  });
+});
+
 describe('switchAccount', () => {
   test('logs out then re-starts Google sign-in (account chooser)', async () => {
     const sb = makeSandbox('A', 'a@x.com'); seedActiveSession(sb);
