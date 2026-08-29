@@ -151,6 +151,15 @@ Aşağıdakilerden **herhangi biri** değiştiyse zorunludur: `index.html`, bir
 `<script>` sürüm parametresi, bir render/rota/menü yolu, `firestore.rules`,
 senkron/yedek/geri-yükleme yolu.
 
+0. **Cache başlığı kontrolü (zorunlu, deploy'dan hemen sonra):**
+   ```bash
+   curl -s -o /dev/null -D - https://pd-me-1ac4d.web.app/ | grep -i cache-control
+   curl -s -o /dev/null -D - https://pd-me-1ac4d.web.app/index.html | grep -i cache-control
+   ```
+   Beklenen: `no-cache, no-store, must-revalidate`. Uygulama kabuğu (`/` ve
+   `/index.html`) önbelleğe alınırsa kullanıcılar bir sonraki sürümü saatlerce
+   göremez ve canlı test yanlış build üzerinde yapılır (2026-08-29'da bizzat
+   yaşandı: HTML `max-age=3600` ile sunuluyordu).
 1. Sert yenileme (cache-bust parametresinin arttığı doğrulanır).
 2. Konsolda hata **yok**.
 3. Bulut rozeti `Google hesabında kayıtlı` durumuna ulaşıyor.

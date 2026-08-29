@@ -432,26 +432,63 @@ describe('E. Professional sources and derived principles', () => {
     assert.ok(sb.coachingSourceIds().length >= 5);
     sb.coachingSourceIds().forEach(id => {
       const s = sb.coachingSource(id);
-      ['title', 'issuingBody', 'version', 'effectiveDate', 'url', 'scope', 'verifiedByUser', 'unverifiedFields', 'note']
-        .forEach(k => assert.ok(k in s, id + '.' + k));
+      ['sourceId', 'title', 'issuingBody', 'sourceType', 'officialUrl', 'publicationDate', 'revisionDate',
+       'version', 'verified', 'verifiedAt', 'verificationBasis', 'unverifiedFields',
+       'supersedes', 'supersededBy', 'scope', 'note'].forEach(k => assert.ok(k in s, id + '.' + k));
+      assert.equal(s.sourceId, id);
       assert.equal('text' in s, false, id);
       assert.equal('fullText' in s, false, id);
       assert.ok(s.title.length < 120, id);
       assert.ok(s.note.length < 260, id);
+      if (s.sourceType !== null) assert.ok(sb.COACHING_SOURCE_TYPES.indexOf(s.sourceType) >= 0, id);
+      if (s.verified) { assert.ok(s.verifiedAt, id); assert.ok(s.verificationBasis, id); }
     });
-    ['icf.ethics', 'icf.competencies', 'icf.referral', 'un.crc', 'kcs.standards'].forEach(id =>
-      assert.ok(sb.coachingSource(id), id));
+    ['icf.ethics', 'icf.competencies', 'icf.referral', 'emcc.ac.ethics', 'un.crc', 'kcs.standards']
+      .forEach(id => assert.ok(sb.coachingSource(id), id));
+    assert.equal(sb.coachingRegisterSource('x.y', { sourceType: 'made_up' }).error, 'INVALID_SOURCE_TYPE');
   });
-  test('E2. unconfirmed source metadata is declared, not asserted', () => {
+  test('E1b. Y1: the verifiable sources are verified with a stated basis', () => {
+    const sb = createSandbox();
+    const icf = sb.coachingSource('icf.ethics');
+    assert.equal(icf.verified, true);
+    assert.equal(icf.version, '2025');
+    assert.match(icf.officialUrl, /^https:\/\/coachingfederation\.org\/.*code-of-ethics-2025\.pdf$/);
+    assert.equal(icf.supersedes, '2020 edition');
+    const comp = sb.coachingSource('icf.competencies');
+    assert.equal(comp.verified, true);
+    assert.equal(comp.version, '2025');
+    assert.equal(comp.sourceType, 'competency_framework');
+    const emcc = sb.coachingSource('emcc.ac.ethics');
+    assert.equal(emcc.verified, true);
+    assert.equal(emcc.version, '4');
+    assert.equal(emcc.publicationDate, '2026-02-15');
+    assert.equal(emcc.revisionDate, '2025');
+    assert.match(emcc.verificationBasis, /first_party_announcement_read/);
+    assert.equal(/2016/.test(JSON.stringify(emcc)), false);   // no stale edition kept as current
+    const crc = sb.coachingSource('un.crc');
+    assert.equal(crc.verified, true);
+    assert.equal(crc.publicationDate, '1989-11-20');
+    assert.match(crc.verificationBasis, /1990-09-02/);
+    const kcs = sb.coachingSource('kcs.standards');
+    assert.equal(kcs.verified, true);
+    assert.equal(kcs.sourceType, 'safeguarding_standards');
+    assert.equal(kcs.version, null);                          // edition deliberately not asserted
+    assert.ok(kcs.unverifiedFields.indexOf('version') >= 0);
+    assert.equal(/\blaw\b/i.test(kcs.note), false || kcs.note.indexOf('NOT law') >= 0);
+  });
+  test('E2. the ICF referral resource stays honestly unresolved (never fabricated)', () => {
     const sb = createSandbox();
     const pending = sb.coachingSourcesNeedingVerification();
-    assert.ok(pending.length > 0);
-    pending.forEach(p => assert.equal(sb.coachingSource(p.id).verifiedByUser, false));
-    // the referral document reference is explicitly unknown rather than invented
+    deq(pending.map(p => p.sourceId), ['icf.referral']);      // Y1: everything else is closed
     const ref = sb.coachingSource('icf.referral');
-    assert.equal(ref.url, null);
+    assert.equal(ref.verified, false);
+    assert.equal(ref.officialUrl, null);
     assert.equal(ref.version, null);
-    assert.ok(ref.unverifiedFields.indexOf('url') >= 0);
+    assert.equal(ref.publicationDate, null);
+    assert.equal(ref.verificationBasis, null);
+    ['officialUrl', 'version', 'publicationDate'].forEach(f => assert.ok(ref.unverifiedFields.indexOf(f) >= 0, f));
+    // and no URL of any kind was slipped into the record as if it governed
+    assert.equal(JSON.stringify(ref).indexOf('http'), -1);
   });
   test('E3. PROFESSIONAL STANDARD and PRODUCT POLICY are never blended', () => {
     const sb = createSandbox();

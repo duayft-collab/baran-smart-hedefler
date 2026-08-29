@@ -668,6 +668,21 @@ describe('K. Gate, mirror and static guards', () => {
     assert.match(SRC, /if\(typeof registerRelationResolver==='function'\)\{\s*\n\s*registerRelationResolver\(COACHING_RELATION_TYPE/);
     assert.equal(/^\s*(render|save|initCloud|wdBoot|wexBoot)\s*\(/m.test(SRC), false);
   });
+  test('K6. the app shell is not cached, so a deploy is visible immediately', () => {
+    const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'firebase.json'), 'utf8'));
+    const headers = cfg.hosting.headers || [];
+    const shell = headers.filter(h => h.source === '/index.html' || h.source === '/');
+    assert.equal(shell.length, 2, 'both / and /index.html must be covered');
+    shell.forEach(h => {
+      const cc = h.headers.find(x => x.key === 'Cache-Control');
+      assert.ok(cc, h.source);
+      assert.match(cc.value, /no-store/, h.source);
+      assert.match(cc.value, /must-revalidate/, h.source);
+    });
+    // versioned assets keep their own caching — the fix is scoped to the shell
+    assert.equal(headers.some(h => /\.js|\.css|\*\*/.test(h.source)), false);
+  });
+
   test('K5. RELEASE-LIVE-1 exists and documents only real tooling', () => {
     const doc = fs.readFileSync(path.join(ROOT, 'docs', 'constitution', 'RELEASE-LIVE-1.md'), 'utf8');
     ['node --check', "node --test 'tests/*.test.js'", 'diff -rq js public/js', '900'].forEach(t =>

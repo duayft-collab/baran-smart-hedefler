@@ -27,22 +27,36 @@
 var COACHING_ETHICS_VERSION = 1;
 var COACHING_PRINCIPLE_KIND = ['PROFESSIONAL_STANDARD','FOCUSUP_PRODUCT_POLICY'];
 
-/* ── 1) Source registry ──────────────────────────────────────────────────── */
+/* ── 1) Source registry ──────────────────────────────────────────────────
+   Metadata only. `verified` means THE RECORDED FIELDS are confirmed; anything
+   still unknown is listed in `unverifiedFields` and stored as null rather than
+   guessed. `verificationBasis` says HOW it was confirmed, so a later reader can
+   judge the strength of the claim instead of trusting a boolean. ── */
+var COACHING_SOURCE_TYPES = ['code_of_ethics','competency_framework','guidance',
+  'international_treaty','safeguarding_standards'];
+
 var COACHING_SOURCES = {};
 function coachingRegisterSource(id, def){
   if(typeof id!=='string' || !/^[a-z][a-z0-9_.]{1,47}$/.test(id)) return {ok:false,error:'INVALID_SOURCE_ID'};
   def = def || {};
+  if(def.sourceType!=null && COACHING_SOURCE_TYPES.indexOf(def.sourceType)<0) return {ok:false,error:'INVALID_SOURCE_TYPE'};
+  var nn = function(v){ return v!=null ? String(v) : null; };
   COACHING_SOURCES[id] = {
-    id:id,
+    sourceId:id,
     title: String(def.title||''),
     issuingBody: String(def.issuingBody||''),
-    version: def.version!=null ? String(def.version) : null,
-    effectiveDate: def.effectiveDate!=null ? String(def.effectiveDate) : null,
-    url: def.url!=null ? String(def.url) : null,
-    scope: Array.isArray(def.scope) ? def.scope.map(String) : [],
-    /* false until a human confirms the metadata against the primary source. */
-    verifiedByUser: def.verifiedByUser===true,
+    sourceType: nn(def.sourceType),
+    officialUrl: nn(def.officialUrl),
+    publicationDate: nn(def.publicationDate),
+    revisionDate: nn(def.revisionDate),
+    version: nn(def.version),
+    verified: def.verified===true,
+    verifiedAt: nn(def.verifiedAt),
+    verificationBasis: nn(def.verificationBasis),
     unverifiedFields: Array.isArray(def.unverifiedFields) ? def.unverifiedFields.map(String) : [],
+    supersedes: nn(def.supersedes),
+    supersededBy: nn(def.supersededBy),
+    scope: Array.isArray(def.scope) ? def.scope.map(String) : [],
     note: String(def.note||'')
   };
   return {ok:true, source:COACHING_SOURCES[id]};
@@ -50,56 +64,65 @@ function coachingRegisterSource(id, def){
 function coachingSource(id){ return Object.prototype.hasOwnProperty.call(COACHING_SOURCES,id) ? COACHING_SOURCES[id] : null; }
 function coachingSourceIds(){ return Object.keys(COACHING_SOURCES).sort(); }
 function coachingSourcesNeedingVerification(){
-  return coachingSourceIds().filter(function(id){ return COACHING_SOURCES[id].verifiedByUser!==true; })
-    .map(function(id){ return {id:id, title:COACHING_SOURCES[id].title, unverifiedFields:COACHING_SOURCES[id].unverifiedFields.slice()}; });
+  return coachingSourceIds().filter(function(id){ return COACHING_SOURCES[id].verified!==true; })
+    .map(function(id){ return {sourceId:id, title:COACHING_SOURCES[id].title,
+      unverifiedFields:COACHING_SOURCES[id].unverifiedFields.slice()}; });
 }
 
 coachingRegisterSource('icf.ethics', {
   title:'ICF Code of Ethics', issuingBody:'International Coaching Federation (ICF)',
-  version:'2020 revision', effectiveDate:'2020-01',
-  url:'https://coachingfederation.org/ethics/code-of-ethics',
+  sourceType:'code_of_ethics', version:'2025', publicationDate:'2025',
+  officialUrl:'https://coachingfederation.org/wp-content/uploads/2025/03/icf-ethics-code-of-ethics-2025.pdf',
+  supersedes:'2020 edition',
+  verified:true, verifiedAt:'2026-08-29', verificationBasis:'owner_confirmed_first_party_document',
   scope:['ethics','confidentiality','conflict_of_interest','scope_of_practice','referral'],
-  unverifiedFields:['version','effectiveDate'],
-  note:'Primary ethical basis for the coach role. Read in full; not summarized here.' });
+  note:'Primary ethical basis. Automated probe returns 403 (bot protection), so confirmation is the owner\'s, not this tool\'s.' });
 
 coachingRegisterSource('icf.competencies', {
-  title:'ICF Core Competencies (updated model)', issuingBody:'International Coaching Federation (ICF)',
-  version:'updated model', effectiveDate:'2019-11',
-  url:'https://coachingfederation.org/credentials-and-standards/core-competencies',
+  title:'ICF Core Competencies', issuingBody:'International Coaching Federation (ICF)',
+  sourceType:'competency_framework', version:'2025', publicationDate:'2025',
+  officialUrl:'https://coachingfederation.org/wp-content/uploads/2025/09/icf-cs-core-competencies-2025.pdf',
+  supersedes:'2019 updated model',
+  verified:true, verifiedAt:'2026-08-29', verificationBasis:'owner_confirmed_first_party_document',
   scope:['competency','ethics','presence','listening','evoking_awareness','agreement'],
-  unverifiedFields:['version','effectiveDate'],
-  note:'Competency vocabulary for later phases; Phase 2 uses only the ethical-foundation domain.' });
+  note:'Competency vocabulary for Phase 7. Automated probe returns 403 (bot protection).' });
 
 coachingRegisterSource('icf.referral', {
   title:'ICF guidance on referring a client to therapy', issuingBody:'International Coaching Federation (ICF)',
-  version:null, effectiveDate:null, url:null,
+  sourceType:'guidance', version:null, publicationDate:null, officialUrl:null,
+  verified:false, verifiedAt:null, verificationBasis:null,
+  unverifiedFields:['officialUrl','version','publicationDate'],
   scope:['referral','coaching_vs_therapy','scope_of_practice'],
-  unverifiedFields:['version','effectiveDate','url'],
-  note:'Exact document reference NOT confirmed offline. The coach must supply the current citation before this source is quoted anywhere user-facing.' });
+  note:'No current governing first-party document established. Left unresolved on purpose: a secondary blog must never be cited as if it were the standard.' });
 
 coachingRegisterSource('emcc.ac.ethics', {
   title:'Global Code of Ethics for Coaches, Mentors and Supervisors',
-  issuingBody:'EMCC Global / Association for Coaching',
-  version:null, effectiveDate:null,
-  url:'https://www.globalcodeofethics.org/',
+  issuingBody:'EMCC Global and signatory professional bodies',
+  sourceType:'code_of_ethics', version:'4', revisionDate:'2025', publicationDate:'2026-02-15',
+  officialUrl:'https://www.globalcodeofethics.org/', supersedes:'version 3',
+  verified:true, verifiedAt:'2026-08-29',
+  verificationBasis:'first_party_announcement_read: emccglobal.org/news/global-code-of-ethics-new-version (version 4, review completed late 2025, announced 2026-02-15)',
   scope:['ethics','confidentiality','competence','supervision'],
-  unverifiedFields:['version','effectiveDate'],
   note:'Secondary corroborating standard; used where it agrees with ICF, never to override it.' });
 
 coachingRegisterSource('un.crc', {
-  title:'UN Convention on the Rights of the Child', issuingBody:'United Nations',
-  version:'1989', effectiveDate:'1990-09-02',
-  url:'https://www.ohchr.org/en/instruments-mechanisms/instruments/convention-rights-child',
+  title:'Convention on the Rights of the Child', issuingBody:'United Nations',
+  sourceType:'international_treaty', version:'1989', publicationDate:'1989-11-20',
+  revisionDate:null, officialUrl:'https://www.ohchr.org/en/instruments-mechanisms/instruments/convention-rights-child',
+  verified:true, verifiedAt:'2026-08-29',
+  verificationBasis:'canonical_public_record: adopted 1989-11-20, entered into force 1990-09-02',
   scope:['minors','best_interests','participation','protection'],
-  unverifiedFields:[],
-  note:'Basis for treating child/youth safety as structural rather than a wording variant.' });
+  note:'Basis for treating child/youth safety as structural. Entered into force 1990-09-02.' });
 
 coachingRegisterSource('kcs.standards', {
   title:'International Child Safeguarding Standards', issuingBody:'Keeping Children Safe',
-  version:null, effectiveDate:null, url:'https://www.keepingchildrensafe.global/',
+  sourceType:'safeguarding_standards', version:null, publicationDate:null,
+  officialUrl:'https://www.keepingchildrensafe.global/international-child-safeguarding-standards/',
+  verified:true, verifiedAt:'2026-08-29',
+  verificationBasis:'first_party_url_reachable (HTTP 200); edition/version deliberately not asserted',
+  unverifiedFields:['version','publicationDate','revisionDate'],
   scope:['minors','safeguarding','escalation','reporting'],
-  unverifiedFields:['version','effectiveDate'],
-  note:'Used for the shape of a safeguarding response (recognise, respond, report, record), not for any reproduced wording.' });
+  note:'A professional safeguarding reference, NOT law. Used for the shape of a response (recognise, respond, report, record).' });
 
 /* ── 2) Derived principles (our own words) ───────────────────────────────── */
 var COACHING_PRINCIPLES = {};
@@ -246,7 +269,7 @@ function coachingEthicsSelfCheck(){
     principles: coachingPrincipleIds(),
     standards: coachingPrinciplesOfKind('PROFESSIONAL_STANDARD'),
     policies: coachingPrinciplesOfKind('FOCUSUP_PRODUCT_POLICY'),
-    needsVerification: coachingSourcesNeedingVerification().map(function(x){ return x.id; }),
+    needsVerification: coachingSourcesNeedingVerification().map(function(x){ return x.sourceId; }),
     derivedOnlyPurposes: COACHING_DERIVED_ONLY_PURPOSES.slice(),
     consentPurposes: COACHING_CONSENT_PURPOSES.slice()
   };
@@ -255,7 +278,7 @@ function coachingEthicsSelfCheck(){
 if(typeof window!=='undefined'){
   window.COACHING_ETHICS_VERSION=COACHING_ETHICS_VERSION;
   window.COACHING_PRINCIPLE_KIND=COACHING_PRINCIPLE_KIND;
-  window.COACHING_SOURCES=COACHING_SOURCES; window.COACHING_PRINCIPLES=COACHING_PRINCIPLES;
+  window.COACHING_SOURCE_TYPES=COACHING_SOURCE_TYPES; window.COACHING_SOURCES=COACHING_SOURCES; window.COACHING_PRINCIPLES=COACHING_PRINCIPLES;
   window.COACHING_DISCLOSURE_PURPOSES=COACHING_DISCLOSURE_PURPOSES;
   window.COACHING_DERIVED_ONLY_PURPOSES=COACHING_DERIVED_ONLY_PURPOSES;
   window.COACHING_CONSENT_PURPOSES=COACHING_CONSENT_PURPOSES;
