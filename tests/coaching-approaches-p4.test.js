@@ -414,7 +414,7 @@ describe('G. Full chain, privacy and static guards', () => {
     assert.equal(sb.D.coaching.length, 1);
     assert.equal(sb.D.coaching[0].title, 'OKR Sistemi');
     assert.equal(sb.D.questions.length, 1);
-    assert.equal(sb.COACHING.enabled, false);
+    assert.equal(sb.COACHING.enabled, true);   // live since Phase 5
     const ui = fs.readFileSync(path.join(ROOT, 'js', '08-ui-core.js'), 'utf8');
     const navBlock = ui.slice(ui.indexOf('var NAV=['), ui.indexOf('function renderNav'));
     assert.equal((navBlock.match(/\{id:'/g) || []).length, 31);
@@ -436,10 +436,10 @@ describe('G. Full chain, privacy and static guards', () => {
     ['18-coaching-ethics.js', '23-coaching-suggest.js', '24-coaching-approaches.js',
      '25-coaching-router.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p4'), f));
-    ['17-coaching-domain.js', '26-coaching-archive.js'].forEach(f =>
-      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5'), f));
+    assert.match(INDEX, /26-coaching-archive\.js\?v=2026\.08-coaching-p5/);
+    assert.match(INDEX, /17-coaching-domain\.js\?v=2026\.08-coaching-on/);   // bumped at activation
     // no coaching module ships without a tag
     (INDEX.match(/js\/\d+[a-z]?-coaching-[^"]*/g) || []).forEach(src =>
-      assert.match(src, /\?v=2026\.08-coaching-p\d/, src));
+      assert.match(src, /\?v=2026\.08-coaching-(p\d[a-z]?|on)/, src));
   });
 });

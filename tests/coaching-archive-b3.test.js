@@ -209,8 +209,12 @@ describe('B3-5. Restore validates but never persists', () => {
   });
   test('17. writing still has to pass the Phase 1 chokepoint', () => {
     const sb = owner(createSandbox());
+    sb.COACHING.enabled = false;                 // the flag is one link of the chain
     assert.equal(sb.coachingAssertWritable('write').allowed, false);
     assert.equal(sb.coachingAssertWritable('write').reason, 'feature_disabled');
+    sb.COACHING.enabled = true;                  // ...and with it on, the safety gate still owns the decision
+    assert.equal(sb.coachingAssertWritable('write').allowed, false);
+    assert.equal(sb.coachingAssertWritable('write').reason, 'insufficient_context');
     assert.equal(/coachingAssertWritable\(|coachingSessionsCol\(|\w\.set\(|\.doc\(|\.collection\(/.test(exec(SRC26)), false);
   });
 });

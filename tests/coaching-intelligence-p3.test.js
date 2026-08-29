@@ -471,7 +471,7 @@ describe('X. Privacy, safety, legacy and static guards', () => {
     const routes = boot.slice(boot.indexOf('var pages={'), boot.indexOf('var fn=pages[tab]'));
     assert.equal(/coachingSuggest|coachingIntervention|interventions:|suggest:|antipattern/i.test(routes), false);
     assert.match(routes, /questions:function\(\)\{renderGenericList\('questions'\);\}/);  // the legacy route, unchanged
-    assert.equal(sb.COACHING.enabled, false);
+    assert.equal(sb.COACHING.enabled, true);   // live since Phase 5
   });
   test('X7. mirrors byte-identical, modules under the size limit, wired once', () => {
     P3_FILES.forEach(f => {

@@ -427,12 +427,16 @@ describe('E. Safety gate cannot be bypassed', () => {
 
 /* ── F. Feature flag ──────────────────────────────────────────────────────── */
 describe('F. Feature flag', () => {
-  test('F1. default is OFF', () => {
-    assert.equal(createSandbox().COACHING.enabled, false);
-    assert.match(SRC, /var COACHING = \{ enabled:false \}/);
+  test('F1. the flag ships ON, and turning it off still denies everything', () => {
+    assert.equal(createSandbox().COACHING.enabled, true);
+    assert.match(SRC, /var COACHING = \{ enabled:true \}/);
+    const sb = createSandbox(); signedIn(sb, 'U1'); allowGate(sb);
+    sb.COACHING.enabled = false;
+    deq(sb.coachingAssertWritable('write'), { allowed: false, reason: 'feature_disabled' });
   });
   test('F2. OFF denies every write, even for a fully capable owner with a gate', () => {
     const sb = createSandbox(); signedIn(sb, 'U1'); allowGate(sb);
+    sb.COACHING.enabled = false;
     deq(sb.coachingAssertWritable('write'), { allowed: false, reason: 'feature_disabled' });
   });
   test('F3. flag ON is not authorization — an ungranted member is still denied', () => {
@@ -444,6 +448,7 @@ describe('F. Feature flag', () => {
   test('F4. denial order is flag → owner → capability → safety', () => {
     const sb = createSandbox();
     sb.CLOUD.uid = null; sb.CLOUD.user = null;
+    sb.COACHING.enabled = false;
     assert.equal(sb.coachingAssertWritable('write').reason, 'feature_disabled');
     sb.COACHING.enabled = true;
     assert.equal(sb.coachingAssertWritable('write').reason, 'owner_unresolved');
@@ -453,6 +458,7 @@ describe('F. Feature flag', () => {
   });
   test('F5. exercising the whole public surface while OFF leaves D byte-identical', () => {
     const sb = createSandbox(); signedIn(sb, 'U1');
+    sb.COACHING.enabled = false;
     const before = sb.canonicalStringify(sb.D);
     sb.coachingSelfCheck();
     sb.coachingBuildSession({ title: 'x', context: 'child', tags: ['a'] });
@@ -752,9 +758,9 @@ describe('M. Self-check', () => {
     const sb = createSandbox(); signedIn(sb, 'U1');
     const c = sb.coachingSelfCheck();
     assert.equal(c.schemaVersion, 1);
-    assert.equal(c.featureEnabled, false);
+    assert.equal(c.featureEnabled, true);   // shipped ON in Phase 5
     assert.equal(c.safetyGateInstalled, true);   // Phase 2 installs the real gate at load
-    assert.equal(c.writable, false);            // ...and the flag being OFF still denies
+    assert.equal(c.writable, false);            // ...but no safety gate decision yet, so still denied
     assert.equal(c.privacyDefault, 'private');
     assert.equal(c.storeCount, 0);
     assert.equal(c.legacyCount, 1);

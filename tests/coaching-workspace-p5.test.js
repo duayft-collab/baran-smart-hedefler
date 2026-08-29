@@ -707,15 +707,14 @@ describe('G. Privacy, legacy and gates', () => {
     assert.match(boot, /coaching:function\(\)\{renderGenericList\('coaching'\);\}/);
     assert.match(boot, /questions:function\(\)\{renderGenericList\('questions'\);\}/);
   });
-  test('G4. with the flag OFF no navigation entry is injected', () => {
-    const sb = createSandbox();                    // default flag OFF
-    assert.equal(sb.COACHING.enabled, false);
-    assert.equal(sb.coachingWorkspaceSelfCheck().navInjected, false);
+  test('G4. the workspace is live and the menu is not doubled', () => {
+    const sb = createSandbox();
+    assert.equal(sb.COACHING.enabled, true);       // shipped ON
     const ui = F('08-ui-core.js');
     const navBlock = ui.slice(ui.indexOf('var NAV=['), ui.indexOf('function renderNav'));
+    // the base menu is untouched; the workspace REPLACES the legacy item at runtime
     assert.equal((navBlock.match(/\{id:'/g) || []).length, 31);
     assert.equal(/coachhome|coachsession/.test(navBlock), false);
-    // the injection exists but is gated
     assert.match(code(SRC28), /coachingEnabled\(\)/);
   });
   test('G4b. activation replaces the legacy menu entry rather than adding a rival', () => {
@@ -741,8 +740,9 @@ describe('G. Privacy, legacy and gates', () => {
     assert.equal(INDEX, fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8'));
     ['26-coaching-archive.js', '12-render-boot.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5'), f));
+    assert.match(INDEX, /17-coaching-domain\.js\?v=2026\.08-coaching-on/);
     ['27-coaching-session-store.js', '28-coaching-workspace.js', '29-coaching-live.js',
-     '17-coaching-domain.js', '17b-coaching-client.js'].forEach(f =>
+     '17b-coaching-client.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5c'), f));
     assert.ok(INDEX.indexOf('17b-coaching-client.js') < INDEX.indexOf('27-coaching-session-store.js'));
     // load order: store before shell before live, all before render-boot

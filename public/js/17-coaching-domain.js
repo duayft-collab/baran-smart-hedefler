@@ -25,8 +25,11 @@
    Ethics/Boundaries/Safeguarding layer once that layer exists.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Master feature flag. DEFAULT OFF. Not a security boundary. ── */
-var COACHING = { enabled:false };
+/* ── Master feature flag. Not a security boundary — Firestore Rules are.
+   Turned ON in Phase 5 after the workspace, real persistence, the offline
+   contract and the non-persistent coaching client were production-verified.
+   Setting it to false still denies every write at the chokepoint. ── */
+var COACHING = { enabled:true };
 
 var COACHING_SCHEMA_VERSION = 1;
 var COACHING_MODULE = 'coaching';
