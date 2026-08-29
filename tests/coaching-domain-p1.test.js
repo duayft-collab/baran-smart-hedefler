@@ -229,11 +229,14 @@ describe('C. Context and approach registries', () => {
     ['', 'A', 'Career', '1x', 'a', 'with space', 'with-dash', null, 5, 'x'.repeat(40)].forEach(k =>
       assert.equal(sb.coachingRegisterContext(k).ok, false, String(k)));
   });
-  test('C5. no methodology/content library ships in Phase 1', () => {
+  test('C5. Phase 1 declares the approach registry but ships no content into it', () => {
     const sb = createSandbox();
-    deq(sb.coachingApproachKeys(), []);
-    assert.equal(sb.coachingValidApproach('grow'), false);
+    // the module under test contributes nothing; Phase 4 fills the same registry
+    assert.equal(/coachingRegisterApproach\('/.test(SRC), false);
+    assert.equal(sb.coachingValidApproach('grow'), false);          // lower-case is not an id
     assert.equal(sb.coachingBuildSession({ approach: 'grow' }).session.approach, null);
+    assert.equal(sb.coachingValidApproach('GROW'), true);           // filled by Phase 4
+    assert.equal(sb.coachingBuildSession({ approach: 'GROW' }).session.approach, 'GROW');
   });
   test('C6. context and methodology are separate namespaces and cannot shadow', () => {
     const sb = createSandbox();
@@ -635,7 +638,8 @@ describe('J. Backup decision', () => {
     assert.equal(p.included, false);
     assert.equal(p.count, 0);
     deq(p.records, []);
-    assert.equal(p.policy.reason, 'phase1_privacy_hold');
+    assert.equal(p.policy.reason, 'excluded_by_design_use_scoped_export');
+    assert.equal(p.policy.channel, 'coachingExport');
     assert.equal(p.policy.includedInStateBackup, false);
     assert.equal(p.policy.includedInLocalJsonExport, false);
     assert.equal(p.policy.registeredInDiffSchema, false);
@@ -747,7 +751,7 @@ describe('M. Self-check', () => {
     assert.equal(c.storeCount, 0);
     assert.equal(c.legacyCount, 1);
     assert.equal(c.inPayload, false);
-    deq(c.approaches, []);
+    assert.equal(c.approaches.length, 10);                 // filled by Phase 4, same registry
     assert.equal(c.backup.includedInStateBackup, false);
   });
   test('M2. self-check is pure', () => {

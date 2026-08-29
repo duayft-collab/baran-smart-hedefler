@@ -24,6 +24,10 @@ function deq(a, e, m) { assert.deepEqual(JSON.parse(JSON.stringify(a)), e, m); }
    headers, so comments are stripped before those regexes run. */
 function code(src) { return src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1 '); }
 const C17 = code(SRC17), C18 = code(SRC18), C19 = code(SRC19);
+/* Executable code only: comments AND string literals removed, so prose that
+   merely contains a token is not mistaken for code that uses it. */
+function exec(src) { return code(src).replace(/'(\\.|[^'\\])*'|"(\\.|[^"\\])*"/g, "''"); }
+const X18 = exec(SRC18), X19 = exec(SRC19);
 function sess(sb, over) {
   const r = sb.coachingBuildSession(Object.assign({ context: 'adult' }, over || {}), FIXED);
   assert.equal(r.ok, true, JSON.stringify(r.errors));
@@ -358,7 +362,9 @@ describe('P. Privacy of safety decisions and derived learning', () => {
   });
   test('P7. B3 still holds: no automatic broad backup or export', () => {
     const sb = createSandbox();
-    assert.equal(sb.COACHING_BACKUP_POLICY.reason, 'phase1_privacy_hold');
+    // B3 is closed by a dedicated scoped channel — the legacy D paths stay shut.
+    assert.equal(sb.COACHING_BACKUP_POLICY.reason, 'excluded_by_design_use_scoped_export');
+    assert.equal(sb.COACHING_BACKUP_POLICY.channel, 'coachingExport');
     assert.equal(sb.COACHING_BACKUP_POLICY.includedInStateBackup, false);
     assert.equal(sb.COACHING_BACKUP_POLICY.includedInLocalJsonExport, false);
     assert.equal(sb.coachingBackupProvider().included, false);
@@ -478,8 +484,12 @@ describe('E. Professional sources and derived principles', () => {
   });
   test('E2. the ICF referral resource stays honestly unresolved (never fabricated)', () => {
     const sb = createSandbox();
-    const pending = sb.coachingSourcesNeedingVerification();
-    deq(pending.map(p => p.sourceId), ['icf.referral']);      // Y1: everything else is closed
+    const pending = sb.coachingSourcesNeedingVerification().map(p => p.sourceId);
+    assert.ok(pending.indexOf('icf.referral') >= 0);
+    // Y1: every source the owner verified stays verified; Phase 4 framework
+    // provenance records are honestly unverified rather than dressed up.
+    ['icf.ethics', 'icf.competencies', 'emcc.ac.ethics', 'un.crc', 'kcs.standards']
+      .forEach(id => assert.equal(pending.indexOf(id), -1, id));
     const ref = sb.coachingSource('icf.referral');
     assert.equal(ref.verified, false);
     assert.equal(ref.officialUrl, null);
@@ -536,17 +546,26 @@ describe('R. No live UI, mirrors and static guards', () => {
     assert.equal(/coachingSession|COACHING_|safeguard/i.test(ui), false);
     assert.equal(/coachingSession|COACHING_|safeguard/i.test(boot), false);
     assert.equal((ui.match(/\{id:'coaching'/g) || []).length, 1);   // the legacy entry, unchanged
-    [C18, C19].forEach((src, i) => {
+    [X18, X19].forEach((src, i) => {
       assert.equal(/renderPage|gotoTab|\bsh\(|innerHTML|document\./.test(src), false, 'module ' + i);
       assert.equal(/NAV\s*=|nav-root/.test(src), false, 'module ' + i);
     });
   });
   test('R2. no question bank, approach router, academy, simulator or mirror shipped', () => {
     const sb = createSandbox();
-    deq(sb.coachingApproachKeys(), []);                     // Phase 4 still owns approaches
+    // Phase 4 has since filled the approach registry Phase 1 declared — via the
+    // SAME registry, not a second one. Phase 2 itself still ships none.
+    assert.equal(sb.coachingApproachKeys().length, 10);
+    assert.equal(/coachingRegisterApproachDef|coachingRegisterApproach\s*\(/.test(C18 + C19), false);
     // Phase 2 itself ships no interventions; every policy comes from the Phase 3 modules
     assert.equal(/coachingRegisterIntervention\s*\(/.test(C18 + C19), false);
-    assert.equal(/GROW|solution.focused|motivational.interview|socratic/i.test(C18 + C19), false);
+    // the safeguard ENGINE stays methodology-free
+    assert.equal(/GROW|solution.focused|motivational.interview|socratic/i.test(C19), false);
+    // 18 now holds Phase 4 framework PROVENANCE in the shared source registry
+    // (instruction: one source registry, not two) — metadata only, no content
+    assert.ok(sb.coachingSource('whitmore.performance'));
+    assert.ok(sb.coachingSource('mi.mint'));
+    assert.equal(/compatiblePurposes|preferredInterventionTypes|tagPurposes|coachingRouteApproaches/.test(C18), false);
   });
   test('R3. the modules perform no I/O of any kind', () => {
     [[C18, '18'], [C19, '19']].forEach(([src, n]) => {

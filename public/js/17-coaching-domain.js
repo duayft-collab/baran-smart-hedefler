@@ -97,8 +97,11 @@ coachingRegisterContext('executive', {label:'Yönetici'});
    and methodology can never be conflated in the schema.
    ══════════════════════════════════════════════════════════════════════════ */
 var COACHING_APPROACHES = {};
+/* Approach ids are canonical upper-case identifiers (GROW, VALUES_BASED, ...);
+   context keys stay strictly lower-case, so the two namespaces cannot collide. */
+var COACHING_APPROACH_KEY_RE = /^[A-Za-z][A-Za-z0-9_]{1,39}$/;
 function coachingRegisterApproach(key, def){
-  if(typeof key!=='string' || !COACHING_KEY_RE.test(key)) return {ok:false,error:'INVALID_APPROACH_KEY'};
+  if(typeof key!=='string' || !COACHING_APPROACH_KEY_RE.test(key)) return {ok:false,error:'INVALID_APPROACH_KEY'};
   if(_coHas(COACHING_CONTEXTS,key)) return {ok:false,error:'APPROACH_SHADOWS_CONTEXT'};
   def = def || {};
   COACHING_APPROACHES[key] = { key:key, label:_coStr(def.label||key,80), addedIn:_coStr(def.addedIn||'',24) };
@@ -458,7 +461,11 @@ var COACHING_BACKUP_POLICY = {
   includedInStateBackup:false,
   includedInLocalJsonExport:false,
   registeredInDiffSchema:false,
-  reason:'phase1_privacy_hold',
+  /* B3 CLOSED in Phase 4: coaching data still never enters the legacy D backup
+     or the plaintext local export — it has its own scoped, consent-gated,
+     encrypted channel instead (26-coaching-archive.js). */
+  reason:'excluded_by_design_use_scoped_export',
+  channel:'coachingExport',
   requiredBeforeInclusion:['explicit_user_consent','scoped_or_encrypted_export','phase2_safeguard_classification']
 };
 function coachingBackupProvider(){
@@ -521,6 +528,7 @@ if(typeof window!=='undefined'){
   window.coachingRegisterContext=coachingRegisterContext; window.coachingContext=coachingContext;
   window.coachingContextKeys=coachingContextKeys; window.coachingValidContext=coachingValidContext;
   window.coachingContextIsMinor=coachingContextIsMinor;
+  window.COACHING_APPROACH_KEY_RE=COACHING_APPROACH_KEY_RE;
   window.coachingRegisterApproach=coachingRegisterApproach; window.coachingApproachKeys=coachingApproachKeys;
   window.coachingValidApproach=coachingValidApproach;
   window.coachingValidLifecycle=coachingValidLifecycle; window.coachingIsTerminal=coachingIsTerminal;

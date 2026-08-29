@@ -23,7 +23,8 @@ var _CS_W = {
   stageMatch:3, stageMiss:-1, purposeMatch:4, depthBase:2,
   competency:1, sameTypeAsLast:-3, sameTypeTwice:-5, alreadyUsed:-6, samePurposeRecent:-2,
   spaceAfterQuestions:5, questionAfterQuestions:-3, stackedChallenge:-8,
-  spaceAfterRealization:5, questionAfterRealization:-3, mediumRisk:-1
+  spaceAfterRealization:5, questionAfterRealization:-3, mediumRisk:-1,
+  approachMatch:4, approachMismatch:-1
 };
 
 function _sgArr(v){ return Array.isArray(v) ? v : []; }
@@ -73,6 +74,14 @@ function _sgScore(x, ctx){
     else if(x.isQuestion) add(_CS_W.questionAfterRealization, null);
   }
   if(x.riskLevel==='medium') add(_CS_W.mediumRisk, null);
+  /* Phase 4: an approach WEIGHTS the canonical registry, it never replaces it.
+     An untagged move is only nudged, never excluded — the ranker still owns the
+     final say, and safety still owns the ranker. */
+  if(ctx.approach){
+    if(x.compatibleApproaches && x.compatibleApproaches.indexOf(ctx.approach)>=0)
+      add(_CS_W.approachMatch, 'Önerilen yaklaşımla ("'+ctx.approach+'") uyumlu.');
+    else add(_CS_W.approachMismatch, null);
+  }
   return {score:score, reasons:reasons};
 }
 
@@ -121,7 +130,8 @@ function coachingSuggestMoves(input){
     recentTypes:types, questionRun:_sgQuestionRun(types),
     recentPurposes:_sgArr(input.recentMoves).map(function(m){ return m && m.purpose; }).filter(Boolean),
     usedIds:_sgArr(input.usedIds).map(String),
-    significantRealization: input.significantRealization===true
+    significantRealization: input.significantRealization===true,
+    approach: (typeof coachingApproach==='function' && input.approach && coachingApproach(input.approach)) ? input.approach : null
   };
   var scored = eligible.map(function(x){
     var s = _sgScore(x, ctx);
@@ -161,7 +171,7 @@ function coachingSuggestMoves(input){
   if(!suggestions.length) notes.push('Bu bağlam ve kısıtlarla uygun hamle bulunamadı.');
 
   return { allowed:true, safety:safety, suggestions:suggestions, considered:considered,
-    context:context, stage:stage, notes:notes, version:COACHING_SUGGEST_VERSION };
+    context:context, stage:stage, approach:ctx.approach, notes:notes, version:COACHING_SUGGEST_VERSION };
 }
 
 function coachingSuggestSelfCheck(){

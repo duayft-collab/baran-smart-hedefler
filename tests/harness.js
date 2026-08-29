@@ -162,6 +162,9 @@ function createSandbox() {
   run(src('js/21-coaching-question-bank.js'), '21-coaching-question-bank.js');
   run(src('js/22-coaching-quality.js'), '22-coaching-quality.js');
   run(src('js/23-coaching-suggest.js'), '23-coaching-suggest.js');
+  run(src('js/24-coaching-approaches.js'), '24-coaching-approaches.js');
+  run(src('js/25-coaching-router.js'), '25-coaching-router.js');
+  run(src('js/26-coaching-archive.js'), '26-coaching-archive.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;

@@ -68,7 +68,10 @@ describe('R. Canonical intervention registry', () => {
     deq(sb.COACHING_STAGES, ['OPENING', 'CONTRACTING', 'EXPLORING', 'DEEPENING', 'AWARENESS',
       'OPTIONS', 'COMMITMENT', 'CLOSING', 'FOLLOW_UP']);
     assert.equal(/\bGROW\b|solution.focused|motivational.interview|socratic/i.test(code(SRC20) + code(SRC21) + code(SRC23)), false);
-    sb.coachingInterventionList().forEach(x => deq(x.compatibleApproaches, [], x.id)); // Phase 4 fills these
+    // Phase 3 declares the field and never fills it; Phase 4 owns the tagging
+    ['20-coaching-interventions.js', '21-coaching-question-bank.js'].forEach(f =>
+      assert.equal(/compatibleApproaches\s*(\.push|=\s*\[['"])/.test(code(F(f))), false, f));
+    assert.ok(sb.coachingInterventionList().some(x => x.compatibleApproaches.length > 0));
   });
   test('R6. every registration passes through the Phase 2 policy mechanism', () => {
     const sb = createSandbox();

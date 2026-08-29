@@ -124,6 +124,66 @@ coachingRegisterSource('kcs.standards', {
   scope:['minors','safeguarding','escalation','reporting'],
   note:'A professional safeguarding reference, NOT law. Used for the shape of a response (recognise, respond, report, record).' });
 
+/* ── PHASE 4 additions: the frameworks the approach library rests on ──
+   Framework provenance, not framework text. Book/paper records carry
+   verified:false because edition and identifier could not be confirmed offline
+   — they name where an idea comes from, and are never cited as proof. ── */
+coachingRegisterSource('whitmore.performance', {
+  title:'Coaching for Performance (the GROW structure)', issuingBody:'John Whitmore / Nicholas Brealey Publishing',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['grow','performance','structure'],
+  note:'Origin of the GROW sequence in coaching practice. Edition not confirmed offline; used as provenance only.' });
+coachingRegisterSource('sfbt.origin', {
+  title:'Solution-Focused Brief Therapy foundational practice', issuingBody:'Steve de Shazer and Insoo Kim Berg',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['solution_focused','exceptions','scaling','preferred_future'],
+  note:'THERAPY provenance. Evidence for SFBT as therapy does not transfer to solution-focused coaching without qualification.' });
+coachingRegisterSource('mi.mint', {
+  title:'Motivational Interviewing Network of Trainers', issuingBody:'MINT Inc.',
+  sourceType:'guidance', officialUrl:'https://motivationalinterviewing.org/',
+  verified:true, verifiedAt:'2026-08-29', verificationBasis:'first_party_url_reachable (HTTP 200)',
+  unverifiedFields:['version','publicationDate'],
+  scope:['motivational_interviewing','ambivalence','autonomy','change_talk'],
+  note:'Practitioner network for MI. MI originates in counselling; its coaching application is an adaptation.' });
+coachingRegisterSource('mi.miller_rollnick', {
+  title:'Motivational Interviewing (the four processes)', issuingBody:'William R. Miller and Stephen Rollnick / Guilford Press',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['motivational_interviewing','engaging','focusing','evoking','planning'],
+  note:'Provenance of the four-process model. Edition not confirmed offline.' });
+coachingRegisterSource('cbt.guided_discovery', {
+  title:'Guided discovery in cognitive therapy', issuingBody:'Cognitive therapy tradition (Beck and successors)',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['socratic','assumptions','evidence','alternative_perspective'],
+  note:'CLINICAL provenance. Coaching use is limited to non-clinical exploration of assumptions.' });
+coachingRegisterSource('strengths.via', {
+  title:'VIA Character Strengths', issuingBody:'VIA Institute on Character',
+  sourceType:'guidance', officialUrl:'https://www.viacharacter.org/',
+  verified:true, verifiedAt:'2026-08-29', verificationBasis:'first_party_url_reachable (HTTP 200)',
+  unverifiedFields:['version','publicationDate'],
+  scope:['strengths','capability','positive_psychology'],
+  note:'Strengths vocabulary. FocusUp does not administer or infer any strengths assessment.' });
+coachingRegisterSource('sdt.deci_ryan', {
+  title:'Self-Determination Theory (autonomy, competence, relatedness)', issuingBody:'Edward L. Deci and Richard M. Ryan',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['values','autonomy','motivation'],
+  note:'Motivational principle behind values-based and MI work. Automated probe blocked (403); not independently confirmed here.' });
+coachingRegisterSource('behaviour.change_science', {
+  title:'Behaviour change science: implementation intentions, cue-routine repetition and behavioural analysis',
+  issuingBody:'Behavioural science literature (no single issuing body)',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['behaviour_change','habits','environment','implementation_intentions'],
+  note:'A field, not a document. Recorded so the behaviour-change approach names its basis without citing a specific study.' });
+coachingRegisterSource('career.construction', {
+  title:'Career construction and planned-happenstance perspectives', issuingBody:'Career development literature',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['career','transition','decision_criteria'],
+  note:'Provenance for career coaching. FocusUp asserts no labour-market facts.' });
+coachingRegisterSource('narrative.practice', {
+  title:'Narrative practice (externalising and alternative stories)', issuingBody:'Michael White and David Epston',
+  sourceType:'guidance', verified:false, unverifiedFields:['version','publicationDate','officialUrl'],
+  scope:['narrative','identity','meaning'],
+  note:'THERAPY provenance. Coaching use stays non-clinical and stops at the Phase 2 boundary.' });
+
 /* ── 2) Derived principles (our own words) ───────────────────────────────── */
 var COACHING_PRINCIPLES = {};
 function coachingRegisterPrinciple(id, def){
