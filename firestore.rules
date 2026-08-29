@@ -43,6 +43,20 @@ service cloud.firestore {
         || (pilMember(caller, owner)
             && pilEntry(caller).permissions[module][cap] == true);
     }
+    /* Coaching = professional practice data about REAL third parties (adults,
+       employees, executives, adolescents, children). It is deliberately NOT
+       reachable through the generic 'state' capability: it uses its own module
+       key, which no default role preset contains (PIL_MODULES omits it), so a
+       member holding state.read gains NOTHING here. Missing keys are read with
+       .get() defaults so an absent permission DENIES quietly instead of raising
+       an evaluation error. Fail-closed at every step. */
+    function pilCoachingCan(caller, owner, cap) {
+      return caller == owner
+        || (pilMember(caller, owner)
+            && pilEntry(caller).permissions is map
+            && pilEntry(caller).permissions.get('coaching', {}) is map
+            && pilEntry(caller).permissions.get('coaching', {}).get(cap, false) == true);
+    }
 
     match /users/{userId} {
 
@@ -78,6 +92,25 @@ service cloud.firestore {
         allow read:    if request.auth != null && pilCan(request.auth.uid, userId, 'archive', 'read');
         allow create:  if request.auth != null && pilCan(request.auth.uid, userId, 'archive', 'backup');
         allow delete:  if request.auth != null && pilCan(request.auth.uid, userId, 'archive', 'restore');
+      }
+
+      /* ── Coaching Mastery OS (PHASE 1 foundation) ────────────────────────
+         Owner-only by default. The session document holds bounded metadata;
+         unbounded content (notes / interventions / reflections / observations /
+         commitments / transcript / attachments) lives in child collections that
+         inherit the SAME module-scoped capability — never a looser one. No
+         public access, no unauthenticated access, no cross-owner access, and no
+         inheritance from app/state sharing. */
+      match /coachingSessions/{sessionId} {
+        allow read:            if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'read');
+        allow create, update:  if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'write');
+        allow delete:          if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'delete');
+
+        match /{childCollection}/{childDoc} {
+          allow read:            if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'read');
+          allow create, update:  if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'write');
+          allow delete:          if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'delete');
+        }
       }
     }
   }

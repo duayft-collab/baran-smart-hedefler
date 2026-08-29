@@ -152,6 +152,11 @@ function createSandbox() {
 
   run(src('js/11-restore-ui.js'), '11-restore-ui.js');
 
+  /* COACHING-P1: domain/privacy foundation. Loaded LAST so it cannot influence the
+     load order any existing suite depends on. Side-effect free apart from registering
+     the canonical 'coachingSession' relation resolver. */
+  run(src('js/17-coaching-domain.js'), '17-coaching-domain.js');
+
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;
   sandbox.__getElements = () => elements;
