@@ -35,6 +35,19 @@ function newCoachingEventId(){ return 'ev_'+Date.now().toString(36)+'-'+_csvSeq(
 /* Never surface a raw backend error: it can carry paths, ids or payload echoes. */
 function _csvFail(code){ return {ok:false, error:code}; }
 
+/* ── Did the SERVER take it? ──
+   Offline persistence makes set() resolve from the local cache, so a plain
+   "it resolved" is not the same as "it is stored". hasPendingWrites tells us
+   the write is still queued locally, and the UI must say so rather than claim
+   the note is saved. Unknown counts as unconfirmed — we never over-claim. */
+async function coachingWriteConfirmed(ref){
+  try{
+    var snap = await ref.get();
+    if(!snap || !snap.metadata) return true;              // no metadata surface → trust the resolve
+    return snap.metadata.hasPendingWrites !== true;
+  }catch(e){ return false; }
+}
+
 function coachingSessionDoc(sessionId){
   var col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null;
   if(!col || !coachingValidId(sessionId)) return null;
@@ -83,8 +96,9 @@ async function coachingSessionCreate(input){
     if(existing && existing.exists) return _csvFail('id_conflict');
     await ref.set(rec);
   }catch(e){ return _csvFail('write_failed'); }
+  var confirmed = await coachingWriteConfirmed(ref);
   await coachingRecordEvent(rec, {type:'SESSION_STARTED'});
-  return {ok:true, session:rec};
+  return {ok:true, session:rec, confirmed:confirmed};
 }
 
 /* ── Bounded patch of the session document ── */
@@ -109,7 +123,7 @@ async function coachingSessionPatch(session, patch, event){
   var ref = coachingSessionDoc(next.id);
   if(!ref) return _csvFail('storage_unavailable');
   try{ await ref.set(next, {merge:true}); }catch(e){ return _csvFail('write_failed'); }
-  return {ok:true, session:next};
+  return {ok:true, session:next, confirmed:await coachingWriteConfirmed(ref)};
 }
 
 /* ── Event log: shape only, never speech ── */
@@ -148,7 +162,10 @@ async function coachingSaveNote(session, text){
   if(!ref) return _csvFail('storage_unavailable');
   var rec = { id:'current', body:body, updatedAt:_csvNow(), length:body.length };
   try{ await ref.set(rec); }catch(e){ return _csvFail('write_failed'); }
-  return {ok:true, note:rec};
+  var confirmed = await coachingWriteConfirmed(ref);
+  /* queued locally but not stored yet — the caller must not report "saved" */
+  if(!confirmed) return {ok:false, error:'write_pending', note:rec, queued:true};
+  return {ok:true, note:rec, confirmed:true};
 }
 async function coachingLoadNote(sessionId){
   var ref = coachingChildDoc(sessionId, 'notes', 'current');
@@ -336,7 +353,7 @@ if(typeof window!=='undefined'){
   window.COACHING_PATCHABLE=COACHING_PATCHABLE; window.COACHING_NOTE_MAX=COACHING_NOTE_MAX;
   window.newCoachingEventId=newCoachingEventId;
   window.coachingSessionDoc=coachingSessionDoc; window.coachingChildDoc=coachingChildDoc;
-  window.coachingWriteGuard=coachingWriteGuard;
+  window.coachingWriteGuard=coachingWriteGuard; window.coachingWriteConfirmed=coachingWriteConfirmed;
   window.coachingSessionCreate=coachingSessionCreate; window.coachingSessionPatch=coachingSessionPatch;
   window.coachingRecordEvent=coachingRecordEvent; window.coachingSaveNote=coachingSaveNote;
   window.coachingLoadNote=coachingLoadNote; window.coachingUseIntervention=coachingUseIntervention;

@@ -39,14 +39,14 @@ function coachingApproachLabel(id){
 }
 
 /* ── Runtime UI state. Memory only: no localStorage coaching database. ── */
-var COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:false,
+var COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:false, savePending:false,
   error:null, notice:null, sessions:[], ctx:{}, routed:null, moves:[], usedIds:[],
   recentMoves:[], startedAt:null, timer:null, libraryOpen:false, libraryFilter:{},
   draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' }, busy:false };
 
 function coachingUiReset(){
   if(COACHING_UI.timer){ clearInterval(COACHING_UI.timer); COACHING_UI.timer = null; }
-  COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:false,
+  COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:false, savePending:false,
     error:null, notice:null, sessions:[], ctx:{}, routed:null, moves:[], usedIds:[],
     recentMoves:[], startedAt:null, timer:null, libraryOpen:false, libraryFilter:{},
     draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' }, busy:false };
@@ -72,6 +72,7 @@ var COACHING_L_ERROR = {
   owner_unresolved:'Hesap doğrulanamadı. Yeniden giriş yapmayı dene.',
   storage_unavailable:'Bağlantı hazır değil. Birazdan tekrar dene.',
   write_failed:'Kaydedilemedi. Notun ekranda duruyor; tekrar dene.',
+  write_pending:'Kaydedilemedi — bağlantı bekleniyor. Notun ekranda duruyor; bağlantı gelince tekrar dene.',
   read_failed:'Okunamadı. Birazdan tekrar dene.',
   not_found:'Görüşme bulunamadı.',
   id_conflict:'Bu görüşme zaten var.',
@@ -159,7 +160,9 @@ function renderCoachingHome(){
     });
     h += '</tbody></table></div>';
   }
-  h += '<div style="margin-top:20px;text-align:right">'+
+  h += '<div style="margin-top:20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
+    (coachingLegacyCount()?('<button class="btn btn-g btn-sm" onclick="gotoTab(\'coaching\')">'+
+      _cuIc('arc',12,'var(--t3)')+' Eski koçluk notlarım ('+coachingLegacyCount()+')</button>'):'')+
     '<button class="btn btn-g btn-sm" onclick="coachingOpenPrivacy()">'+_cuIc('sh',12,'var(--t3)')+' Gizlilik ve Dışa Aktarma</button></div>';
   h += '</div>';
   sh('pinner', h);
@@ -293,11 +296,17 @@ function coachingWorkspaceSelfCheck(){
   if(typeof coachingEnabled!=='function' || !coachingEnabled()) return;
   if(typeof NAV==='undefined' || !Array.isArray(NAV)) return;
   for(var i=0;i<NAV.length;i++){
-    if(NAV[i].sec==='secKnow'){
-      NAV[i].items.push({id:'coachhome', l:'Koçluk Çalışma Alanı', i:'us'});
-      coachingWorkspaceSelfCheck._nav = true;
-      break;
+    if(NAV[i].sec!=='secKnow') continue;
+    var items = NAV[i].items;
+    /* One Koçluk destination, not two competing ones. The professional
+       workspace REPLACES the legacy entry in the menu; the legacy route and
+       D.coaching records stay exactly where they are and remain reachable
+       from the workspace as an archive. */
+    for(var j=0;j<items.length;j++){
+      if(items[j].id==='coaching'){ items[j] = {id:'coachhome', l:'Koçluk', i:'us'}; coachingWorkspaceSelfCheck._nav = true; break; }
     }
+    if(!coachingWorkspaceSelfCheck._nav){ items.push({id:'coachhome', l:'Koçluk', i:'us'}); coachingWorkspaceSelfCheck._nav = true; }
+    break;
   }
 })();
 

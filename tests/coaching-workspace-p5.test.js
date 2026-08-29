@@ -26,7 +26,8 @@ function fakeDb() {
   function docRef(p) {
     return {
       _path: p,
-      get() { return Promise.resolve({ exists: Object.prototype.hasOwnProperty.call(store, p), data() { return store[p]; }, ref: docRef(p) }); },
+      get() { return Promise.resolve({ exists: Object.prototype.hasOwnProperty.call(store, p), data() { return store[p]; }, ref: docRef(p),
+        metadata: { hasPendingWrites: !!store.__offline, fromCache: !!store.__offline } }); },
       set(d, o) { store[p] = (o && o.merge) ? Object.assign({}, store[p], JSON.parse(JSON.stringify(d))) : JSON.parse(JSON.stringify(d)); return Promise.resolve(); },
       update(d) { store[p] = Object.assign({}, store[p], JSON.parse(JSON.stringify(d))); return Promise.resolve(); },
       delete() { delete store[p]; return Promise.resolve(); },
@@ -48,6 +49,7 @@ function fakeDb() {
           return q.order.d === 'desc' ? (A < B ? 1 : A > B ? -1 : 0) : (A < B ? -1 : A > B ? 1 : 0);
         });
         keys = keys.slice(0, q.limit);
+        keys = keys.filter(k => k.indexOf('__offline') < 0);
         return Promise.resolve({
           size: keys.length,
           forEach(cb) { keys.forEach(k => cb({ id: k.slice(pre.length), data() { return store[k]; }, ref: docRef(k) })); }
@@ -267,6 +269,87 @@ describe('C. Persistence, notes and events', () => {
     assert.equal(res.ok, true);
     assert.equal(res.session.lifecycle, 'cancelled');
     assert.ok(sb.CLOUD.db._store['users/OWNER1/coachingSessions/' + a.session.id]);
+  });
+});
+
+/* ── OFFLINE / FAILURE (P5-4) ─────────────────────────────────────────────── */
+describe('C2. Offline behaviour never claims a save it did not get', () => {
+  test('C2a. a locally queued write is reported as NOT saved', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    const online = await sb.coachingSaveNote(a.session, 'cevrimici not');
+    assert.equal(online.ok, true);
+    assert.equal(online.confirmed, true);
+
+    sb.CLOUD.db._store.__offline = true;              // Firestore resolves from cache
+    const offline = await sb.coachingSaveNote(a.session, 'cevrimdisi not');
+    assert.equal(offline.ok, false, 'a queued write must not report success');
+    assert.equal(offline.error, 'write_pending');
+    assert.equal(offline.queued, true);
+    // the content is still in the local queue, so nothing was lost
+    assert.equal(sb.CLOUD.db._store['users/OWNER1/coachingSessions/' + a.session.id + '/notes/current'].body, 'cevrimdisi not');
+  });
+  test('C2b. the coach is told, in plain words, that it is not saved', () => {
+    const sb = createSandbox();
+    const msg = sb.coachingErrorText('write_pending');
+    assert.ok(msg.indexOf('Kaydedilemedi') >= 0, msg);
+    assert.ok(msg.indexOf('bağlantı') >= 0, msg);
+    assert.equal(/[a-z]_[a-z]|Firebase|Firestore|PERMISSION/.test(msg), false, msg);
+  });
+  test('C2c. the live indicator shows pending and offers a retry', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    sb.COACHING_UI.session = a.session;
+    sb.COACHING_UI.startedAt = Date.now();
+    sb.tab = 'coachsession';
+    sb.CLOUD.db._store.__offline = true;
+    sb.COACHING_UI.note = 'kaybolmamali';
+    sb.ge('coach_note').value = 'kaybolmamali';        // the textarea the coach is typing into
+    await sb.coachingSaveNow(false);
+    assert.equal(sb.COACHING_UI.savePending, true);
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.ok(html.indexOf('Kaydedilemedi — bağlantı bekleniyor') >= 0);
+    assert.ok(html.indexOf('Tekrar Dene') >= 0);
+    assert.equal(html.indexOf('>Kayıtlı<'), -1);
+    assert.ok(html.indexOf('kaybolmamali') >= 0, 'the unsaved text must stay on screen');
+  });
+  test('C2d. reconnecting and retrying reports a real save', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    sb.COACHING_UI.session = a.session; sb.tab = 'coachsession';
+    sb.CLOUD.db._store.__offline = true;
+    sb.COACHING_UI.note = 'once basarisiz';
+    sb.ge('coach_note').value = 'once basarisiz';
+    await sb.coachingSaveNow(false);
+    assert.equal(sb.COACHING_UI.savePending, true);
+    delete sb.CLOUD.db._store.__offline;              // network back
+    await sb.coachingSaveNow(false);
+    assert.equal(sb.COACHING_UI.savePending, false);
+    assert.equal(sb.COACHING_UI.noteDirty, false);
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.ok(html.indexOf('Kayıtlı') >= 0);
+    const back = await sb.coachingLoadNote(a.session.id);
+    assert.equal(back.note.body, 'once basarisiz');   // what the UI claims matches storage
+  });
+  test('C2e. an unsaved note survives navigating away and back in-app', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    sb.COACHING_UI.session = a.session; sb.COACHING_UI.note = 'yazmakta oldugum';
+    sb.COACHING_UI.noteDirty = true; sb.tab = 'coachsession';
+    sb.renderCoachingLive();                          // as if returning to the tab
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.ok(html.indexOf('yazmakta oldugum') >= 0);
+  });
+  test('C2f. no unencrypted coaching shadow store is created anywhere', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW({ purpose: 'GIZLI_AMAC' }));
+    sb.CLOUD.db._store.__offline = true;
+    await sb.coachingSaveNote(a.session, 'GIZLI_NOT');
+    const ls = JSON.stringify(sb.localStorage);
+    assert.equal(ls.indexOf('GIZLI_NOT'), -1);
+    assert.equal(ls.indexOf('GIZLI_AMAC'), -1);
+    assert.equal(sb.canonicalStringify(sb.D).indexOf('GIZLI_NOT'), -1);
+    P5_FILES.forEach(f => assert.equal(/localStorage/.test(code(F(f))), false, f));
   });
 });
 
@@ -539,6 +622,14 @@ describe('G. Privacy, legacy and gates', () => {
     // the injection exists but is gated
     assert.match(code(SRC28), /coachingEnabled\(\)/);
   });
+  test('G4b. activation replaces the legacy menu entry rather than adding a rival', () => {
+    const src = code(SRC28);
+    assert.match(src, /items\[j\]\.id==='coaching'/);
+    assert.match(src, /id:'coachhome', l:'Koçluk'/);
+    // the legacy route and its data are never removed
+    assert.equal(/delete D\.coaching|D\.coaching\s*=/.test(code(SRC28) + code(SRC29)), false);
+    assert.match(code(SRC28), /gotoTab\(\\'coaching\\'\)/);   // archive link back to the old screen
+  });
   test('G5. the routes exist but are unreachable while the flag is OFF', () => {
     const boot = F('12-render-boot.js');
     assert.match(boot, /coachhome:function\(\)/);
@@ -554,6 +645,8 @@ describe('G. Privacy, legacy and gates', () => {
     assert.equal(INDEX, fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8'));
     ['17-coaching-domain.js', '26-coaching-archive.js', '12-render-boot.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5'), f));
+    P5_FILES.forEach(f =>
+      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5b'), f));
     // load order: store before shell before live, all before render-boot
     assert.ok(INDEX.indexOf('27-coaching-session-store.js') < INDEX.indexOf('28-coaching-workspace.js'));
     assert.ok(INDEX.indexOf('28-coaching-workspace.js') < INDEX.indexOf('29-coaching-live.js'));

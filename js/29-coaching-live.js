@@ -186,8 +186,9 @@ function renderCoachingLive(){
     '<span id="coach_elapsed" style="font-size:13px;font-variant-numeric:tabular-nums;color:var(--t2)">'+
     _cue(coachingElapsed(COACHING_UI.startedAt))+'</span>'+
     coachingStatusPill(s.lifecycle)+
-    '<span id="coach_save" style="font-size:11px;color:var(--t3)">'+
-    (COACHING_UI.saving?'Kaydediliyor…':(COACHING_UI.noteDirty?'Kaydedilmedi':'Kayıtlı'))+'</span>'+
+    '<span id="coach_save" style="font-size:11px;color:'+(COACHING_UI.savePending?'var(--orange)':'var(--t3)')+'">'+
+    _cue(COACHING_UI.saving?'Kaydediliyor…':(COACHING_UI.savePending?'Kaydedilemedi — bağlantı bekleniyor'
+      :(COACHING_UI.noteDirty?'Kaydedilmedi':'Kayıtlı')))+'</span>'+
     '</div></div>';
 
   if(COACHING_UI.error) h += coachingBanner('error', COACHING_UI.error);
@@ -209,7 +210,8 @@ function renderCoachingLive(){
     '<p id="coach_note_help" style="font-size:11px;color:var(--t3);margin-top:7px">'+
     'Bu senin çalışma notun — teşhis değil. Gerekmeyen hassas ayrıntıyı yazma.</p>'+
     '<div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">'+
-    '<button class="btn btn-s btn-sm" onclick="coachingSaveNow()">Kaydet</button>'+
+    '<button class="btn '+(COACHING_UI.savePending?'btn-p':'btn-s')+' btn-sm" onclick="coachingSaveNow()">'+
+    (COACHING_UI.savePending?'Tekrar Dene':'Kaydet')+'</button>'+
     '<button class="btn btn-p btn-sm" onclick="coachingOpenClose()">Görüşmeyi Kapat</button>'+
     '<button class="btn btn-g btn-sm" style="margin-left:auto" onclick="coachingCancelLive()">İptal</button>'+
     '</div></div>';
@@ -309,13 +311,16 @@ async function coachingSaveNow(silent){
   var res = await coachingSaveNote(s, COACHING_UI.note);
   COACHING_UI.saving = false;
   if(res.ok){
-    COACHING_UI.noteDirty = false; COACHING_UI.error = null;
-    _clSetSaveText('Kayıtlı');                       /* only after persistence returned */
+    COACHING_UI.noteDirty = false; COACHING_UI.savePending = false; COACHING_UI.error = null;
+    /* said only after the SERVER confirmed — a locally queued write is not saved */
+    _clSetSaveText('Kayıtlı');
     coachingRecordEvent(s, {type:'COACH_NOTE_UPDATED'});
-  }else{
-    COACHING_UI.error = coachingErrorText(res.error, res.reason);
-    _clSetSaveText('Kaydedilemedi');
     if(!silent) renderCoachingLive();
+  }else{
+    COACHING_UI.savePending = (res.error==='write_pending');
+    COACHING_UI.error = coachingErrorText(res.error, res.reason);
+    _clSetSaveText(COACHING_UI.savePending?'Kaydedilemedi — bağlantı bekleniyor':'Kaydedilemedi');
+    renderCoachingLive();
   }
   return res;
 }
