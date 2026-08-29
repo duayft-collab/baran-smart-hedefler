@@ -169,6 +169,9 @@ function createSandbox() {
   run(src('js/27-coaching-session-store.js'), '27-coaching-session-store.js');
   run(src('js/28-coaching-workspace.js'), '28-coaching-workspace.js');
   run(src('js/29-coaching-live.js'), '29-coaching-live.js');
+  run(src('js/30-coaching-mirror.js'), '30-coaching-mirror.js');
+  run(src('js/31-coaching-practice.js'), '31-coaching-practice.js');
+  run(src('js/32-coaching-mirror-ui.js'), '32-coaching-mirror-ui.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;

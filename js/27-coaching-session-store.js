@@ -23,7 +23,10 @@
 var COACHING_STORE_VERSION = 1;
 var COACHING_EVENT_TYPES = ['SESSION_STARTED','CONTEXT_UPDATED','APPROACH_SUGGESTED',
   'INTERVENTION_VIEWED','INTERVENTION_USED','COACH_NOTE_UPDATED','ACTION_COMMITTED',
-  'SESSION_COMPLETED','SESSION_CANCELLED','SESSION_RESTORED'];
+  'SESSION_COMPLETED','SESSION_CANCELLED','SESSION_RESTORED',
+  /* Phase 6 — evidence the mirror needs, all of it structure and none of it speech */
+  'SAFETY_BOUNDARY_HELD','COMMITMENT_SOURCE_CORRECTED','MIRROR_GENERATED',
+  'PRACTICE_ACCEPTED','PRACTICE_SKIPPED','PRACTICE_REPORTED','OBSERVATION_DISPUTED'];
 var COACHING_COMMITMENT_SOURCES = ['coachee','coach_suggestion'];
 var COACHING_NOTE_MAX = 8000;
 var COACHING_TEXT_MAX = 600;
@@ -128,7 +131,7 @@ async function coachingSessionCreate(input){
 
 /* ── Bounded patch of the session document ── */
 var COACHING_PATCHABLE = ['title','subjectRef','tags','approach','approachTags','competencyTags',
-  'lifecycle','safeguard','review','counters'];
+  'lifecycle','safeguard','review','counters','mirror'];
 async function coachingSessionPatch(session, patch, event){
   if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
   if(!(await _csvClient())) return _csvFail('storage_unavailable');
@@ -164,6 +167,12 @@ async function coachingRecordEvent(session, event){
     interventionId: event.interventionId ? _csvStr(event.interventionId,80) : null,
     interventionType: event.interventionType ? _csvStr(event.interventionType,48) : null,
     approachId: event.approachId ? _csvStr(event.approachId,48) : null,
+    contextKey: event.contextKey ? _csvStr(event.contextKey,48) : null,
+    decision: event.decision ? _csvStr(event.decision,32) : null,
+    reasonCode: event.reasonCode ? _csvStr(event.reasonCode,48) : null,
+    practiceId: event.practiceId ? _csvStr(event.practiceId,64) : null,
+    observationCode: event.observationCode ? _csvStr(event.observationCode,48) : null,
+    outcome: event.outcome ? _csvStr(event.outcome,24) : null,
     purpose: event.purpose ? _csvStr(event.purpose,32) : null,
     stage: event.stage ? _csvStr(event.stage,32) : null,
     /* controlled historical snapshot — ONLY for a move the coach actually used,
@@ -186,7 +195,14 @@ async function coachingSaveNote(session, text){
   if(!(await _csvClient())) return _csvFail('connection_required');
   var body = _csvStr(text, COACHING_NOTE_MAX);
   var guard = coachingWriteGuard('write', session, {type:'note', text:body});
-  if(!guard.allowed) return {ok:false, error:'blocked', reason:guard.reason, decision:guard.decision||null};
+  if(!guard.allowed){
+    /* The coach held the line. Record THAT — decision and reason code only, never
+       the utterance — so the mirror can recognise boundary discipline instead of
+       mistaking a safe stop for a gap. */
+    if(guard.decision==='pause' || guard.decision==='stop_and_refer')
+      coachingRecordEvent(session, {type:'SAFETY_BOUNDARY_HELD', decision:guard.decision, reasonCode:guard.reason});
+    return {ok:false, error:'blocked', reason:guard.reason, decision:guard.decision||null};
+  }
   var ref = coachingChildDoc(session.id, 'notes', 'current');
   if(!ref) return _csvFail('storage_unavailable');
   var rec = { id:'current', body:body, updatedAt:_csvNow(), length:body.length };
@@ -236,7 +252,10 @@ async function coachingCompleteSession(session, outcome){
     /* A coach suggestion may be recorded, but it is NEVER stored as the
        coachee's commitment. Ownership of the action is the whole point. */
     if(COACHING_COMMITMENT_SOURCES.indexOf(src)<0) return _csvFail('commitment_source_required');
-    if(src!=='coachee') return _csvFail('commitment_must_be_coachee_owned');
+    if(src!=='coachee'){
+      coachingRecordEvent(session, {type:'COMMITMENT_SOURCE_CORRECTED'});
+      return _csvFail('commitment_must_be_coachee_owned');
+    }
     commitment = { id:'c_'+Date.now().toString(36)+'-'+_csvSeq().toString(36),
       source:'coachee', text:_csvStr(outcome.commitment.text, COACHING_TEXT_MAX),
       dueAt:outcome.commitment.dueAt?_csvStr(outcome.commitment.dueAt,32):null,
@@ -280,6 +299,87 @@ async function coachingCancelSession(session){
   var res = await coachingSessionPatch(session, {lifecycle:'cancelled'}, {type:'cancel'});
   if(res.ok) await coachingRecordEvent(res.session, {type:'SESSION_CANCELLED'});
   return res;
+}
+
+/* ══ Phase 6 storage ══ observations live with their session; practice and
+   coach feedback are coach-level and live in their own owner-scoped collection. */
+var COACHING_DEV_ROOT = 'coachingDevelopment';
+function coachingDevelopmentCol(){
+  var db = (typeof coachingDb==='function') ? coachingDb() : null;
+  if(!db) return null;
+  var u = (typeof coachingResolveOwner==='function') ? coachingResolveOwner() : null;
+  if(!u) return null;
+  return db.collection('users').doc(u).collection(COACHING_DEV_ROOT);
+}
+async function coachingSaveObservations(session, observations, summary){
+  if(!(await _csvClient())) return _csvFail('connection_required');
+  if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
+  var list = Array.isArray(observations) ? observations.slice(0,24) : [];
+  var guard = coachingWriteGuard('write', session, {type:'mirror'});
+  if(!guard.allowed) return {ok:false, error:'blocked', reason:guard.reason};
+  for(var i=0;i<list.length;i++){
+    var ref = coachingChildDoc(session.id, 'observations', list[i].id);
+    if(!ref) return _csvFail('storage_unavailable');
+    var w = await _csvRace(ref.set(list[i]));
+    if(!w.ok) return _csvFail(_csvIoError(w.reason));
+  }
+  var counters = Object.assign({}, session.counters);
+  counters.observations = list.length;
+  var patched = await coachingSessionPatch(session, {mirror:summary||null, counters:counters}, {type:'mirror'});
+  if(!patched.ok) return patched;
+  await coachingRecordEvent(patched.session, {type:'MIRROR_GENERATED'});
+  return {ok:true, session:patched.session, saved:list.length};
+}
+async function coachingLoadObservations(sessionId){
+  if(!(await _csvClient())) return _csvFail('connection_required');
+  var col = coachingChildDoc(sessionId, 'observations');
+  if(!col) return _csvFail('storage_unavailable');
+  var r = await _csvRace(col.limit(COACHING_PAGE_MAX).get());
+  if(!r.ok) return _csvFail(_csvIoError(r.reason));
+  var out = []; r.value.forEach(function(d){ out.push(d.data()); });
+  return {ok:true, observations:out};
+}
+async function coachingLoadEvents(sessionId, limit){
+  if(!(await _csvClient())) return _csvFail('connection_required');
+  var col = coachingChildDoc(sessionId, 'events');
+  if(!col) return _csvFail('storage_unavailable');
+  var n = Math.min(Math.max(1, Number(limit)||100), COACHING_PAGE_MAX);
+  var r = await _csvRace(col.limit(n).get());
+  if(!r.ok) return _csvFail(_csvIoError(r.reason));
+  var out = []; r.value.forEach(function(d){ out.push(d.data()); });
+  out.sort(function(a,b){ return String(a.at).localeCompare(String(b.at)); });
+  return {ok:true, events:out};
+}
+async function coachingSaveDevelopmentDoc(rec){
+  if(!(await _csvClient())) return _csvFail('connection_required');
+  if(!rec || !rec.id || !rec.kind) return _csvFail('invalid_record');
+  if(typeof coachingCan==='function' && !coachingCan('write')) return _csvFail('not_authorized');
+  if(typeof coachingEnabled==='function' && !coachingEnabled()) return {ok:false, error:'blocked', reason:'feature_disabled'};
+  var col = coachingDevelopmentCol();
+  if(!col) return _csvFail('storage_unavailable');
+  var w = await _csvRace(col.doc(String(rec.id)).set(rec));
+  if(!w.ok) return _csvFail(_csvIoError(w.reason));
+  return {ok:true, record:rec};
+}
+async function coachingLoadDevelopment(kind, limit){
+  if(!(await _csvClient())) return _csvFail('connection_required');
+  if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
+  var col = coachingDevelopmentCol();
+  if(!col) return _csvFail('storage_unavailable');
+  var n = Math.min(Math.max(1, Number(limit)||50), COACHING_PAGE_MAX);
+  var r = await _csvRace(col.limit(n).get());
+  if(!r.ok) return _csvFail(_csvIoError(r.reason));
+  var out = []; r.value.forEach(function(d){ var v = d.data(); if(!kind || v.kind===kind) out.push(v); });
+  return {ok:true, records:out};
+}
+async function coachingPurgeDevelopment(ids){
+  if(!(await _csvClient())) return _csvFail('connection_required');
+  if(typeof coachingCan==='function' && !coachingCan('delete')) return _csvFail('not_authorized');
+  var col = coachingDevelopmentCol();
+  if(!col) return _csvFail('storage_unavailable');
+  var list = Array.isArray(ids) ? ids : [];
+  for(var i=0;i<list.length;i++){ await _csvRace(col.doc(String(list[i])).delete()); }
+  return {ok:true, purged:list.length};
 }
 
 /* ── Reads — always bounded ── */
@@ -398,6 +498,10 @@ if(typeof window!=='undefined'){
   window.coachingCompleteSession=coachingCompleteSession; window.coachingCancelSession=coachingCancelSession;
   window.coachingLoadSession=coachingLoadSession; window.coachingListSessions=coachingListSessions;
   window.coachingPurgeSession=coachingPurgeSession;
+  window.COACHING_DEV_ROOT=COACHING_DEV_ROOT; window.coachingDevelopmentCol=coachingDevelopmentCol;
+  window.coachingSaveObservations=coachingSaveObservations; window.coachingLoadObservations=coachingLoadObservations;
+  window.coachingLoadEvents=coachingLoadEvents; window.coachingSaveDevelopmentDoc=coachingSaveDevelopmentDoc;
+  window.coachingLoadDevelopment=coachingLoadDevelopment; window.coachingPurgeDevelopment=coachingPurgeDevelopment;
   window.coachingRestorePreview=coachingRestorePreview; window.coachingRestoreSessions=coachingRestoreSessions;
   window.coachingStoreSelfCheck=coachingStoreSelfCheck;
 }

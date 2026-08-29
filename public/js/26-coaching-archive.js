@@ -26,7 +26,7 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 var COACHING_EXPORT_FORMAT = 'focusup.coaching.export';
-var COACHING_EXPORT_VERSION = 1;
+var COACHING_EXPORT_VERSION = 2;   /* v2 adds mirror + development records; v1 still opens */
 var COACHING_EXPORT_SCOPES = ['metadata_only','deidentified_derived','full_owner_export'];
 var COACHING_EXPORT_DEFAULT_SCOPE = 'metadata_only';
 var COACHING_KDF_ITERATIONS = 210000;
@@ -92,7 +92,8 @@ function coachingExportPlan(scope, opts){
   opts = opts || {};
   var s = COACHING_EXPORT_SCOPES.indexOf(scope)>=0 ? scope : COACHING_EXPORT_DEFAULT_SCOPE;
   var encRequired = COACHING_ENCRYPTION_REQUIRED_SCOPES.indexOf(s)>=0;
-  var includes = { counters:true, context:true, lifecycle:true, periodMonth:true,
+  var includes = { counters:true, context:true, lifecycle:true, periodMonth:true, mirrorCounts:true,
+    mirrorObservations:(s!=='metadata_only'), developmentRecords:(s==='full_owner_export'),
     safeguardState:(s!=='metadata_only'), competencyTags:(s!=='metadata_only'),
     title:(s==='full_owner_export'), subjectRef:(s==='full_owner_export'),
     notes:(s==='full_owner_export'), transcript:false, attachments:false };
@@ -116,7 +117,10 @@ function coachingRedactSession(session, scope){
     approach: s.approach || null,
     counters: (s.counters && typeof s.counters==='object')
       ? Object.keys(s.counters).reduce(function(m,k){ m[k]=Number(s.counters[k])||0; return m; },{}) : {},
-    period: /^\d{4}-\d{2}/.test(created) ? created.slice(0,7) : null
+    period: /^\d{4}-\d{2}/.test(created) ? created.slice(0,7) : null,
+    /* mirror COUNTS only — an observation code is a shape, not a sentence */
+    mirror: (s.mirror && s.mirror.version)
+      ? { version:s.mirror.version, strengths:Number(s.mirror.strengths)||0, watch:Number(s.mirror.watch)||0 } : null
   };
   if(sc==='metadata_only') return base;
   if(sc==='deidentified_derived'){
@@ -133,7 +137,8 @@ function coachingRedactSession(session, scope){
     approachTags:(s.approachTags||[]).slice(), competencyTags:(s.competencyTags||[]).slice(),
     tags:(s.tags||[]).slice(), lifecycle:s.lifecycle||null, privacy:s.privacy||null,
     title:s.title||'', subjectRef:s.subjectRef||'',
-    safeguard:s.safeguard||null, counters:base.counters, review:s.review||null
+    safeguard:s.safeguard||null, counters:base.counters, review:s.review||null,
+    mirror:s.mirror||null
   };
 }
 
@@ -148,8 +153,12 @@ async function coachingBuildExport(sessions, opts){
 
   var list = Array.isArray(sessions) ? sessions : [];
   var records = list.map(function(s){ return coachingRedactSession(s, plan.scope); });
+  /* Deliberate practice and coach feedback are the owner's own development
+     record. They travel ONLY inside the encrypted full export. */
+  var development = (plan.scope==='full_owner_export' && Array.isArray(opts.development))
+    ? opts.development.slice(0,200) : [];
   var payload = { format:COACHING_EXPORT_FORMAT, formatVersion:COACHING_EXPORT_VERSION,
-    scope:plan.scope, ownerUid:owner, records:records };
+    scope:plan.scope, ownerUid:owner, records:records, development:development };
   var plain = _caCanon(payload);
   var c = _caCrypto();
   if(!c) return {ok:false, error:'crypto_unavailable', plan:plan};
@@ -157,7 +166,7 @@ async function coachingBuildExport(sessions, opts){
 
   var envelope = { format:COACHING_EXPORT_FORMAT, formatVersion:COACHING_EXPORT_VERSION,
     scope:plan.scope, ownerUid:owner, recordCount:records.length,
-    createdAt:opts.now || new Date().toISOString(),
+    createdAt:opts.now || new Date().toISOString(), developmentCount:development.length,
     payloadSha256:payloadSha256, encrypted:false, encryption:null, data:null };
 
   if(!plan.encryptionRequired && !opts.passphrase){
@@ -221,6 +230,7 @@ async function coachingOpenExport(envelope, opts){
     if(sha!==envelope.payloadSha256) return {ok:false, error:'checksum_mismatch'};
   }
   return { ok:true, scope:payload.scope, records:payload.records, count:payload.records.length,
+    development:Array.isArray(payload.development)?payload.development:[],   /* v1 exports have none */
     persisted:false,
     note:'Kayıtlar yalnız doğrulandı. Yazmak için coachingRestoreSessions() çağrılmalıdır; o da yazma zincirinden geçer.' };
 }

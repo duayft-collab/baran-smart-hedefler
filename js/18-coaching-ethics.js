@@ -302,6 +302,9 @@ function coachingDeriveObservation(session, evaluation){
     competencyTagCount: Array.isArray(session.competencyTags) ? session.competencyTags.length : 0,
     childCounts: (session.counters && typeof session.counters==='object') ?
       Object.keys(session.counters).reduce(function(m,k){ m[k]=Number(session.counters[k])||0; return m; },{}) : {},
+    mirrorCodes: (session.mirror && Array.isArray(session.mirror.codes)) ? session.mirror.codes.slice(0,16) : [],
+    mirrorStrengths: (session.mirror && Number(session.mirror.strengths)) || 0,
+    mirrorWatch: (session.mirror && Number(session.mirror.watch)) || 0,
     safetyDecision: evaluation.decision || null,
     safetyCategories: Array.isArray(evaluation.categories) ? evaluation.categories.slice() : [],
     period: /^\d{4}-\d{2}/.test(created) ? created.slice(0,7) : null,   // month only

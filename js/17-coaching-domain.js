@@ -315,6 +315,16 @@ function _coCounters(c){
   COACHING_CHILD_COLLECTIONS.forEach(function(k){ out[k]=_coInt(c[k],0); });
   return out;
 }
+/* Bounded mirror summary. The full observations live in the session's
+   `observations` child collection; this is the compact shape that lets the
+   development view read many sessions with ONE query instead of N. */
+function _coMirror(m){
+  m = _coIsPlainObject(m) ? m : {};
+  var codes = Array.isArray(m.codes) ? m.codes.slice(0,16).map(function(c){ return _coStr(c,48); }) : [];
+  return { version:_coInt(m.version,0), generatedAt:_coIsIso(m.generatedAt)?m.generatedAt:null,
+    codes:codes, strengths:_coInt(m.strengths,0), watch:_coInt(m.watch,0),
+    practiceCode:m.practiceCode!=null?_coStr(m.practiceCode,48):null };
+}
 function _coReview(r){
   r = _coIsPlainObject(r) ? r : {};
   return {
@@ -351,7 +361,8 @@ function coachingNormalizeSession(input, opts){
     subjectRef: _coStr(input.subjectRef, COACHING_EMBEDDED_LIMITS.subjectRef).trim(),
     safeguard: _coSafeguard(input.safeguard),
     counters: _coCounters(input.counters),
-    review: _coReview(input.review)
+    review: _coReview(input.review),
+    mirror: _coMirror(input.mirror)
   };
 }
 /* Structural validation. Content quality is NOT judged here. */

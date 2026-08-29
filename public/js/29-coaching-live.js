@@ -146,7 +146,8 @@ function coachingToggleCtx(key, value){
   else COACHING_UI.ctx[key] = value;
   coachingRefreshMoves();
   var s = COACHING_UI.session;
-  if(s) coachingRecordEvent(s, {type:'CONTEXT_UPDATED'});
+  /* the key is structured metadata the mirror needs; the note text never is */
+  if(s) coachingRecordEvent(s, {type:'CONTEXT_UPDATED', contextKey:key});
 }
 window.coachingToggleCtx = coachingToggleCtx;
 function coachingSetStage(v){ COACHING_UI.ctx.conversationStage = v || null; coachingRefreshMoves(); }
@@ -197,6 +198,12 @@ function renderCoachingLive(){
     '</div></div>';
 
   if(COACHING_UI.error) h += coachingBanner('error', COACHING_UI.error);
+  /* one subtle reminder, never repeated mid-conversation */
+  var rem = (typeof coachingPracticeReminder==='function')
+    ? coachingPracticeReminder(COACHING_UI.activePractice, s) : null;
+  if(rem) h += '<div class="card" style="padding:10px 14px;margin-bottom:14px;background:var(--bl);border:1px solid var(--s2)">'+
+    '<p style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.06em;text-transform:uppercase">Bu görüşmedeki pratiğin</p>'+
+    '<p style="font-size:12.5px;color:var(--t2);margin-top:3px">'+_cue(rem.text)+'</p></div>';
   if(blocked || safety.decision==='stop_and_refer'){
     h += coachingBanner('error','Bu konu koçluğun uygun kapsamı dışında olabilir.',
       (safety.rationale||'')+' '+(r.notes&&r.notes.length?r.notes[0]:''));
@@ -455,10 +462,28 @@ async function coachingSubmitClose(){
   if(String(commitText).trim()) outcome.commitment = { source:'coachee', text:commitText };
   var res = await coachingCompleteSession(s, outcome);
   if(!res.ok){ COACHING_UI.error = coachingErrorText(res.error, res.reason); renderCoachingClose(); return; }
-  coachingUiReset();
-  COACHING_UI.notice = 'Görüşme tamamlandı.';
-  if(typeof gotoTab==='function') gotoTab('coachhome');
-  coachingLoadHome();
+  /* The coach has now written their own reflection. Only THEN does the mirror
+     speak — the system trains self-observation rather than replacing it. */
+  var hadPractice = !!COACHING_UI.activePractice;
+  var gen = (typeof coachingGenerateMirror==='function')
+    ? await coachingGenerateMirror(res.session, {
+        coacheeCommitment: !!res.commitment,
+        insightRecorded: !!String(outcome.insight||'').trim(),
+        coachReflectionRecorded: !!String(outcome.reflection||'').trim() })
+    : {ok:false};
+  var dev = (typeof coachingLoadDevelopment==='function') ? await coachingLoadDevelopment(null, 50) : {ok:false};
+  var records = dev.ok ? dev.records : [];
+  COACHING_UI.session = gen.ok ? gen.session : res.session;
+  COACHING_UI.mirror = gen.ok ? gen.mirror : null;
+  COACHING_UI.activePractice = (typeof coachingActivePractice==='function') ? coachingActivePractice(records) : null;
+  COACHING_UI.practiceAsk = hadPractice && !!COACHING_UI.activePractice;
+  var sug = (gen.ok && typeof coachingSuggestPractice==='function')
+    ? coachingSuggestPractice(gen.mirror, records) : {practice:null};
+  COACHING_UI.practice = sug.practice;
+  COACHING_UI.notice = 'Görüşme tamamlandı.'; COACHING_UI.error = null;
+  COACHING_UI.note = ''; COACHING_UI.noteDirty = false; COACHING_UI.moves = []; COACHING_UI.routed = null;
+  if(COACHING_UI.timer){ clearInterval(COACHING_UI.timer); COACHING_UI.timer = null; }
+  if(typeof gotoTab==='function') gotoTab('coachmirror'); else renderCoachingMirror();
 }
 window.coachingSubmitClose = coachingSubmitClose;
 

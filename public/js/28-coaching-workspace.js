@@ -40,6 +40,7 @@ function coachingApproachLabel(id){
 
 /* ── Runtime UI state. Memory only: no localStorage coaching database. ── */
 var COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:false, savePending:false,
+  mirror:null, practice:null, activePractice:null, practiceAsk:false, devRecords:[], devSessions:[], devCross:null, devObservations:[],
   error:null, notice:null, sessions:[], ctx:{}, routed:null, moves:[], usedIds:[],
   recentMoves:[], startedAt:null, timer:null, libraryOpen:false, libraryFilter:{},
   draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' }, busy:false };
@@ -47,6 +48,7 @@ var COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:
 function coachingUiReset(){
   if(COACHING_UI.timer){ clearInterval(COACHING_UI.timer); COACHING_UI.timer = null; }
   COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:false, savePending:false,
+    mirror:null, practice:null, activePractice:null, practiceAsk:false, devRecords:[], devSessions:[], devCross:null, devObservations:[],
     error:null, notice:null, sessions:[], ctx:{}, routed:null, moves:[], usedIds:[],
     recentMoves:[], startedAt:null, timer:null, libraryOpen:false, libraryFilter:{},
     draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' }, busy:false };
@@ -115,6 +117,11 @@ function coachingStatusPill(lifecycle){
 async function coachingLoadHome(){
   COACHING_UI.busy = true;
   var res = await coachingListSessions({limit:12});
+  if(typeof coachingLoadDevelopment==='function'){
+    var d = await coachingLoadDevelopment(null, 50);
+    COACHING_UI.devRecords = d.ok ? d.records : [];
+    COACHING_UI.activePractice = (typeof coachingActivePractice==='function') ? coachingActivePractice(COACHING_UI.devRecords) : null;
+  }
   COACHING_UI.busy = false;
   if(res.ok){ COACHING_UI.sessions = res.sessions; COACHING_UI.error = null; }
   else { COACHING_UI.sessions = []; COACHING_UI.error = coachingErrorText(res.error); }
@@ -161,7 +168,11 @@ function renderCoachingHome(){
     });
     h += '</tbody></table></div>';
   }
-  h += '<div style="margin-top:20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
+  h += '<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+    '<button class="btn btn-s btn-sm" onclick="gotoTab(\'coachdev\')">'+_cuIc('kpi',12,'var(--t2)')+' Gelişimim</button>'+
+    (COACHING_UI.activePractice?('<span style="font-size:11.5px;color:var(--t3)">Aktif pratiğin: '+
+      _cue(COACHING_UI.activePractice.title)+'</span>'):'')+'</div>';
+  h += '<div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'+
     (coachingLegacyCount()?('<button class="btn btn-g btn-sm" onclick="gotoTab(\'coaching\')">'+
       _cuIc('arc',12,'var(--t3)')+' Eski koçluk notlarım ('+coachingLegacyCount()+')</button>'):'')+
     '<button class="btn btn-g btn-sm" onclick="coachingOpenPrivacy()">'+_cuIc('sh',12,'var(--t3)')+' Gizlilik ve Dışa Aktarma</button></div>';

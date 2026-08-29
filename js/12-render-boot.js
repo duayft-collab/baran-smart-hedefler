@@ -23,6 +23,8 @@ function renderPage(){
        entry; with the flag OFF these routes exist but nothing links to them. */
     coachhome:function(){ if(typeof renderCoachingHome==='function'){ if(typeof coachingLoadHome==='function')coachingLoadHome(); renderCoachingHome(); } },
     coachsession:function(){ if(typeof renderCoachingLive==='function')renderCoachingLive(); },
+    coachmirror:function(){ if(typeof renderCoachingMirror==='function')renderCoachingMirror(); },
+    coachdev:function(){ if(typeof renderCoachingDevelopment==='function'){ if(typeof coachingLoadDevelopmentView==='function')coachingLoadDevelopmentView(); renderCoachingDevelopment(); } },
   };
   var fn=pages[tab];
   if(fn)fn();

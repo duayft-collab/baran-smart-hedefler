@@ -101,6 +101,16 @@ service cloud.firestore {
          inherit the SAME module-scoped capability — never a looser one. No
          public access, no unauthenticated access, no cross-owner access, and no
          inheritance from app/state sharing. */
+      /* Coach-level development records (deliberate practice, coach feedback on
+         the mirror). Same owner scope, same module capability, same fail-closed
+         predicate as the sessions themselves — a member with generic state
+         access still gets nothing. */
+      match /coachingDevelopment/{devDoc} {
+        allow read:            if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'read');
+        allow create, update:  if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'write');
+        allow delete:          if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'delete');
+      }
+
       match /coachingSessions/{sessionId} {
         allow read:            if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'read');
         allow create, update:  if request.auth != null && pilCoachingCan(request.auth.uid, userId, 'write');
