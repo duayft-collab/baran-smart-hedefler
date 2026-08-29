@@ -131,7 +131,48 @@ async function coachingSessionCreate(input){
 
 /* ── Bounded patch of the session document ── */
 var COACHING_PATCHABLE = ['title','subjectRef','tags','approach','approachTags','competencyTags',
-  'lifecycle','safeguard','review','counters','mirror'];
+  'lifecycle','safeguard','review','mirror'];
+
+/* ══ Counters: one authority ══
+   A counter states how many canonical records the session HAS — not how many
+   write attempts were made. It is applied field-by-field with an atomic
+   increment (or a fixed value for a single-document collection), so two
+   concurrent writes cannot lose an update and re-saving one overwritten
+   document cannot inflate a count. Nothing else may write `counters`:
+   coachingSessionPatch strips the field, so a patch built from a stale
+   in-memory session can never roll a count backwards. */
+function _csvIncrement(n){
+  var fv = (typeof firebase!=='undefined' && firebase.firestore && firebase.firestore.FieldValue)
+    ? firebase.firestore.FieldValue : null;
+  return (fv && typeof fv.increment==='function') ? fv.increment(n) : null;
+}
+async function coachingApplyCounters(session, ops){
+  if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
+  ops = ops || {};
+  var ref = coachingSessionDoc(session.id);
+  if(!ref) return _csvFail('storage_unavailable');
+  var current = _coCounters(session.counters);
+  var next = Object.assign({}, current), payload = {}, touched = 0;
+  COACHING_CHILD_COLLECTIONS.forEach(function(k){
+    var op = ops[k];
+    if(!op) return;
+    if(typeof op.set === 'number'){
+      if(op.set === current[k]) return;                 /* already true — no write */
+      payload['counters.'+k] = op.set; next[k] = op.set; touched++;
+    }else if(typeof op.inc === 'number' && op.inc !== 0){
+      var atomic = _csvIncrement(op.inc);
+      next[k] = (Number(current[k])||0) + op.inc;
+      payload['counters.'+k] = (atomic!=null) ? atomic : next[k];
+      touched++;
+    }
+  });
+  if(!touched) return {ok:true, counters:current};
+  var w = await _csvRace(ref.update(payload));
+  if(!w.ok) return _csvFail(_csvIoError(w.reason));
+  /* keep the caller's own object truthful, so anything it patches later agrees */
+  session.counters = next;
+  return {ok:true, counters:next};
+}
 async function coachingSessionPatch(session, patch, event){
   if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
   if(!(await _csvClient())) return _csvFail('storage_unavailable');
@@ -151,7 +192,10 @@ async function coachingSessionPatch(session, patch, event){
   next.ownerUid = guard.ownerUid;
   var ref = coachingSessionDoc(next.id);
   if(!ref) return _csvFail('storage_unavailable');
-  var pw = await _csvRace(ref.set(next, {merge:true}));
+  /* counters have their own authority — never let a patch payload carry them */
+  var payload = JSON.parse(JSON.stringify(next));
+  delete payload.counters;
+  var pw = await _csvRace(ref.set(payload, {merge:true}));
   if(!pw.ok) return _csvFail(_csvIoError(pw.reason));
   return {ok:true, session:next, confirmed:await coachingWriteConfirmed(ref)};
 }
@@ -186,6 +230,8 @@ async function coachingRecordEvent(session, event){
   if(!ref) return _csvFail('storage_unavailable');
   var ew = await _csvRace(ref.set(rec));
   if(!ew.ok) return _csvFail(_csvIoError(ew.reason));
+  /* the record landed — now, and only now, does it count */
+  await coachingApplyCounters(session, {events:{inc:1}});
   return {ok:true, event:rec};
 }
 
@@ -212,6 +258,9 @@ async function coachingSaveNote(session, text){
   var confirmed = await coachingWriteConfirmed(ref);
   /* belt and braces: if a cache ever did queue it, that is still not saved */
   if(!confirmed) return {ok:false, error:'connection_required', note:rec, queued:true};
+  /* notes/current is a single document that is overwritten, so the canonical
+     count is 1 once it exists — an autosave is not a new record */
+  await coachingApplyCounters(session, {notes:{set:1}});
   return {ok:true, note:rec, confirmed:true};
 }
 async function coachingLoadNote(sessionId){
@@ -234,10 +283,11 @@ async function coachingUseIntervention(session, interventionId, opts){
     interventionType:x.type, purpose:x.purpose, stage:opts.stage, approachId:opts.approachId,
     snapshot:{ id:x.id, type:x.type, purpose:x.purpose, text:x.text||x.title } });
   if(!res.ok) return res;
-  var counters = Object.assign({}, session.counters);
-  counters.interventions = (Number(counters.interventions)||0)+1;
-  counters.events = (Number(counters.events)||0)+1;
-  return coachingSessionPatch(session, {counters:counters}, {type:'intervention'});
+  /* coachingRecordEvent already counted the event — counting it again here is
+     the double-count that made the live "Olay" tile disagree with reality */
+  var cw = await coachingApplyCounters(session, {interventions:{inc:1}});
+  if(!cw.ok) return cw;
+  return {ok:true, session:session, counters:cw.counters};
 }
 
 /* ── Completion. The commitment must belong to the coachee. ── */
@@ -265,11 +315,11 @@ async function coachingCompleteSession(session, outcome){
   var guard = coachingWriteGuard('write', session, {type:'complete'});
   if(!guard.allowed) return {ok:false, error:'blocked', reason:guard.reason, decision:guard.decision||null};
 
-  var counters = Object.assign({}, session.counters);
+  var landed = {};
   try{
     if(commitment){
       await coachingChildDoc(session.id,'commitments',commitment.id).set(commitment);
-      counters.commitments = (Number(counters.commitments)||0)+1;
+      landed.commitments = {inc:1};
     }
     if(String(outcome.reflection||'').trim() || String(outcome.insight||'').trim()){
       await coachingChildDoc(session.id,'reflections','final').set({
@@ -279,13 +329,14 @@ async function coachingCompleteSession(session, outcome){
         nextSessionNote:_csvStr(outcome.nextSessionNote, COACHING_TEXT_MAX),
         coachSuggestion:_csvStr(outcome.coachSuggestion, COACHING_TEXT_MAX), /* kept apart from the commitment */
         createdAt:_csvNow() });
-      counters.reflections = (Number(counters.reflections)||0)+1;
+      landed.reflections = {set:1};   /* reflections/final is one document, overwritten */
     }
   }catch(e){ return _csvFail('write_failed'); }
+  await coachingApplyCounters(session, landed);
 
   var review = Object.assign({}, session.review, { completedAt:_csvNow(),
     selfRating:(typeof outcome.selfRating==='number')?outcome.selfRating:null });
-  var patched = await coachingSessionPatch(session, {lifecycle:'completed', counters:counters, review:review},
+  var patched = await coachingSessionPatch(session, {lifecycle:'completed', review:review},
     {type:'complete'});
   if(!patched.ok) return patched;
   await coachingRecordEvent(patched.session, {type:'SESSION_COMPLETED'});
@@ -323,9 +374,9 @@ async function coachingSaveObservations(session, observations, summary){
     var w = await _csvRace(ref.set(list[i]));
     if(!w.ok) return _csvFail(_csvIoError(w.reason));
   }
-  var counters = Object.assign({}, session.counters);
-  counters.observations = list.length;
-  var patched = await coachingSessionPatch(session, {mirror:summary||null, counters:counters}, {type:'mirror'});
+  var cw = await coachingApplyCounters(session, {observations:{set:list.length}});
+  if(!cw.ok) return cw;
+  var patched = await coachingSessionPatch(session, {mirror:summary||null}, {type:'mirror'});
   if(!patched.ok) return patched;
   await coachingRecordEvent(patched.session, {type:'MIRROR_GENERATED'});
   return {ok:true, session:patched.session, saved:list.length};
@@ -493,6 +544,7 @@ if(typeof window!=='undefined'){
   window.coachingSessionDoc=coachingSessionDoc; window.coachingChildDoc=coachingChildDoc;
   window.coachingWriteGuard=coachingWriteGuard; window.coachingWriteConfirmed=coachingWriteConfirmed;
   window.coachingSessionCreate=coachingSessionCreate; window.coachingSessionPatch=coachingSessionPatch;
+  window.coachingApplyCounters=coachingApplyCounters;
   window.coachingRecordEvent=coachingRecordEvent; window.coachingSaveNote=coachingSaveNote;
   window.coachingLoadNote=coachingLoadNote; window.coachingUseIntervention=coachingUseIntervention;
   window.coachingCompleteSession=coachingCompleteSession; window.coachingCancelSession=coachingCancelSession;

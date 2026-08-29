@@ -43,7 +43,10 @@ var COACHING_UI = { view:'home', session:null, note:'', noteDirty:false, saving:
   mirror:null, practice:null, activePractice:null, practiceAsk:false, devRecords:[], devSessions:[], devCross:null, devObservations:[],
   error:null, notice:null, sessions:[], ctx:{}, routed:null, moves:[], usedIds:[],
   recentMoves:[], startedAt:null, timer:null, libraryOpen:false, libraryFilter:{},
-  draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' }, busy:false };
+  draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' },
+  /* what the coach has typed into the close form, kept in memory only so a
+     refused completion can be re-rendered without destroying their words */
+  closeForm:null, closeFocus:null, busy:false };
 
 function coachingUiReset(){
   if(COACHING_UI.timer){ clearInterval(COACHING_UI.timer); COACHING_UI.timer = null; }
@@ -51,7 +54,10 @@ function coachingUiReset(){
     mirror:null, practice:null, activePractice:null, practiceAsk:false, devRecords:[], devSessions:[], devCross:null, devObservations:[],
     error:null, notice:null, sessions:[], ctx:{}, routed:null, moves:[], usedIds:[],
     recentMoves:[], startedAt:null, timer:null, libraryOpen:false, libraryFilter:{},
-    draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' }, busy:false };
+    draft:{ context:'adult', relationLabel:'', purpose:'', consent:'unknown' },
+  /* what the coach has typed into the close form, kept in memory only so a
+     refused completion can be re-rendered without destroying their words */
+  closeForm:null, closeFocus:null, busy:false };
 }
 function _cue(s){ return (typeof U!=='undefined'&&U.esc)?U.esc(String(s==null?'':s)):String(s==null?'':s); }
 function _cuIc(n,sz,cl){ return (typeof ic==='function')?ic(n,sz||14,cl):''; }

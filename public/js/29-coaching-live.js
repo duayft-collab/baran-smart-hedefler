@@ -407,38 +407,64 @@ function coachingLibraryHtml(){
 }
 
 /* ══ CLOSE ══ short, mostly optional, and the action belongs to the coachee ══ */
-function coachingOpenClose(){ COACHING_UI.view = 'close'; renderCoachingClose(); }
+var COACHING_CLOSE_BLANK = {insight:'', commit:'', owned:false, suggestion:'', reflect:''};
+/* The close form is rebuilt from scratch on every render, so the draft — not
+   the DOM — is what survives. Validation may refuse a completion; it may not
+   throw away what the coach wrote. Memory only, for as long as the session is
+   open: nothing here is persisted, synced or written to app state. */
+function coachingCloseDraft(){
+  if(!COACHING_UI.closeForm) COACHING_UI.closeForm = Object.assign({}, COACHING_CLOSE_BLANK);
+  return COACHING_UI.closeForm;
+}
+function coachingCaptureClose(){
+  var d = coachingCloseDraft();
+  var pairs = [['insight','coach_insight'],['commit','coach_commit'],
+    ['suggestion','coach_suggestion'],['reflect','coach_reflect']];
+  pairs.forEach(function(p){ var el = ge(p[1]); if(el) d[p[0]] = el.value || ''; });
+  var cb = ge('coach_commit_owned'); if(cb) d.owned = !!cb.checked;
+  return d;
+}
+function coachingClearCloseDraft(){ COACHING_UI.closeForm = null; COACHING_UI.closeFocus = null; }
+window.coachingCaptureClose = coachingCaptureClose;
+window.coachingClearCloseDraft = coachingClearCloseDraft;
+function coachingOpenClose(){ COACHING_UI.view = 'close'; coachingCloseDraft(); renderCoachingClose(); }
 window.coachingOpenClose = coachingOpenClose;
 function renderCoachingClose(){
   var s = COACHING_UI.session || {};
+  var d = coachingCloseDraft();
   var h = '<div class="fade" style="max-width:640px">';
   h += coachingSectionHead('Görüşmeyi Kapat', _cue(s.title||''),
     '<button class="btn btn-s" onclick="coachingBackToLive()">Geri</button>');
   if(COACHING_UI.error) h += coachingBanner('error', COACHING_UI.error);
   h += '<div class="card" style="padding:18px 20px;margin-bottom:14px">'+
     '<label class="lbl" for="coach_insight" style="display:block;margin-bottom:4px">Ne netleşti?</label>'+
-    '<textarea class="inp" id="coach_insight" rows="2" placeholder="Danışan için bugün neyin değiştiği"></textarea>'+
+    '<textarea class="inp" id="coach_insight" rows="2" placeholder="Danışan için bugün neyin değiştiği">'+_cue(d.insight)+'</textarea>'+
     '<p style="font-size:11px;color:var(--t3);margin:5px 0 16px">İsteğe bağlı.</p>'+
 
     '<label class="lbl" for="coach_commit" style="display:block;margin-bottom:4px">Danışanın kendi eylemi</label>'+
-    '<textarea class="inp" id="coach_commit" rows="2" placeholder="Salı günü toplantıda iki görevi devredeceğim."></textarea>'+
+    '<textarea class="inp" id="coach_commit" rows="2" placeholder="Salı günü toplantıda iki görevi devredeceğim.">'+_cue(d.commit)+'</textarea>'+
     '<p style="font-size:11px;color:var(--t3);margin:5px 0 8px">'+
     'Danışanın kendi cümlesiyle yaz. Senin önerin buraya taahhüt olarak geçmez.</p>'+
     '<label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;cursor:pointer;margin-bottom:16px">'+
-    '<input type="checkbox" class="cb" id="coach_commit_owned"> '+
+    '<input type="checkbox" class="cb" id="coach_commit_owned"'+(d.owned?' checked':'')+'> '+
     '<span>Bu eylemi danışan kendisi seçti.</span></label>'+
 
     '<label class="lbl" for="coach_suggestion" style="display:block;margin-bottom:4px">Senin önerin (ayrı tutulur)</label>'+
-    '<textarea class="inp" id="coach_suggestion" rows="2" placeholder="Taahhüt değil, kendi notun"></textarea>'+
+    '<textarea class="inp" id="coach_suggestion" rows="2" placeholder="Taahhüt değil, kendi notun">'+_cue(d.suggestion)+'</textarea>'+
     '<p style="font-size:11px;color:var(--t3);margin:5px 0 16px">İsteğe bağlı. Danışanın taahhüdüyle karıştırılmaz.</p>'+
 
     '<label class="lbl" for="coach_reflect" style="display:block;margin-bottom:4px">Kendi yansımam</label>'+
-    '<textarea class="inp" id="coach_reflect" rows="2" placeholder="Ne işe yaradı? Nerede acele ettim?"></textarea>'+
+    '<textarea class="inp" id="coach_reflect" rows="2" placeholder="Ne işe yaradı? Nerede acele ettim?">'+_cue(d.reflect)+'</textarea>'+
     '<p style="font-size:11px;color:var(--t3);margin-top:5px">İsteğe bağlı. Yalnız sana açık.</p>'+
     '</div>';
   h += '<button class="btn btn-p" style="width:100%;height:42px" onclick="coachingSubmitClose()">Görüşmeyi Tamamla</button>';
   h += '</div>';
   sh('pinner', h);
+  /* point the coach at the one control that needs correcting — nothing else moved */
+  if(COACHING_UI.closeFocus){
+    var f = ge(COACHING_UI.closeFocus); COACHING_UI.closeFocus = null;
+    if(f && typeof f.focus==='function'){ try{ f.focus(); }catch(e){} }
+  }
 }
 window.renderCoachingClose = renderCoachingClose;
 function coachingBackToLive(){ COACHING_UI.view='live'; COACHING_UI.error=null; renderCoachingLive(); }
@@ -446,19 +472,18 @@ window.coachingBackToLive = coachingBackToLive;
 
 async function coachingSubmitClose(){
   var s = COACHING_UI.session; if(!s) return;
-  var commitText = (ge('coach_commit')||{}).value || '';
-  var owned = !!((ge('coach_commit_owned')||{}).checked);
+  /* read the form into the draft BEFORE anything can refuse it — every path
+     out of here re-renders, and a re-render draws the draft, not the DOM */
+  var d = coachingCaptureClose();
+  var commitText = d.commit;
   COACHING_UI.error = null;
-  if(String(commitText).trim() && !owned){
+  if(String(commitText).trim() && !d.owned){
     COACHING_UI.error = COACHING_L_ERROR.commitment_must_be_coachee_owned;
+    COACHING_UI.closeFocus = 'coach_commit_owned';
     renderCoachingClose(); return;
   }
   await coachingSaveNow(true);
-  var outcome = {
-    insight:(ge('coach_insight')||{}).value || '',
-    reflection:(ge('coach_reflect')||{}).value || '',
-    coachSuggestion:(ge('coach_suggestion')||{}).value || ''
-  };
+  var outcome = { insight:d.insight, reflection:d.reflect, coachSuggestion:d.suggestion };
   if(String(commitText).trim()) outcome.commitment = { source:'coachee', text:commitText };
   var res = await coachingCompleteSession(s, outcome);
   if(!res.ok){ COACHING_UI.error = coachingErrorText(res.error, res.reason); renderCoachingClose(); return; }
@@ -482,6 +507,7 @@ async function coachingSubmitClose(){
   COACHING_UI.practice = sug.practice;
   COACHING_UI.notice = 'Görüşme tamamlandı.'; COACHING_UI.error = null;
   COACHING_UI.note = ''; COACHING_UI.noteDirty = false; COACHING_UI.moves = []; COACHING_UI.routed = null;
+  coachingClearCloseDraft();                      /* the words are stored; the draft is done */
   if(COACHING_UI.timer){ clearInterval(COACHING_UI.timer); COACHING_UI.timer = null; }
   if(typeof gotoTab==='function') gotoTab('coachmirror'); else renderCoachingMirror();
 }

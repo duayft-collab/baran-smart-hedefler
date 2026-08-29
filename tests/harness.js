@@ -61,7 +61,13 @@ function createSandbox() {
     firebase: {
       firestore: {
         Blob: undefined,
-        FieldValue: { serverTimestamp() { return null; } }
+        FieldValue: {
+          serverTimestamp() { return null; },
+          /* increment sentinel — a fake db recognises it and applies the delta,
+             so tests exercise the real atomic counter path rather than a
+             read-modify-write stand-in that would hide lost updates */
+          increment(n) { return { __inc: n }; }
+        }
       }
     },
     requestAnimationFrame(fn) { fn(); },
