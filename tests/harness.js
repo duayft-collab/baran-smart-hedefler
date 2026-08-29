@@ -158,6 +158,10 @@ function createSandbox() {
   run(src('js/17-coaching-domain.js'), '17-coaching-domain.js');
   run(src('js/18-coaching-ethics.js'), '18-coaching-ethics.js');
   run(src('js/19-coaching-safeguard.js'), '19-coaching-safeguard.js');
+  run(src('js/20-coaching-interventions.js'), '20-coaching-interventions.js');
+  run(src('js/21-coaching-question-bank.js'), '21-coaching-question-bank.js');
+  run(src('js/22-coaching-quality.js'), '22-coaching-quality.js');
+  run(src('js/23-coaching-suggest.js'), '23-coaching-suggest.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;

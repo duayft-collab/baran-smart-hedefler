@@ -543,8 +543,9 @@ describe('R. No live UI, mirrors and static guards', () => {
   });
   test('R2. no question bank, approach router, academy, simulator or mirror shipped', () => {
     const sb = createSandbox();
-    deq(sb.coachingApproachKeys(), []);                     // Phase 4 owns approaches
-    deq(sb.coachingSafeguardSelfCheck().interventionPolicies, []);  // Phase 3 owns interventions
+    deq(sb.coachingApproachKeys(), []);                     // Phase 4 still owns approaches
+    // Phase 2 itself ships no interventions; every policy comes from the Phase 3 modules
+    assert.equal(/coachingRegisterIntervention\s*\(/.test(C18 + C19), false);
     assert.equal(/GROW|solution.focused|motivational.interview|socratic/i.test(C18 + C19), false);
   });
   test('R3. the modules perform no I/O of any kind', () => {
