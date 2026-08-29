@@ -35,6 +35,28 @@ function newCoachingEventId(){ return 'ev_'+Date.now().toString(36)+'-'+_csvSeq(
 /* Never surface a raw backend error: it can carry paths, ids or payload echoes. */
 function _csvFail(code){ return {ok:false, error:code}; }
 
+/* ── Bounded wait ──
+   The coaching client has no local cache, so a write settles only when the
+   server answers. Offline it would hang for ever, which is its own kind of
+   lie: the coach would watch "Kaydediliyor…" and learn nothing. Race every
+   backend call against a deadline and treat "no answer" as NOT SAVED. */
+var COACHING_WRITE_TIMEOUT_MS = 8000;
+function _csvRace(p, ms){
+  return Promise.race([
+    Promise.resolve(p).then(function(v){ return {ok:true, value:v}; },
+                            function(){ return {ok:false, reason:'rejected'}; }),
+    new Promise(function(res){ setTimeout(function(){ res({ok:false, reason:'timeout'}); },
+      ms || COACHING_WRITE_TIMEOUT_MS); })
+  ]);
+}
+function _csvIoError(reason){ return reason==='timeout' ? 'connection_required' : 'write_failed'; }
+/* Every entry point below attaches the non-persistent client first. */
+async function _csvClient(){
+  if(typeof coachingClientEnsure!=='function') return false;
+  var c = await coachingClientEnsure();
+  return !!(c && c.ready);
+}
+
 /* ── Did the SERVER take it? ──
    Offline persistence makes set() resolve from the local cache, so a plain
    "it resolved" is not the same as "it is stored". hasPendingWrites tells us
@@ -69,6 +91,7 @@ function coachingWriteGuard(cap, session, event){
 /* ── Create ── */
 async function coachingSessionCreate(input){
   input = input || {};
+  if(!(await _csvClient())) return _csvFail('storage_unavailable');
   var built = (typeof coachingBuildSession==='function')
     ? coachingBuildSession({
         context: input.context,
@@ -92,9 +115,11 @@ async function coachingSessionCreate(input){
   var ref = coachingSessionDoc(rec.id);
   if(!ref) return _csvFail('storage_unavailable');
   try{
-    var existing = await ref.get();
-    if(existing && existing.exists) return _csvFail('id_conflict');
-    await ref.set(rec);
+    var probe = await _csvRace(ref.get());
+    if(!probe.ok) return _csvFail(_csvIoError(probe.reason));
+    if(probe.value && probe.value.exists) return _csvFail('id_conflict');
+    var w = await _csvRace(ref.set(rec));
+    if(!w.ok) return _csvFail(_csvIoError(w.reason));
   }catch(e){ return _csvFail('write_failed'); }
   var confirmed = await coachingWriteConfirmed(ref);
   await coachingRecordEvent(rec, {type:'SESSION_STARTED'});
@@ -106,6 +131,7 @@ var COACHING_PATCHABLE = ['title','subjectRef','tags','approach','approachTags',
   'lifecycle','safeguard','review','counters'];
 async function coachingSessionPatch(session, patch, event){
   if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
+  if(!(await _csvClient())) return _csvFail('storage_unavailable');
   patch = patch || {};
   var next = JSON.parse(JSON.stringify(session));
   Object.keys(patch).forEach(function(k){ if(COACHING_PATCHABLE.indexOf(k)>=0) next[k] = patch[k]; });
@@ -122,7 +148,8 @@ async function coachingSessionPatch(session, patch, event){
   next.ownerUid = guard.ownerUid;
   var ref = coachingSessionDoc(next.id);
   if(!ref) return _csvFail('storage_unavailable');
-  try{ await ref.set(next, {merge:true}); }catch(e){ return _csvFail('write_failed'); }
+  var pw = await _csvRace(ref.set(next, {merge:true}));
+  if(!pw.ok) return _csvFail(_csvIoError(pw.reason));
   return {ok:true, session:next, confirmed:await coachingWriteConfirmed(ref)};
 }
 
@@ -148,26 +175,31 @@ async function coachingRecordEvent(session, event){
     by: (typeof personalContext==='function') ? (personalContext().loginUid||null) : null };
   var ref = coachingChildDoc(session.id, 'events', rec.id);
   if(!ref) return _csvFail('storage_unavailable');
-  try{ await ref.set(rec); }catch(e){ return _csvFail('write_failed'); }
+  var ew = await _csvRace(ref.set(rec));
+  if(!ew.ok) return _csvFail(_csvIoError(ew.reason));
   return {ok:true, event:rec};
 }
 
 /* ── Working note: one overwritten document, not a stream of writes ── */
 async function coachingSaveNote(session, text){
   if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
+  if(!(await _csvClient())) return _csvFail('connection_required');
   var body = _csvStr(text, COACHING_NOTE_MAX);
   var guard = coachingWriteGuard('write', session, {type:'note', text:body});
   if(!guard.allowed) return {ok:false, error:'blocked', reason:guard.reason, decision:guard.decision||null};
   var ref = coachingChildDoc(session.id, 'notes', 'current');
   if(!ref) return _csvFail('storage_unavailable');
   var rec = { id:'current', body:body, updatedAt:_csvNow(), length:body.length };
-  try{ await ref.set(rec); }catch(e){ return _csvFail('write_failed'); }
+  var nw = await _csvRace(ref.set(rec));
+  /* no server answer inside the deadline → NOT saved, and we say so */
+  if(!nw.ok) return {ok:false, error:_csvIoError(nw.reason), note:rec, queued:false};
   var confirmed = await coachingWriteConfirmed(ref);
-  /* queued locally but not stored yet — the caller must not report "saved" */
-  if(!confirmed) return {ok:false, error:'write_pending', note:rec, queued:true};
+  /* belt and braces: if a cache ever did queue it, that is still not saved */
+  if(!confirmed) return {ok:false, error:'connection_required', note:rec, queued:true};
   return {ok:true, note:rec, confirmed:true};
 }
 async function coachingLoadNote(sessionId){
+  if(!(await _csvClient())) return _csvFail('connection_required');
   var ref = coachingChildDoc(sessionId, 'notes', 'current');
   if(!ref) return _csvFail('storage_unavailable');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
@@ -252,6 +284,7 @@ async function coachingCancelSession(session){
 
 /* ── Reads — always bounded ── */
 async function coachingLoadSession(sessionId){
+  if(!(await _csvClient())) return _csvFail('connection_required');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
   var ref = coachingSessionDoc(sessionId);
   if(!ref) return _csvFail('storage_unavailable');
@@ -263,6 +296,7 @@ async function coachingLoadSession(sessionId){
 }
 async function coachingListSessions(opts){
   opts = opts || {};
+  if(!(await _csvClient())) return _csvFail('connection_required');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
   var col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null;
   if(!col) return _csvFail('storage_unavailable');
@@ -279,6 +313,7 @@ async function coachingListSessions(opts){
 /* ── Deletion: owner-confirmed, children first, never automatic ── */
 async function coachingPurgeSession(session, opts){
   opts = opts || {};
+  if(!(await _csvClient())) return _csvFail('connection_required');
   if(opts.confirmed!==true) return _csvFail('confirmation_required');
   if(typeof coachingCan==='function' && !coachingCan('delete')) return _csvFail('not_authorized');
   if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
@@ -315,6 +350,7 @@ function coachingRestorePreview(records){
 }
 async function coachingRestoreSessions(records, opts){
   opts = opts || {};
+  if(opts.confirmed===true && !(await _csvClient())) return _csvFail('connection_required');
   if(opts.confirmed!==true) return {ok:false, error:'confirmation_required', preview:coachingRestorePreview(records)};
   if(typeof coachingCan==='function' && !coachingCan('restore')) return _csvFail('not_authorized');
   var owner = (typeof coachingResolveOwner==='function') ? coachingResolveOwner() : null;
@@ -344,11 +380,13 @@ function coachingStoreSelfCheck(){
   return { version:COACHING_STORE_VERSION, eventTypes:COACHING_EVENT_TYPES.slice(),
     commitmentSources:COACHING_COMMITMENT_SOURCES.slice(), patchable:COACHING_PATCHABLE.slice(),
     noteMax:COACHING_NOTE_MAX, pageMax:(typeof COACHING_PAGE_MAX!=='undefined')?COACHING_PAGE_MAX:null,
+    writeTimeoutMs:COACHING_WRITE_TIMEOUT_MS, onlineFirst:true, localCache:false,
+    client:(typeof coachingClientState==='function')?coachingClientState():null,
     restoreWired:true };
 }
 
 if(typeof window!=='undefined'){
-  window.COACHING_STORE_VERSION=COACHING_STORE_VERSION; window.COACHING_EVENT_TYPES=COACHING_EVENT_TYPES;
+  window.COACHING_STORE_VERSION=COACHING_STORE_VERSION; window.COACHING_WRITE_TIMEOUT_MS=COACHING_WRITE_TIMEOUT_MS; window.COACHING_EVENT_TYPES=COACHING_EVENT_TYPES;
   window.COACHING_COMMITMENT_SOURCES=COACHING_COMMITMENT_SOURCES;
   window.COACHING_PATCHABLE=COACHING_PATCHABLE; window.COACHING_NOTE_MAX=COACHING_NOTE_MAX;
   window.newCoachingEventId=newCoachingEventId;

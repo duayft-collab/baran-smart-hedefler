@@ -187,7 +187,7 @@ function renderCoachingLive(){
     _cue(coachingElapsed(COACHING_UI.startedAt))+'</span>'+
     coachingStatusPill(s.lifecycle)+
     '<span id="coach_save" style="font-size:11px;color:'+(COACHING_UI.savePending?'var(--orange)':'var(--t3)')+'">'+
-    _cue(COACHING_UI.saving?'Kaydediliyor…':(COACHING_UI.savePending?'Kaydedilemedi — bağlantı bekleniyor'
+    _cue(COACHING_UI.saving?'Kaydediliyor…':(COACHING_UI.savePending?'Kaydedilemedi — bağlantı yok'
       :(COACHING_UI.noteDirty?'Kaydedilmedi':'Kayıtlı')))+'</span>'+
     '</div></div>';
 
@@ -317,9 +317,9 @@ async function coachingSaveNow(silent){
     coachingRecordEvent(s, {type:'COACH_NOTE_UPDATED'});
     if(!silent) renderCoachingLive();
   }else{
-    COACHING_UI.savePending = (res.error==='write_pending');
+    COACHING_UI.savePending = (res.error==='connection_required' || res.error==='write_pending');
     COACHING_UI.error = coachingErrorText(res.error, res.reason);
-    _clSetSaveText(COACHING_UI.savePending?'Kaydedilemedi — bağlantı bekleniyor':'Kaydedilemedi');
+    _clSetSaveText(COACHING_UI.savePending?'Kaydedilemedi — bağlantı yok':'Kaydedilemedi');
     renderCoachingLive();
   }
   return res;

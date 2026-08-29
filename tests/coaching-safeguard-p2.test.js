@@ -278,8 +278,10 @@ describe('S. The safety gate cannot be bypassed', () => {
       assert.equal(/coachingPersist|coachingCreateSession|coachingSaveSession|coachingWriteSession/.test(src), false, 'module ' + i);
       assert.equal(/\w\.set\(|\w\.add\(|\w\.update\(|\w\.delete\(|writeBatch|runTransaction/.test(src), false, 'module ' + i);
     });
-    // the single Firestore handle is a read-only reference builder in 17
-    assert.equal((C17.match(/CLOUD\.db\.collection/g) || []).length, 1);
+    // NEW-1: 17 no longer touches the persistent instance at all — the single
+    // Firestore handle comes from the dedicated non-persistent coaching client
+    assert.equal(/CLOUD\.db/.test(C17), false);
+    assert.equal((C17.match(/coachingDb\(\)/g) || []).length, 1);
     assert.equal(/CLOUD\.db/.test(C18 + C19), false);
   });
   test('S7. an invalid or throwing gate still fails closed', () => {

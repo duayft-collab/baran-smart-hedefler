@@ -209,10 +209,15 @@ function coachingChildPath(ownerUid, sessionId, kind){
 /* Firestore handle. Fail-closed: null when the db is absent or the canonical
    owner cannot be resolved. Phase 1 never calls .get()/.set() on it. */
 function coachingSessionsCol(ownerUid){
-  if(typeof CLOUD==='undefined' || !CLOUD.db) return null;
+  /* NEW-1: coaching NEVER uses the app-wide persistent Firestore instance —
+     that one caches everything it touches to IndexedDB in plaintext. It uses
+     the dedicated non-persistent client instead, and gets nothing at all if
+     that client is unavailable. There is deliberately no fallback. */
+  var db = (typeof coachingDb==='function') ? coachingDb() : null;
+  if(!db) return null;
   var u = ownerUid || coachingResolveOwner();
   if(!u) return null;
-  return CLOUD.db.collection('users').doc(u).collection(COACHING_ROOT);
+  return db.collection('users').doc(u).collection(COACHING_ROOT);
 }
 /* Runtime-only cache. Never persisted, never populated in Phase 1. */
 var COACHING_STORE = new Map();

@@ -350,7 +350,11 @@ describe('D. Privacy and PIL authorization', () => {
     const sb = createSandbox();
     asMember(sb, 'MEMBER1', { coaching: { read: true } });
     const writes = [];
-    sb.CLOUD.db = { collection(n) { return { doc(id) { return { collection(c) { writes.push(n + '/' + id + '/' + c); return { __path: n + '/' + id + '/' + c }; } }; } }; } };
+    /* NEW-1: the handle comes from the dedicated non-persistent coaching client,
+       never from the app-wide persistent CLOUD.db. */
+    sb.CLOUD.db = { collection() { throw new Error('coaching must not use the persistent instance'); } };
+    sb.COACHING_CLIENT.db = { collection(n) { return { doc(id) { return { collection(c) { writes.push(n + '/' + id + '/' + c); return { __path: n + '/' + id + '/' + c }; } }; } }; } };
+    sb.COACHING_CLIENT.ready = true;
     const col = sb.coachingSessionsCol();
     assert.equal(col.__path, 'users/OWNER1/coachingSessions');
     assert.equal(writes.some(p => p.indexOf('MEMBER1') >= 0), false);

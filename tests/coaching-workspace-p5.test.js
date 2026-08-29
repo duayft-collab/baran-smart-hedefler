@@ -26,9 +26,16 @@ function fakeDb() {
   function docRef(p) {
     return {
       _path: p,
-      get() { return Promise.resolve({ exists: Object.prototype.hasOwnProperty.call(store, p), data() { return store[p]; }, ref: docRef(p),
-        metadata: { hasPendingWrites: !!store.__offline, fromCache: !!store.__offline } }); },
-      set(d, o) { store[p] = (o && o.merge) ? Object.assign({}, store[p], JSON.parse(JSON.stringify(d))) : JSON.parse(JSON.stringify(d)); return Promise.resolve(); },
+      get() {
+        if (store.__hang) return new Promise(() => { });
+        return Promise.resolve({ exists: Object.prototype.hasOwnProperty.call(store, p), data() { return store[p]; }, ref: docRef(p),
+          metadata: { hasPendingWrites: !!store.__offline, fromCache: !!store.__offline } });
+      },
+      set(d, o) {
+        if (store.__hang) return new Promise(() => { });        // no server answer, ever
+        store[p] = (o && o.merge) ? Object.assign({}, store[p], JSON.parse(JSON.stringify(d))) : JSON.parse(JSON.stringify(d));
+        return Promise.resolve();
+      },
       update(d) { store[p] = Object.assign({}, store[p], JSON.parse(JSON.stringify(d))); return Promise.resolve(); },
       delete() { delete store[p]; return Promise.resolve(); },
       collection(n) { return colRef(p + '/' + n); }
@@ -49,7 +56,7 @@ function fakeDb() {
           return q.order.d === 'desc' ? (A < B ? 1 : A > B ? -1 : 0) : (A < B ? -1 : A > B ? 1 : 0);
         });
         keys = keys.slice(0, q.limit);
-        keys = keys.filter(k => k.indexOf('__offline') < 0);
+        keys = keys.filter(k => k.indexOf('__offline') < 0 && k.indexOf('__hang') < 0);
         return Promise.resolve({
           size: keys.length,
           forEach(cb) { keys.forEach(k => cb({ id: k.slice(pre.length), data() { return store[k]; }, ref: docRef(k) })); }
@@ -61,20 +68,27 @@ function fakeDb() {
   return { _store: store, collection(n) { return colRef(n); } };
 }
 /* signed-in owner, flag on, storage available */
-function ready(sb) {
-  /* The live workspace runs a 1s elapsed-time interval that is cleared in a real
-     browser when the element is replaced. The harness element stub never goes
-     away, so the interval would keep the test runner alive — stub it out. */
+function ready(sb, db) {
+  /* The live workspace runs a 1s elapsed-time interval that a real browser
+     clears when the element is replaced. The harness element stub never goes
+     away, so that interval would keep the test runner alive — stub it out.
+     setTimeout stays REAL: the store races every backend call against it. */
   sb.setInterval = function () { return 0; };
   sb.clearInterval = function () { };
-  sb.setTimeout = function () { return 0; };
-  sb.clearTimeout = function () { };
   sb.CLOUD.uid = 'OWNER1';
   sb.CLOUD.user = { uid: 'OWNER1', email: 'o@x.com', isAnonymous: false };
-  sb.CLOUD.db = fakeDb();
+  /* NEW-1: coaching storage comes from the dedicated non-persistent client,
+     never from CLOUD.db. Attaching the fake here proves the redirect holds. */
+  sb.COACHING_CLIENT.db = db || fakeDb();
+  sb.COACHING_CLIENT.ready = true;
+  sb.COACHING_CLIENT.authedUid = 'OWNER1';
+  sb.COACHING_CLIENT.persistent = false;
+  sb.coachingClientEnsure = function () { return Promise.resolve(sb.COACHING_CLIENT); };
+  sb.COACHING_WRITE_TIMEOUT_MS = 300;              // keep the offline path quick
   sb.COACHING.enabled = true;
   return sb;
 }
+const dbOf = sb => sb.COACHING_CLIENT.db;
 const NEW = (over) => Object.assign({ context: 'adult', purpose: 'Delegasyonu geliştirmek', relationLabel: 'Danışan A' }, over || {});
 
 /* ── CREATION ─────────────────────────────────────────────────────────────── */
@@ -87,7 +101,7 @@ describe('A. Session creation', () => {
     assert.equal(res.session.ownerUid, 'OWNER1');
     assert.equal(res.session.title, 'Delegasyonu geliştirmek');
     assert.equal(res.session.subjectRef, 'Danışan A');
-    const keys = Object.keys(sb.CLOUD.db._store);
+    const keys = Object.keys(dbOf(sb)._store);
     assert.ok(keys.some(k => k === 'users/OWNER1/coachingSessions/' + res.session.id), keys.join('\n'));
     assert.ok(keys.some(k => k.indexOf('/coachingSessions/' + res.session.id + '/events/') > 0));
     assert.equal(keys.some(k => k.indexOf('users/OWNER1/app/state') === 0), false);
@@ -98,7 +112,7 @@ describe('A. Session creation', () => {
     const res = await sb.coachingSessionCreate(NEW());
     assert.equal(res.ok, false);
     assert.equal(res.reason, 'feature_disabled');
-    deq(Object.keys(sb.CLOUD.db._store), []);
+    deq(Object.keys(dbOf(sb)._store), []);
   });
   test('A3. an unrelated member cannot create in the owner scope', async () => {
     const sb = ready(createSandbox());
@@ -110,19 +124,19 @@ describe('A. Session creation', () => {
     const res = await sb.coachingSessionCreate(NEW());
     assert.equal(res.ok, false);
     assert.equal(res.reason, 'not_authorized');
-    deq(Object.keys(sb.CLOUD.db._store), []);
+    deq(Object.keys(dbOf(sb)._store), []);
   });
   test('A4. an invalid record never reaches storage', async () => {
     const sb = ready(createSandbox());
     const res = await sb.coachingSessionCreate(NEW({ relationLabel: 'danisan@example.com' }));
     assert.equal(res.ok, false);
     assert.equal(res.error, 'invalid_session');
-    deq(Object.keys(sb.CLOUD.db._store), []);
+    deq(Object.keys(dbOf(sb)._store), []);
   });
   test('A5. an existing id is never silently replaced', async () => {
     const sb = ready(createSandbox());
     const a = await sb.coachingSessionCreate(NEW());
-    sb.CLOUD.db._store['users/OWNER1/coachingSessions/' + a.session.id].title = 'ORIGINAL';
+    dbOf(sb)._store['users/OWNER1/coachingSessions/' + a.session.id].title = 'ORIGINAL';
     const clash = await sb.coachingSessionPatch(a.session, { title: 'x' });
     assert.equal(clash.ok, true);           // patching own session is fine
     assert.equal(sb.coachingValidId(a.session.id), true);
@@ -144,7 +158,7 @@ describe('B. Minors and safety own the write path', () => {
       const res = await sb.coachingSessionCreate(NEW({ context: ctx, purpose: 'Okulda odaklanmak' }));
       assert.equal(res.ok, false, ctx);
       assert.equal(res.reason, 'guardian_consent_required', ctx);
-      deq(Object.keys(sb.CLOUD.db._store), [], ctx);
+      deq(Object.keys(dbOf(sb)._store), [], ctx);
     }
   });
   test('B2. with consent recorded, a child session is created', async () => {
@@ -167,7 +181,7 @@ describe('B. Minors and safety own the write path', () => {
     const res = await sb.coachingSessionCreate(NEW({ purpose: 'İntihar etmeyi düşünüyorum' }));
     assert.equal(res.ok, false);
     assert.equal(res.decision, 'stop_and_refer');
-    deq(Object.keys(sb.CLOUD.db._store), []);
+    deq(Object.keys(dbOf(sb)._store), []);
   });
   test('B5. a scope-boundary note cannot be saved either', async () => {
     const sb = ready(createSandbox());
@@ -175,7 +189,7 @@ describe('B. Minors and safety own the write path', () => {
     const res = await sb.coachingSaveNote(a.session, 'Bende depresyon var mı diye soruyor.');
     assert.equal(res.ok, false);
     assert.equal(res.decision, 'pause');
-    assert.equal(Object.keys(sb.CLOUD.db._store).some(k => k.indexOf('/notes/') > 0), false);
+    assert.equal(Object.keys(dbOf(sb)._store).some(k => k.indexOf('/notes/') > 0), false);
   });
   test('B6. an adult-only intervention cannot be recorded in a child session', async () => {
     const sb = ready(createSandbox());
@@ -201,9 +215,9 @@ describe('C. Persistence, notes and events', () => {
     const sb = ready(createSandbox());
     const a = await sb.coachingSessionCreate(NEW());
     for (const t of ['a', 'ab', 'abc']) await sb.coachingSaveNote(a.session, t);
-    const noteKeys = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/notes/') > 0);
+    const noteKeys = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/notes/') > 0);
     deq(noteKeys, ['users/OWNER1/coachingSessions/' + a.session.id + '/notes/current']);
-    assert.equal(sb.CLOUD.db._store[noteKeys[0]].body, 'abc');
+    assert.equal(dbOf(sb)._store[noteKeys[0]].body, 'abc');
     const back = await sb.coachingLoadNote(a.session.id);
     assert.equal(back.note.body, 'abc');
   });
@@ -212,8 +226,8 @@ describe('C. Persistence, notes and events', () => {
     const a = await sb.coachingSessionCreate(NEW({ purpose: 'GIZLI_AMAC_777' }));
     await sb.coachingSaveNote(a.session, 'GIZLI_NOT_555 danışan çok zorlanıyor');
     await sb.coachingRecordEvent(a.session, { type: 'COACH_NOTE_UPDATED' });
-    const events = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/events/') > 0)
-      .map(k => sb.CLOUD.db._store[k]);
+    const events = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/events/') > 0)
+      .map(k => dbOf(sb)._store[k]);
     assert.ok(events.length >= 2);
     const j = JSON.stringify(events);
     ['GIZLI_NOT_555', 'GIZLI_AMAC_777', 'Danışan A'].forEach(x => assert.equal(j.indexOf(x), -1, x));
@@ -231,14 +245,14 @@ describe('C. Persistence, notes and events', () => {
     const res = await sb.coachingUseIntervention(a.session, 'q.goal.define', { stage: 'EXPLORING' });
     assert.equal(res.ok, true, JSON.stringify(res));
     assert.equal(res.session.counters.interventions, before + 1);
-    const used = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/events/') > 0)
-      .map(k => sb.CLOUD.db._store[k]).find(e => e.type === 'INTERVENTION_USED');
+    const used = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/events/') > 0)
+      .map(k => dbOf(sb)._store[k]).find(e => e.type === 'INTERVENTION_USED');
     assert.ok(used);
     assert.equal(used.interventionId, 'q.goal.define');
     assert.equal(used.interventionSnapshot.id, 'q.goal.define');
     assert.ok(used.interventionSnapshot.text.length > 5);
-    const viewed = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/events/') > 0)
-      .map(k => sb.CLOUD.db._store[k]).filter(e => e.type === 'INTERVENTION_VIEWED');
+    const viewed = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/events/') > 0)
+      .map(k => dbOf(sb)._store[k]).filter(e => e.type === 'INTERVENTION_VIEWED');
     deq(viewed, []);                       // showing a suggestion writes nothing
   });
   test('C5. reads are bounded and owner-scoped', async () => {
@@ -268,7 +282,7 @@ describe('C. Persistence, notes and events', () => {
     const res = await sb.coachingCancelSession(a.session);
     assert.equal(res.ok, true);
     assert.equal(res.session.lifecycle, 'cancelled');
-    assert.ok(sb.CLOUD.db._store['users/OWNER1/coachingSessions/' + a.session.id]);
+    assert.ok(dbOf(sb)._store['users/OWNER1/coachingSessions/' + a.session.id]);
   });
 });
 
@@ -281,17 +295,17 @@ describe('C2. Offline behaviour never claims a save it did not get', () => {
     assert.equal(online.ok, true);
     assert.equal(online.confirmed, true);
 
-    sb.CLOUD.db._store.__offline = true;              // Firestore resolves from cache
+    dbOf(sb)._store.__offline = true;              // Firestore resolves from cache
     const offline = await sb.coachingSaveNote(a.session, 'cevrimdisi not');
     assert.equal(offline.ok, false, 'a queued write must not report success');
-    assert.equal(offline.error, 'write_pending');
+    assert.equal(offline.error, 'connection_required');
     assert.equal(offline.queued, true);
     // the content is still in the local queue, so nothing was lost
-    assert.equal(sb.CLOUD.db._store['users/OWNER1/coachingSessions/' + a.session.id + '/notes/current'].body, 'cevrimdisi not');
+    assert.equal(dbOf(sb)._store['users/OWNER1/coachingSessions/' + a.session.id + '/notes/current'].body, 'cevrimdisi not');
   });
   test('C2b. the coach is told, in plain words, that it is not saved', () => {
     const sb = createSandbox();
-    const msg = sb.coachingErrorText('write_pending');
+    const msg = sb.coachingErrorText('connection_required');
     assert.ok(msg.indexOf('Kaydedilemedi') >= 0, msg);
     assert.ok(msg.indexOf('bağlantı') >= 0, msg);
     assert.equal(/[a-z]_[a-z]|Firebase|Firestore|PERMISSION/.test(msg), false, msg);
@@ -302,27 +316,49 @@ describe('C2. Offline behaviour never claims a save it did not get', () => {
     sb.COACHING_UI.session = a.session;
     sb.COACHING_UI.startedAt = Date.now();
     sb.tab = 'coachsession';
-    sb.CLOUD.db._store.__offline = true;
+    dbOf(sb)._store.__offline = true;
     sb.COACHING_UI.note = 'kaybolmamali';
     sb.ge('coach_note').value = 'kaybolmamali';        // the textarea the coach is typing into
     await sb.coachingSaveNow(false);
     assert.equal(sb.COACHING_UI.savePending, true);
     const html = (sb.__getElements().pinner || {}).innerHTML || '';
-    assert.ok(html.indexOf('Kaydedilemedi — bağlantı bekleniyor') >= 0);
+    assert.ok(html.indexOf('Kaydedilemedi — bağlantı yok') >= 0);
     assert.ok(html.indexOf('Tekrar Dene') >= 0);
     assert.equal(html.indexOf('>Kayıtlı<'), -1);
     assert.ok(html.indexOf('kaybolmamali') >= 0, 'the unsaved text must stay on screen');
+  });
+  test('C2c2. a server that never answers is reported as not saved, within a deadline', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    dbOf(sb)._store.__hang = true;                    // transport gone, no local cache to fake it
+    const t0 = Date.now();
+    const res = await sb.coachingSaveNote(a.session, 'cevaplanmayan yazma');
+    const ms = Date.now() - t0;
+    assert.equal(res.ok, false);
+    assert.equal(res.error, 'connection_required');
+    assert.equal(res.queued, false);                  // nothing was queued anywhere
+    assert.ok(ms < 3000, 'must not hang: ' + ms + 'ms');
+    assert.ok(ms >= 200, 'must actually wait for the deadline: ' + ms + 'ms');
+  });
+  test('C2c3. reads and other writes are bounded the same way', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    dbOf(sb)._store.__hang = true;
+    assert.equal((await sb.coachingSessionPatch(a.session, { title: 'x' })).error, 'connection_required');
+    assert.equal((await sb.coachingRecordEvent(a.session, { type: 'CONTEXT_UPDATED' })).error, 'connection_required');
+    const create = await sb.coachingSessionCreate(NEW({ purpose: 'ikinci' }));
+    assert.equal(create.error, 'connection_required');
   });
   test('C2d. reconnecting and retrying reports a real save', async () => {
     const sb = ready(createSandbox());
     const a = await sb.coachingSessionCreate(NEW());
     sb.COACHING_UI.session = a.session; sb.tab = 'coachsession';
-    sb.CLOUD.db._store.__offline = true;
+    dbOf(sb)._store.__offline = true;
     sb.COACHING_UI.note = 'once basarisiz';
     sb.ge('coach_note').value = 'once basarisiz';
     await sb.coachingSaveNow(false);
     assert.equal(sb.COACHING_UI.savePending, true);
-    delete sb.CLOUD.db._store.__offline;              // network back
+    delete dbOf(sb)._store.__offline;              // network back
     await sb.coachingSaveNow(false);
     assert.equal(sb.COACHING_UI.savePending, false);
     assert.equal(sb.COACHING_UI.noteDirty, false);
@@ -343,13 +379,73 @@ describe('C2. Offline behaviour never claims a save it did not get', () => {
   test('C2f. no unencrypted coaching shadow store is created anywhere', async () => {
     const sb = ready(createSandbox());
     const a = await sb.coachingSessionCreate(NEW({ purpose: 'GIZLI_AMAC' }));
-    sb.CLOUD.db._store.__offline = true;
+    dbOf(sb)._store.__offline = true;
     await sb.coachingSaveNote(a.session, 'GIZLI_NOT');
     const ls = JSON.stringify(sb.localStorage);
     assert.equal(ls.indexOf('GIZLI_NOT'), -1);
     assert.equal(ls.indexOf('GIZLI_AMAC'), -1);
     assert.equal(sb.canonicalStringify(sb.D).indexOf('GIZLI_NOT'), -1);
     P5_FILES.forEach(f => assert.equal(/localStorage/.test(code(F(f))), false, f));
+  });
+});
+
+/* ── NEW-1: no persistent plaintext coaching cache ────────────────────────── */
+describe('C3. Coaching never rides on the persistent app cache', () => {
+  test('C3a. the storage handle comes from the coaching client, never CLOUD.db', () => {
+    const sb = createSandbox();
+    sb.CLOUD.uid = 'OWNER1';
+    sb.CLOUD.user = { uid: 'OWNER1', email: 'o@x.com', isAnonymous: false };
+    sb.CLOUD.db = fakeDb();                          // the persistent app instance
+    sb.COACHING_CLIENT.db = null; sb.COACHING_CLIENT.ready = false;
+    assert.equal(sb.coachingSessionsCol(), null, 'must not fall back to the persistent instance');
+    sb.COACHING_CLIENT.db = fakeDb(); sb.COACHING_CLIENT.ready = true;
+    assert.ok(sb.coachingSessionsCol());
+    assert.equal(/CLOUD\.db/.test(code(F('17-coaching-domain.js'))), false);
+  });
+  test('C3b. the coaching client never enables persistence', () => {
+    const src = code(F('17b-coaching-client.js'));
+    assert.equal(/enablePersistence/.test(src), false);
+    assert.equal(/synchronizeTabs/.test(src), false);
+    assert.equal(/localStorage|sessionStorage|indexedDB|openDatabase/i.test(src), false);
+    const sb = createSandbox();
+    assert.equal(sb.COACHING_CLIENT.persistent, false);
+    assert.equal(sb.coachingClientState().persistent, false);
+    assert.equal(sb.coachingClientState().name, 'coaching');
+  });
+  test('C3c. an unattached client yields no storage at all — fail closed', async () => {
+    const sb = createSandbox();
+    sb.CLOUD.uid = 'OWNER1'; sb.CLOUD.user = { uid: 'OWNER1', isAnonymous: false };
+    sb.COACHING.enabled = true;
+    sb.coachingClientEnsure = function () { return Promise.resolve({ ready: false, error: 'not_authenticated' }); };
+    assert.equal((await sb.coachingSessionCreate(NEW())).error, 'storage_unavailable');
+    assert.equal((await sb.coachingListSessions({})).error, 'connection_required');
+    assert.equal((await sb.coachingSaveNote({ id: 'coa_a-1' }, 'x')).error, 'connection_required');
+  });
+  test('C3d. the app-wide persistent instance still exists for everything else', () => {
+    const auth = F('03-auth.js');
+    assert.match(auth, /enablePersistence\(\{synchronizeTabs:true\}\)/);   // unrelated modules unchanged
+    assert.equal(/coaching/i.test(auth), false);
+  });
+  test('C3e. no coaching content reaches localStorage or the D payload', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW({ purpose: 'GIZLI_AMAC_1', relationLabel: 'GIZLI_KISI' }));
+    await sb.coachingSaveNote(a.session, 'GIZLI_NOT_1');
+    await sb.coachingCompleteSession((await sb.coachingSessionPatch(a.session, { lifecycle: 'active' })).session,
+      { insight: 'GIZLI_ICGORU', commitment: { source: 'coachee', text: 'GIZLI_EYLEM' } });
+    const ls = JSON.stringify(sb.localStorage);
+    const d = sb.canonicalStringify(sb.D);
+    ['GIZLI_AMAC_1', 'GIZLI_KISI', 'GIZLI_NOT_1', 'GIZLI_ICGORU', 'GIZLI_EYLEM'].forEach(x => {
+      assert.equal(ls.indexOf(x), -1, 'localStorage leaked ' + x);
+      assert.equal(d.indexOf(x), -1, 'D payload leaked ' + x);
+    });
+  });
+  test('C3f. the store declares itself online-first with no local cache', () => {
+    const sb = ready(createSandbox());
+    const c = sb.coachingStoreSelfCheck();
+    assert.equal(c.onlineFirst, true);
+    assert.equal(c.localCache, false);
+    assert.ok(c.writeTimeoutMs > 0);
+    assert.equal(c.client.persistent, false);
   });
 });
 
@@ -386,18 +482,18 @@ describe('D. Completion and client-owned action', () => {
     const s = await activeSession(sb);
     await sb.coachingCompleteSession(s, { insight: 'Sorumluluğu başkasına bırakıyor.',
       coachSuggestion: 'Daha çok delege etmeli.', reflection: 'Fazla erken öneri verdim.' });
-    const refl = sb.CLOUD.db._store[Object.keys(sb.CLOUD.db._store).find(k => k.indexOf('/reflections/final') > 0)];
+    const refl = dbOf(sb)._store[Object.keys(dbOf(sb)._store).find(k => k.indexOf('/reflections/final') > 0)];
     assert.equal(refl.coachSuggestion, 'Daha çok delege etmeli.');
     assert.equal(refl.coachReflection, 'Fazla erken öneri verdim.');
-    const commitKeys = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/commitments/') > 0);
+    const commitKeys = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/commitments/') > 0);
     deq(commitKeys, []);                   // a suggestion never becomes a commitment
   });
   test('D4. completion is deterministic and events are logged', async () => {
     const sb = ready(createSandbox());
     const s = await activeSession(sb);
     await sb.coachingCompleteSession(s, { commitment: { source: 'coachee', text: 'Yapacağım.' } });
-    const types = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/events/') > 0)
-      .map(k => sb.CLOUD.db._store[k].type);
+    const types = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/events/') > 0)
+      .map(k => dbOf(sb)._store[k].type);
     assert.ok(types.indexOf('SESSION_COMPLETED') >= 0);
     assert.ok(types.indexOf('ACTION_COMMITTED') >= 0);
   });
@@ -414,7 +510,7 @@ describe('E. B3 restore is wired through the chokepoint', () => {
     assert.equal(noConfirm.error, 'confirmation_required');
     assert.equal(noConfirm.preview.valid, 1);
     assert.equal(noConfirm.preview.transcriptsIncluded, false);
-    deq(Object.keys(sb.CLOUD.db._store), []);
+    deq(Object.keys(dbOf(sb)._store), []);
   });
   test('E2. a confirmed restore writes through the guard', async () => {
     const sb = ready(createSandbox());
@@ -423,10 +519,10 @@ describe('E. B3 restore is wired through the chokepoint', () => {
     const res = await sb.coachingRestoreSessions([s], { confirmed: true });
     assert.equal(res.ok, true);
     assert.equal(res.restored, 1);
-    assert.ok(sb.CLOUD.db._store['users/OWNER1/coachingSessions/coa_r2-1']);
-    assert.equal(sb.CLOUD.db._store['users/OWNER1/coachingSessions/coa_r2-1'].ownerUid, 'OWNER1');
-    const ev = Object.keys(sb.CLOUD.db._store).filter(k => k.indexOf('/events/') > 0)
-      .map(k => sb.CLOUD.db._store[k].type);
+    assert.ok(dbOf(sb)._store['users/OWNER1/coachingSessions/coa_r2-1']);
+    assert.equal(dbOf(sb)._store['users/OWNER1/coachingSessions/coa_r2-1'].ownerUid, 'OWNER1');
+    const ev = Object.keys(dbOf(sb)._store).filter(k => k.indexOf('/events/') > 0)
+      .map(k => dbOf(sb)._store[k].type);
     assert.ok(ev.indexOf('SESSION_RESTORED') >= 0);
   });
   test('E3. an existing session is skipped, never overwritten', async () => {
@@ -436,7 +532,7 @@ describe('E. B3 restore is wired through the chokepoint', () => {
     const res = await sb.coachingRestoreSessions([tampered], { confirmed: true });
     assert.equal(res.restored, 0);
     deq(res.skipped.map(s => s.reason), ['already_exists']);
-    assert.equal(sb.CLOUD.db._store['users/OWNER1/coachingSessions/' + a.session.id].title, 'ORİJİNAL');
+    assert.equal(dbOf(sb)._store['users/OWNER1/coachingSessions/' + a.session.id].title, 'ORİJİNAL');
   });
   test('E4. a foreign-owner record is skipped', async () => {
     const sb = ready(createSandbox());
@@ -451,7 +547,7 @@ describe('E. B3 restore is wired through the chokepoint', () => {
     const res = await sb.coachingRestoreSessions([{ id: 'nope' }, null, { id: 'coa_r5-1', createdAt: 'bad' }], { confirmed: true });
     assert.equal(res.preview.invalid >= 1, true);
     assert.equal(res.restored <= 1, true);
-    assert.equal(Object.keys(sb.CLOUD.db._store).some(k => k.indexOf('nope') > 0), false);
+    assert.equal(Object.keys(dbOf(sb)._store).some(k => k.indexOf('nope') > 0), false);
   });
   test('E6. restore obeys the flag and the capability', async () => {
     const sb = ready(createSandbox());
@@ -643,10 +739,12 @@ describe('G. Privacy, legacy and gates', () => {
       assert.equal((INDEX.match(new RegExp(f.replace(/\./g, '\\.'), 'g')) || []).length, 1, f);
     });
     assert.equal(INDEX, fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8'));
-    ['17-coaching-domain.js', '26-coaching-archive.js', '12-render-boot.js'].forEach(f =>
+    ['26-coaching-archive.js', '12-render-boot.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5'), f));
-    P5_FILES.forEach(f =>
-      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5b'), f));
+    ['27-coaching-session-store.js', '28-coaching-workspace.js', '29-coaching-live.js',
+     '17-coaching-domain.js', '17b-coaching-client.js'].forEach(f =>
+      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5c'), f));
+    assert.ok(INDEX.indexOf('17b-coaching-client.js') < INDEX.indexOf('27-coaching-session-store.js'));
     // load order: store before shell before live, all before render-boot
     assert.ok(INDEX.indexOf('27-coaching-session-store.js') < INDEX.indexOf('28-coaching-workspace.js'));
     assert.ok(INDEX.indexOf('28-coaching-workspace.js') < INDEX.indexOf('29-coaching-live.js'));

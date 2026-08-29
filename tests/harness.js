@@ -156,6 +156,7 @@ function createSandbox() {
      load order any existing suite depends on. Side-effect free apart from registering
      the canonical 'coachingSession' relation resolver. */
   run(src('js/17-coaching-domain.js'), '17-coaching-domain.js');
+  run(src('js/17b-coaching-client.js'), '17b-coaching-client.js');
   run(src('js/18-coaching-ethics.js'), '18-coaching-ethics.js');
   run(src('js/19-coaching-safeguard.js'), '19-coaching-safeguard.js');
   run(src('js/20-coaching-interventions.js'), '20-coaching-interventions.js');
