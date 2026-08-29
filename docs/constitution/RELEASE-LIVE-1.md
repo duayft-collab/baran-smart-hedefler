@@ -76,6 +76,24 @@ diff -rq js public/js && diff -rq css public/css && diff index.html public/index
 
 **Geçme ölçütü:** `MIRROR-OK`.
 
+### G3b — Cache-bust bumplandı mı? (ZORUNLU)
+
+Bir `js/` veya `css/` dosyasının **içeriği değiştiyse** `index.html` içindeki
+`?v=` etiketi de **değişmelidir**. Aksi halde tarayıcı, taze HTML kabuğunu
+alsa bile eski JS'i sunmaya devam eder ve canlı test yanlış kodu doğrular.
+
+```bash
+git diff --name-only HEAD~1 HEAD -- 'js/*.js' 'css/*.css' | while read f; do
+  b=$(basename "$f")
+  echo "$b -> $(grep -o "$b?v=[^\"]*" index.html)"
+done
+git diff HEAD~1 HEAD -- index.html | grep '?v='   # bump'ların gerçekten yapıldığını gösterir
+```
+
+**Geçme ölçütü:** değişen her dosyanın sürüm etiketi bir önceki commit'e göre
+farklı. (2026-08-29'da bizzat yaşandı: `18-coaching-ethics.js` değişti, etiket
+bumplanmadı, tarayıcı bir saat eski modülü çalıştırdı.)
+
 Ayrıca her modülün kendi test dosyası, kendi aynasını iddia eder
 (`mirror byte-identity js ↔ public/js`). Yeni modül eklenirken bu testin de
 eklenmesi zorunludur.
