@@ -657,6 +657,21 @@ describe('F. Workspace UI', () => {
     assert.ok(types.some(t => sb.COACHING_SPACE_TYPES.indexOf(t) >= 0), types.join(','));
     assert.equal(sb.COACHING_UI.moves[0].intervention.type === 'OPEN_QUESTION', false);
   });
+  test('F8b. the coach can reach the "do not ask, wait" recommendation', async () => {
+    const sb = ready(createSandbox());
+    const a = await sb.coachingSessionCreate(NEW());
+    sb.COACHING_UI.session = a.session; sb.tab = 'coachsession';
+    // the chip exists and is wired to the router input the engine actually reads
+    assert.ok(sb.COACHING_CTX_CHIPS.some(c => c[0] === 'significantRealization'), 'no chip for it');
+    sb.COACHING_UI.ctx = { conversationStage: 'AWARENESS' };
+    sb.coachingToggleCtx('significantRealization', 'yes');       // as the DOM sends it
+    assert.equal(sb.COACHING_UI.ctx.significantRealization, true, 'must coerce to a real boolean');
+    const types = sb.COACHING_UI.moves.map(m => m.intervention.type);
+    assert.ok(types.indexOf('SILENCE') >= 0 || types.indexOf('REFLECTION') >= 0, types.join(','));
+    assert.equal(types[0] === 'OPEN_QUESTION', false, 'a question must not lead here');
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.ok(html.indexOf('Farkındalık doğdu') >= 0);
+  });
   test('F9. the elapsed clock is formatted, not raw', () => {
     const sb = createSandbox();
     assert.equal(sb.coachingElapsed(1000, 1000), '00:00');
@@ -741,9 +756,9 @@ describe('G. Privacy, legacy and gates', () => {
     ['26-coaching-archive.js', '12-render-boot.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5'), f));
     assert.match(INDEX, /17-coaching-domain\.js\?v=2026\.08-coaching-on/);
-    ['27-coaching-session-store.js', '28-coaching-workspace.js', '29-coaching-live.js',
-     '17b-coaching-client.js'].forEach(f =>
+    ['27-coaching-session-store.js', '28-coaching-workspace.js', '17b-coaching-client.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5c'), f));
+    assert.match(INDEX, /29-coaching-live\.js\?v=2026\.08-coaching-p5d/);
     assert.ok(INDEX.indexOf('17b-coaching-client.js') < INDEX.indexOf('27-coaching-session-store.js'));
     // load order: store before shell before live, all before render-boot
     assert.ok(INDEX.indexOf('27-coaching-session-store.js') < INDEX.indexOf('28-coaching-workspace.js'));

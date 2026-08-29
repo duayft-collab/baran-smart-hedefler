@@ -31,7 +31,10 @@ var COACHING_CTX_CHIPS = [
   ['behaviourChangeNeed','high','Süreklilik sorunu'],
   ['leadershipContext','yes','Liderlik konusu'],
   ['careerContext','yes','Kariyer konusu'],
-  ['meaningIdentityContext','yes','Anlam / kimlik']
+  ['meaningIdentityContext','yes','Anlam / kimlik'],
+  /* The one that lets the engine answer "don't ask, wait" — without a control
+     for it the coach could never reach a silence recommendation. */
+  ['significantRealization','yes','Farkındalık doğdu']
 ];
 
 /* ══ NEW SESSION ══ */
@@ -137,6 +140,8 @@ window.coachingCreateFromDraft = coachingCreateFromDraft;
 /* ══ LIVE WORKSPACE ══ */
 function coachingCtxOn(key, value){ return COACHING_UI.ctx[key]===value; }
 function coachingToggleCtx(key, value){
+  /* chips arrive from the DOM as strings; the router expects a real boolean here */
+  if(key==='significantRealization') value = (value===true || value==='yes' || value==='true');
   if(COACHING_UI.ctx[key]===value) delete COACHING_UI.ctx[key];
   else COACHING_UI.ctx[key] = value;
   coachingRefreshMoves();
