@@ -151,6 +151,10 @@ describe('A. Canonical session schema', () => {
     assert.equal(s.safeguard.severity, 'none');
     assert.equal(s.safeguard.referral, 'none');
     assert.equal(s.safeguard.reviewedAt, null);
+    deq(s.safeguard.guardianConsent, { state: 'unknown', by: null, at: null });
+    const g = sb.coachingBuildSession({ safeguard: { guardianConsent: { state: 'granted', by: 'veli', at: '2026-08-29T09:00:00.000Z' } } }).session;
+    deq(g.safeguard.guardianConsent, { state: 'granted', by: 'veli', at: '2026-08-29T09:00:00.000Z' });
+    assert.equal(sb.coachingBuildSession({ safeguard: { guardianConsent: { state: 'nope' } } }).session.safeguard.guardianConsent.state, 'unknown');
   });
 });
 
@@ -356,11 +360,13 @@ describe('D. Privacy and PIL authorization', () => {
 describe('E. Safety gate cannot be bypassed', () => {
   test('E1. no gate installed → denied, decision "pause"', () => {
     const sb = createSandbox();
+    sb.COACHING_SAFETY.gate = null;                       // Phase 2 installs one at load
     assert.equal(sb.coachingSafetyGateInstalled(), false);
     deq(sb.coachingSafetyCheck(null, {}), { allowed: false, decision: 'pause', reason: 'safety_layer_absent' });
   });
   test('E2. a fully authorized owner with the flag ON still cannot write without the gate', () => {
     const sb = createSandbox(); signedIn(sb, 'U1');
+    sb.COACHING_SAFETY.gate = null;                       // simulate the layer being absent
     sb.COACHING.enabled = true;
     const g = sb.coachingAssertWritable('write');
     assert.equal(g.allowed, false);
@@ -389,6 +395,7 @@ describe('E. Safety gate cannot be bypassed', () => {
   });
   test('E6. installing a non-function gate is refused', () => {
     const sb = createSandbox();
+    sb.COACHING_SAFETY.gate = null;
     deq(sb.coachingInstallSafetyGate('x'), { ok: false, error: 'INVALID_GATE' });
     assert.equal(sb.coachingSafetyGateInstalled(), false);
   });
@@ -430,6 +437,7 @@ describe('F. Feature flag', () => {
     sb.COACHING.enabled = true;
     assert.equal(sb.coachingAssertWritable('write').reason, 'owner_unresolved');
     signedIn(sb, 'U1');
+    sb.COACHING_SAFETY.gate = null;
     assert.equal(sb.coachingAssertWritable('write').reason, 'safety_layer_absent');
   });
   test('F5. exercising the whole public surface while OFF leaves D byte-identical', () => {
@@ -718,8 +726,8 @@ describe('M. Self-check', () => {
     const c = sb.coachingSelfCheck();
     assert.equal(c.schemaVersion, 1);
     assert.equal(c.featureEnabled, false);
-    assert.equal(c.safetyGateInstalled, false);
-    assert.equal(c.writable, false);
+    assert.equal(c.safetyGateInstalled, true);   // Phase 2 installs the real gate at load
+    assert.equal(c.writable, false);            // ...and the flag being OFF still denies
     assert.equal(c.privacyDefault, 'private');
     assert.equal(c.storeCount, 0);
     assert.equal(c.legacyCount, 1);

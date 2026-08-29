@@ -131,6 +131,11 @@ function coachingCanTransition(from,to){
    Broader levels are an additive, deliberate future decision; they can never
    be reached by accident and are never inherited from app/state sharing.
    ══════════════════════════════════════════════════════════════════════════ */
+/* Guardian-consent lifecycle for minor contexts. Declared here (not in the
+   Phase 2 engine) because normalization owns the canonical record shape; the
+   engine only reads it. Additive: zero records exist, schemaVersion unchanged. */
+var COACHING_CONSENT_STATE = ['unknown','not_required','granted','declined','withdrawn'];
+
 var COACHING_PRIVACY_DEFAULT = 'private';
 var COACHING_PRIVACY_LEVELS = ['private'];
 function coachingValidPrivacy(p){ return COACHING_PRIVACY_LEVELS.indexOf(p)>=0; }
@@ -271,6 +276,14 @@ function _coTagList(v, max){
   }
   return out;
 }
+function _coConsent(c){
+  c = _coIsPlainObject(c) ? c : {};
+  return {
+    state: COACHING_CONSENT_STATE.indexOf(c.state)>=0 ? c.state : 'unknown',
+    by: c.by!=null ? _coStr(c.by,128) : null,
+    at: _coIsIso(c.at) ? c.at : null
+  };
+}
 function _coSafeguard(s){
   s = _coIsPlainObject(s) ? s : {};
   return {
@@ -278,7 +291,8 @@ function _coSafeguard(s){
     severity: COACHING_SAFEGUARD_SEVERITY.indexOf(s.severity)>=0 ? s.severity : 'none',
     referral: COACHING_REFERRAL_STATE.indexOf(s.referral)>=0 ? s.referral : 'none',
     reviewedAt: _coIsIso(s.reviewedAt) ? s.reviewedAt : null,
-    reviewedBy: s.reviewedBy!=null ? _coStr(s.reviewedBy,128) : null
+    reviewedBy: s.reviewedBy!=null ? _coStr(s.reviewedBy,128) : null,
+    guardianConsent: _coConsent(s.guardianConsent)
   };
 }
 function _coCounters(c){
@@ -492,6 +506,7 @@ if(typeof window!=='undefined'){
   window.COACHING_CONTEXTS=COACHING_CONTEXTS; window.COACHING_APPROACHES=COACHING_APPROACHES;
   window.COACHING_LIFECYCLE=COACHING_LIFECYCLE; window.COACHING_TRANSITIONS=COACHING_TRANSITIONS;
   window.COACHING_PRIVACY_DEFAULT=COACHING_PRIVACY_DEFAULT; window.COACHING_PRIVACY_LEVELS=COACHING_PRIVACY_LEVELS;
+  window.COACHING_CONSENT_STATE=COACHING_CONSENT_STATE;
   window.COACHING_BOUNDARY_CATEGORIES=COACHING_BOUNDARY_CATEGORIES;
   window.COACHING_SAFEGUARD_SEVERITY=COACHING_SAFEGUARD_SEVERITY;
   window.COACHING_SAFEGUARD_STATE=COACHING_SAFEGUARD_STATE;

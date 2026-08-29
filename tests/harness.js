@@ -156,6 +156,8 @@ function createSandbox() {
      load order any existing suite depends on. Side-effect free apart from registering
      the canonical 'coachingSession' relation resolver. */
   run(src('js/17-coaching-domain.js'), '17-coaching-domain.js');
+  run(src('js/18-coaching-ethics.js'), '18-coaching-ethics.js');
+  run(src('js/19-coaching-safeguard.js'), '19-coaching-safeguard.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;
