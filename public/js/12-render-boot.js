@@ -19,6 +19,10 @@ function renderPage(){
     coaching:function(){renderGenericList('coaching');},
     vault:function(){renderGenericList('vault');},
     questions:function(){renderGenericList('questions');},
+    /* PHASE 5: reachable only when the coaching feature flag injects its nav
+       entry; with the flag OFF these routes exist but nothing links to them. */
+    coachhome:function(){ if(typeof renderCoachingHome==='function'){ if(typeof coachingLoadHome==='function')coachingLoadHome(); renderCoachingHome(); } },
+    coachsession:function(){ if(typeof renderCoachingLive==='function')renderCoachingLive(); },
   };
   var fn=pages[tab];
   if(fn)fn();

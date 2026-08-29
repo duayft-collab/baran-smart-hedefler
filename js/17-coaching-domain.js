@@ -115,11 +115,14 @@ function coachingValidApproach(key){ return _coHas(COACHING_APPROACHES,key); }
    Hard delete is NOT part of the normal lifecycle: 'archived' is terminal and
    preserves the record (same discipline as decisionArchive).
    ══════════════════════════════════════════════════════════════════════════ */
-var COACHING_LIFECYCLE = ['draft','active','completed','archived'];
+var COACHING_LIFECYCLE = ['draft','active','completed','cancelled','archived'];
 var COACHING_TRANSITIONS = {
-  draft:     ['active','archived'],
-  active:    ['completed','archived'],
+  draft:     ['active','cancelled','archived'],
+  active:    ['completed','cancelled','archived'],
   completed: ['archived'],
+  /* an abandoned session is cancelled, never hard-deleted — it stays visible and
+     can still be archived, so nothing disappears behind the coach's back */
+  cancelled: ['archived'],
   archived:  []
 };
 function coachingValidLifecycle(s){ return COACHING_LIFECYCLE.indexOf(s)>=0; }
@@ -185,7 +188,7 @@ function coachingSafetyCheck(session, event){
    ══════════════════════════════════════════════════════════════════════════ */
 var COACHING_ROOT = 'coachingSessions';
 var COACHING_CHILD_COLLECTIONS = ['notes','interventions','reflections','observations',
-  'commitments','transcript','attachments'];
+  'commitments','events','transcript','attachments'];
 /* Bounded embedded arrays — hard caps enforced by normalization. */
 var COACHING_EMBEDDED_LIMITS = { competencyTags:12, approachTags:6, tags:20, tagLen:48, title:140, subjectRef:64 };
 var COACHING_PAGE_MAX = 100;   // no unbounded collection reads, ever

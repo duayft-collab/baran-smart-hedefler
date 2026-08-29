@@ -162,9 +162,13 @@ describe('A. Canonical session schema', () => {
 describe('B. Lifecycle', () => {
   test('B1. canonical states, and hard delete is not one of them', () => {
     const sb = createSandbox();
-    deq(sb.COACHING_LIFECYCLE, ['draft', 'active', 'completed', 'archived']);
+    deq(sb.COACHING_LIFECYCLE, ['draft', 'active', 'completed', 'cancelled', 'archived']);
     assert.equal(sb.COACHING_LIFECYCLE.includes('deleted'), false);
     assert.equal(sb.COACHING_LIFECYCLE.includes('purged'), false);
+    // an abandoned session is cancelled and kept, never hard-deleted
+    assert.equal(sb.coachingCanTransition('active', 'cancelled'), true);
+    assert.equal(sb.coachingCanTransition('cancelled', 'archived'), true);
+    assert.equal(sb.coachingCanTransition('cancelled', 'active'), false);
   });
   test('B2. transition matrix is explicit', () => {
     const sb = createSandbox();
@@ -535,7 +539,7 @@ describe('H. Storage separation', () => {
   test('H3. unbounded content is modelled as child collections, never embedded', () => {
     const sb = createSandbox();
     deq(sb.COACHING_CHILD_COLLECTIONS,
-      ['notes', 'interventions', 'reflections', 'observations', 'commitments', 'transcript', 'attachments']);
+      ['notes', 'interventions', 'reflections', 'observations', 'commitments', 'events', 'transcript', 'attachments']);
     const s = sb.coachingBuildSession({}, FIXED).session;
     sb.COACHING_CHILD_COLLECTIONS.forEach(k =>
       assert.equal(Object.prototype.hasOwnProperty.call(s, k), false, k));

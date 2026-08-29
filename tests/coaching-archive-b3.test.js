@@ -54,7 +54,8 @@ describe('B3-1. Policy: coaching never joins the legacy backup', () => {
     assert.equal(sb.COACHING_EXPORT_DEFAULT_SCOPE, 'metadata_only');
     deq(sb.COACHING_ENCRYPTION_REQUIRED_SCOPES, ['full_owner_export']);
     assert.equal(sb.coachingExportPolicy().transcriptsIncluded, false);
-    assert.equal(sb.coachingExportPolicy().restorePersists, false);
+    assert.equal(sb.coachingExportPolicy().restorePersists, true);    // Phase 5 wired it
+    assert.equal(sb.coachingExportPolicy().restoreOverwrites, false); // but never overwrites
   });
   test('3. an unknown scope falls back to the safest one', () => {
     const sb = createSandbox();
@@ -201,7 +202,7 @@ describe('B3-5. Restore validates but never persists', () => {
     const opened = await sb.coachingOpenExport(built.envelope, {});
     assert.equal(opened.ok, true);
     assert.equal(opened.persisted, false);
-    assert.match(opened.note, /Faz 5/);
+    assert.match(opened.note, /coachingRestoreSessions/);  // writing is a separate, guarded call
     assert.equal(sb.coachingStoreCount(), 0);
     assert.equal(sb.canonicalStringify(sb.D), before);
     assert.equal(sb.D.coachingSessions, undefined);
@@ -241,7 +242,7 @@ describe('B3-6. Audit and deletion lifecycle', () => {
     assert.equal(old.archived, true);
     assert.equal(old.purgeEligible, true);
     assert.ok(old.ageDays > 365);
-    deq(old.childCollectionsPurgedFirst, ['notes', 'interventions', 'reflections', 'observations', 'commitments', 'transcript', 'attachments']);
+    deq(old.childCollectionsPurgedFirst, ['notes', 'interventions', 'reflections', 'observations', 'commitments', 'events', 'transcript', 'attachments']);
     assert.equal(sb.COACHING_PURGE_AFTER_DAYS, 365);
   });
 });

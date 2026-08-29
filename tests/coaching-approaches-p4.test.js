@@ -431,8 +431,15 @@ describe('G. Full chain, privacy and static guards', () => {
     assert.ok(INDEX.indexOf('23-coaching-suggest.js') < INDEX.indexOf('24-coaching-approaches.js'));
     assert.ok(INDEX.indexOf('24-coaching-approaches.js') < INDEX.indexOf('25-coaching-router.js'));
   });
-  test('G6. every changed module got a fresh cache-bust tag', () => {
-    ['17-coaching-domain.js', '18-coaching-ethics.js', '23-coaching-suggest.js'].forEach(f =>
+  test('G6. every coaching module carries a cache-bust tag from the phase that changed it', () => {
+    // Phase 4 files still on p4; 17 and 26 were changed again in Phase 5
+    ['18-coaching-ethics.js', '23-coaching-suggest.js', '24-coaching-approaches.js',
+     '25-coaching-router.js'].forEach(f =>
       assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p4'), f));
+    ['17-coaching-domain.js', '26-coaching-archive.js'].forEach(f =>
+      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p5'), f));
+    // no coaching module ships without a tag
+    (INDEX.match(/js\/\d+[a-z]?-coaching-[^"]*/g) || []).forEach(src =>
+      assert.match(src, /\?v=2026\.08-coaching-p\d/, src));
   });
 });

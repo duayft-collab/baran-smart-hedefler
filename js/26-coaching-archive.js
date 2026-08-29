@@ -79,8 +79,9 @@ function coachingExportPolicy(){
     automaticExport: false,
     requiresExplicitUserAction: true,
     requiresOwnerCapability: 'backup',
-    restorePersists: false,
+    restorePersists: true,          /* Phase 5: wired through coachingAssertWritable */
     restoreRequiresCapability: 'restore',
+    restoreOverwrites: false,       /* an existing session id is skipped, never replaced */
     transcriptsIncluded: false,
     transcriptNote: 'Transkript alt-koleksiyonu hiçbir kapsamda dışa aktarılmaz; ayrı ve açık bir karar gerektirir.',
     purgeAfterDays: COACHING_PURGE_AFTER_DAYS,
@@ -221,7 +222,7 @@ async function coachingOpenExport(envelope, opts){
   }
   return { ok:true, scope:payload.scope, records:payload.records, count:payload.records.length,
     persisted:false,
-    note:'Kayıtlar yalnız doğrulandı. Yazma Faz 5\'e aittir ve coachingAssertWritable() zincirinden geçmek zorundadır.' };
+    note:'Kayıtlar yalnız doğrulandı. Yazmak için coachingRestoreSessions() çağrılmalıdır; o da yazma zincirinden geçer.' };
 }
 
 /* ── Deletion lifecycle ── */
