@@ -481,6 +481,45 @@ describe('G. Academy invents no storage and leaks nothing', () => {
     assert.equal(r.ok, false);
     assert.equal(devKeys(sb).length, 0);
   });
+  test('G5b. a failed reflection save keeps what the coach typed', async () => {
+    /* same rule as the Phase 6 close form: validation or connection failure
+       may refuse the write, but it may never destroy unsaved words */
+    const sb = ready(createSandbox());
+    sb.ACADEMY_UI.records = [];
+    sb.academyOpenUnit('CORE_SILENCE');
+    const TYPED = 'Sessizlik bana zor geliyor ve bunu kaydetmek istiyorum.';
+    sb.ge('academy_reflect').value = TYPED;
+    dbOf(sb)._store.__hang = true;
+    await sb.academySaveReflectionNow();
+    delete dbOf(sb)._store.__hang;
+    assert.ok(sb.ACADEMY_UI.error, 'the coach must be told it did not save');
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.ok(html.indexOf(TYPED) >= 0, 'the unsaved reflection was wiped from the screen');
+    assert.equal(devKeys(sb).length, 0, 'nothing was persisted');
+  });
+  test('G5c. a saved reflection clears the draft and survives a re-render', async () => {
+    const sb = ready(createSandbox());
+    sb.ACADEMY_UI.records = [];
+    sb.academyOpenUnit('CORE_SILENCE');
+    sb.ge('academy_reflect').value = 'kaydedilecek';
+    await sb.academySaveReflectionNow();
+    assert.equal(sb.ACADEMY_UI.error, null);
+    sb.renderAcademyUnit();
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.ok(html.indexOf('kaydedilecek') >= 0);
+  });
+  test('G5d. a draft never leaks into another unit', async () => {
+    const sb = ready(createSandbox());
+    sb.ACADEMY_UI.records = [];
+    sb.academyOpenUnit('CORE_SILENCE');
+    sb.ge('academy_reflect').value = 'sadece sessizlik icin';
+    dbOf(sb)._store.__hang = true;
+    await sb.academySaveReflectionNow();
+    delete dbOf(sb)._store.__hang;
+    sb.academyOpenUnit('CORE_QUESTIONS');
+    const html = (sb.__getElements().pinner || {}).innerHTML || '';
+    assert.equal(html.indexOf('sadece sessizlik icin'), -1, 'a draft belongs to one unit');
+  });
   test('G6. no browser storage, no app state, no second client', () => {
     FILES.forEach(n => {
       const e = exec(F(n));

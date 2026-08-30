@@ -12,7 +12,9 @@
 
 var ACADEMY_UI = { view:'home', unitId:null, pathId:null, records:[], observations:[],
   recommendations:[], checkId:null, checkAnswer:null, error:null, notice:null,
-  busy:false, reflectDirty:false };
+  /* what the coach has typed into the reflection box but not yet saved.
+     Memory only, one unit at a time: a refused write must never destroy it. */
+  reflectDraft:null, busy:false };
 
 function _aue(s){ return (typeof U!=='undefined'&&U.esc)?U.esc(String(s==null?'':s)):String(s==null?'':s); }
 function _auHead(title, sub, right){
@@ -128,6 +130,7 @@ window.renderAcademyHome = renderAcademyHome;
 /* ── UNIT ─────────────────────────────────────────────────────────────────── */
 function academyOpenUnit(unitId){
   if(!academyUnit(unitId)) return;
+  if(ACADEMY_UI.reflectDraft && ACADEMY_UI.reflectDraft.unitId!==unitId) ACADEMY_UI.reflectDraft = null;
   ACADEMY_UI.unitId = unitId; ACADEMY_UI.view = 'unit';
   ACADEMY_UI.checkId = null; ACADEMY_UI.checkAnswer = null;
   ACADEMY_UI.error = null; ACADEMY_UI.notice = null;
@@ -189,10 +192,13 @@ function renderAcademyUnit(){
 
   /* DÜŞÜN — private, optional, short */
   var refl = academyReflectionFor(ACADEMY_UI.records, u.unitId);
+  var draft = (ACADEMY_UI.reflectDraft && ACADEMY_UI.reflectDraft.unitId===u.unitId)
+    ? ACADEMY_UI.reflectDraft.body : null;
+  var reflectValue = (draft!=null) ? draft : (refl ? refl.body : '');
   h += '<div '+_AU_CARD+'><p '+_AU_MUTED+'>DÜŞÜN</p>';
   h += _auLines('', u.reflectionPrompts);
   h += '<textarea class="inp" id="academy_reflect" rows="3" placeholder="Kısa ve yalnız sana açık."'+
-    ' style="margin-top:8px">'+_aue(refl?refl.body:'')+'</textarea>'+
+    ' style="margin-top:8px">'+_aue(reflectValue)+'</textarea>'+
     '<button class="btn btn-s" style="margin-top:8px" onclick="academySaveReflectionNow()">Kaydet</button></div>';
 
   /* GERÇEK GÖRÜŞMEDE UYGULA */
@@ -368,15 +374,18 @@ window.academyAdopt = academyAdopt;
 async function academySaveReflectionNow(){
   var el = ge('academy_reflect');
   var text = el ? (el.value||'') : '';
+  /* capture BEFORE the write can fail — every path out of here re-renders,
+     and a re-render draws the draft, not the DOM */
+  ACADEMY_UI.reflectDraft = { unitId: ACADEMY_UI.unitId, body: text };
   if(!String(text).trim()){ ACADEMY_UI.notice='Yazacak bir şey yok.'; renderAcademyUnit(); return; }
   var res = await academySaveReflection(ACADEMY_UI.unitId, text);
   if(!res.ok){
     ACADEMY_UI.error = (typeof coachingErrorText==='function')
       ? coachingErrorText(res.error, res.reason) : 'Kaydedilemedi.';
-    /* the words stay on screen: the draft is re-rendered from the DOM value */
-    renderAcademyUnit(); return;
+    renderAcademyUnit(); return;              /* draft kept: the words stay */
   }
   _auUpsert(res.record);
+  ACADEMY_UI.reflectDraft = null;             /* stored — the draft is done */
   ACADEMY_UI.error = null; ACADEMY_UI.notice = 'Yansıman kaydedildi. Yalnız sana açık.';
   renderAcademyUnit();
 }
