@@ -442,7 +442,9 @@ describe('H. Privacy, export and gates', () => {
       assert.equal(a, fs.readFileSync(path.join(ROOT, 'public', 'js', f), 'utf8'), f);
       assert.ok(a.split('\n').length < 900, f);
       assert.equal((INDEX.match(new RegExp(f.replace(/\./g, '\\.'), 'g')) || []).length, 1, f);
-      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-p6'), f);
+      /* current-era tag, not this phase's: a later phase that changes a module
+         is expected to re-tag it — that is what the cache-bust gate is for */
+      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-[a-z0-9-]+'), f);
     });
     assert.equal(INDEX, fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8'));
     assert.ok(INDEX.indexOf('30-coaching-mirror.js') < INDEX.indexOf('31-coaching-practice.js'));

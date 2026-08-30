@@ -130,7 +130,13 @@ async function coachingLoadHome(){
   }
   COACHING_UI.busy = false;
   if(res.ok){ COACHING_UI.sessions = res.sessions; COACHING_UI.error = null; }
-  else { COACHING_UI.sessions = []; COACHING_UI.error = coachingErrorText(res.error); }
+  else {
+    /* A failed query says nothing about how many sessions exist. Keep whatever
+       was already loaded and show the failure alongside it; replacing it with
+       an empty list would tell a coach with real history that they have none. */
+    if(!Array.isArray(COACHING_UI.sessions)) COACHING_UI.sessions = [];
+    COACHING_UI.error = coachingErrorText(res.error);
+  }
   if(typeof tab!=='undefined' && tab==='coachhome') renderCoachingHome();
 }
 function renderCoachingHome(){
@@ -190,11 +196,18 @@ window.renderCoachingHome = renderCoachingHome;
 async function coachingResume(id){
   var res = await coachingLoadSession(id);
   if(!res.ok){ COACHING_UI.error = coachingErrorText(res.error); renderCoachingHome(); return; }
+  var n = await coachingLoadNote(id);
+  if(!n.ok){
+    /* Opening the workspace with a blank note would be worse than not opening
+       it: the next autosave would overwrite the real note with nothing. */
+    COACHING_UI.error = coachingErrorText(n.error, n.reason);
+    renderCoachingHome(); return;
+  }
   COACHING_UI.session = res.session;
   COACHING_UI.startedAt = Date.now();
-  var n = await coachingLoadNote(id);
-  COACHING_UI.note = (n.ok && n.note) ? String(n.note.body||'') : '';
+  COACHING_UI.note = n.note ? String(n.note.body||'') : '';
   COACHING_UI.noteDirty = false;
+  COACHING_UI.error = null;
   if(typeof gotoTab==='function') gotoTab('coachsession');
 }
 window.coachingResume = coachingResume;

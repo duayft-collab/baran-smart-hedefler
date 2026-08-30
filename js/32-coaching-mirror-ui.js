@@ -200,9 +200,14 @@ async function coachingLoadDevelopmentView(){
   var s = await coachingListSessions({limit:20});
   var d = await coachingLoadDevelopment(null, 50);
   COACHING_UI.busy = false;
-  var sessions = (s.ok ? s.sessions : []).filter(function(x){ return x.lifecycle==='completed'; });
+  /* a failed refresh must not turn a real history into "no pattern yet" */
+  var sessions = s.ok
+    ? s.sessions.filter(function(x){ return x.lifecycle==='completed'; })
+    : (COACHING_UI.devSessions || []);
+  if(!s.ok) COACHING_UI.error = coachingErrorText(s.error, s.reason);
+  else if(d.ok) COACHING_UI.error = null;
   COACHING_UI.devSessions = sessions;
-  COACHING_UI.devRecords = d.ok ? d.records : [];
+  COACHING_UI.devRecords = d.ok ? d.records : (COACHING_UI.devRecords || []);
   COACHING_UI.activePractice = coachingActivePractice(COACHING_UI.devRecords);
   COACHING_UI.devCross = coachingCrossSessionMirror(sessions);
   COACHING_UI.devObservations = COACHING_UI.devCross.observations || [];

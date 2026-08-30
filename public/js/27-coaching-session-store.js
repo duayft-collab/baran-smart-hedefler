@@ -53,6 +53,10 @@ function _csvRace(p, ms){
   ]);
 }
 function _csvIoError(reason){ return reason==='timeout' ? 'connection_required' : 'write_failed'; }
+/* A read that did not answer tells us NOTHING about what is stored. It must
+   never become not_found, an empty list, or a null note: each of those is a
+   statement about the data, and we do not have one. */
+function _csvReadError(reason){ return reason==='timeout' ? 'connection_required' : 'read_failed'; }
 /* Every entry point below attaches the non-persistent client first. */
 async function _csvClient(){
   if(typeof coachingClientEnsure!=='function') return false;
@@ -272,8 +276,10 @@ async function coachingLoadNote(sessionId){
   var ref = coachingChildDoc(sessionId, 'notes', 'current');
   if(!ref) return _csvFail('storage_unavailable');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
-  try{ var d = await ref.get(); return {ok:true, note:(d&&d.exists)?d.data():null}; }
-  catch(e){ return _csvFail('read_failed'); }
+  var r = await _csvRace(ref.get());
+  if(!r.ok) return _csvFail(_csvReadError(r.reason));   /* silence is not "no note" */
+  var d = r.value;
+  return {ok:true, note:(d&&d.exists)?d.data():null};
 }
 
 /* ── A move the coach actually made (used ≠ suggested) ── */
@@ -451,17 +457,23 @@ async function coachingPurgeDevelopment(ids){
   return {ok:true, purged:list.length};
 }
 
-/* ── Reads — always bounded ── */
+/* ── Reads — always bounded, and never louder than the evidence ──
+   Every read below races the same deadline as every write. A read that does
+   not answer returns a controlled failure and NOTHING else: no null note, no
+   empty session list, no not_found. Those are statements about the data, and
+   a timeout does not give us one. Purge and restore depend on this — each
+   fails closed rather than acting on a read it did not get. */
 async function coachingLoadSession(sessionId){
   if(!(await _csvClient())) return _csvFail('connection_required');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
   var ref = coachingSessionDoc(sessionId);
   if(!ref) return _csvFail('storage_unavailable');
-  try{
-    var d = await ref.get();
-    if(!d || !d.exists) return _csvFail('not_found');
-    return {ok:true, session:d.data()};
-  }catch(e){ return _csvFail('read_failed'); }
+  var r = await _csvRace(ref.get());
+  /* only a settled read may say the session is missing */
+  if(!r.ok) return _csvFail(_csvReadError(r.reason));
+  var d = r.value;
+  if(!d || !d.exists) return _csvFail('not_found');
+  return {ok:true, session:d.data()};
 }
 async function coachingListSessions(opts){
   opts = opts || {};
@@ -470,13 +482,14 @@ async function coachingListSessions(opts){
   var col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null;
   if(!col) return _csvFail('storage_unavailable');
   var limit = Math.min(Math.max(1, Number(opts.limit)||20), COACHING_PAGE_MAX);
-  try{
-    var q = col.orderBy('updatedAt','desc').limit(limit);
-    var snap = await q.get();
-    var out = [];
-    snap.forEach(function(d){ out.push(d.data()); });
-    return {ok:true, sessions:out, limit:limit};
-  }catch(e){ return _csvFail('read_failed'); }
+  var q = col.orderBy('updatedAt','desc').limit(limit);
+  var r = await _csvRace(q.get());
+  /* an empty array here would tell a coach with real history that they have
+     none — the one lie this screen must never tell */
+  if(!r.ok) return _csvFail(_csvReadError(r.reason));
+  var out = [];
+  r.value.forEach(function(d){ out.push(d.data()); });
+  return {ok:true, sessions:out, limit:limit};
 }
 
 /* ── Deletion: owner-confirmed, children first, never automatic ── */
@@ -488,16 +501,24 @@ async function coachingPurgeSession(session, opts){
   if(!session || !coachingValidId(session.id)) return _csvFail('invalid_session');
   var ref = coachingSessionDoc(session.id);
   if(!ref) return _csvFail('storage_unavailable');
-  try{
-    for(var i=0;i<COACHING_CHILD_COLLECTIONS.length;i++){
-      var kind = COACHING_CHILD_COLLECTIONS[i];
-      var snap = await ref.collection(kind).limit(COACHING_PAGE_MAX).get();
-      var docs = []; snap.forEach(function(d){ docs.push(d.ref); });
-      for(var j=0;j<docs.length;j++) await docs[j].delete();
-    }
-    await ref.delete();
-  }catch(e){ return _csvFail('delete_failed'); }
-  return {ok:true, purged:session.id};
+  /* Enumerate every child collection BEFORE deleting anything. An enumeration
+     that did not answer is not "this collection is empty", and acting on that
+     guess would delete the parent and orphan whatever it could not see. So:
+     one uncertain read anywhere aborts the whole purge, having deleted nothing. */
+  var doomed = [];
+  for(var i=0;i<COACHING_CHILD_COLLECTIONS.length;i++){
+    var kind = COACHING_CHILD_COLLECTIONS[i];
+    var er = await _csvRace(ref.collection(kind).limit(COACHING_PAGE_MAX).get());
+    if(!er.ok) return _csvFail(_csvReadError(er.reason));   /* fail closed */
+    er.value.forEach(function(d){ doomed.push(d.ref); });
+  }
+  for(var j=0;j<doomed.length;j++){
+    var dw = await _csvRace(doomed[j].delete());
+    if(!dw.ok) return _csvFail(_csvIoError(dw.reason));
+  }
+  var pw = await _csvRace(ref.delete());
+  if(!pw.ok) return _csvFail(_csvIoError(pw.reason));
+  return {ok:true, purged:session.id, children:doomed.length};
 }
 
 /* ══ B3 restore persistence — the Phase 4 prerequisite, now wired ══
@@ -533,14 +554,17 @@ async function coachingRestoreSessions(records, opts){
     if(!guard.allowed){ skipped.push({id:rec.id, reason:guard.reason}); continue; }
     var ref = coachingSessionDoc(rec.id);
     if(!ref){ failed.push({id:rec.id, reason:'storage_unavailable'}); continue; }
-    try{
-      var existing = await ref.get();
-      if(existing && existing.exists){ skipped.push({id:rec.id, reason:'already_exists'}); continue; }
-      rec.ownerUid = owner;
-      await ref.set(rec);
-      written.push(rec.id);
-      await coachingRecordEvent(rec, {type:'SESSION_RESTORED'});
-    }catch(e){ failed.push({id:rec.id, reason:'write_failed'}); }
+    /* The collision check decides whether we are creating or overwriting.
+       If it does not answer we know neither, and the safe answer is to leave
+       the destination alone. */
+    var ex = await _csvRace(ref.get());
+    if(!ex.ok){ failed.push({id:rec.id, reason:_csvReadError(ex.reason)}); continue; }
+    if(ex.value && ex.value.exists){ skipped.push({id:rec.id, reason:'already_exists'}); continue; }
+    rec.ownerUid = owner;
+    var rw = await _csvRace(ref.set(rec));
+    if(!rw.ok){ failed.push({id:rec.id, reason:_csvIoError(rw.reason)}); continue; }
+    written.push(rec.id);
+    await coachingRecordEvent(rec, {type:'SESSION_RESTORED'});
   }
   return {ok:true, restored:written.length, written:written, skipped:skipped, failed:failed, preview:preview};
 }
