@@ -442,6 +442,7 @@ describe('G. Full chain, privacy and static guards', () => {
     // no coaching module ships without a current-era tag (a later phase may
     // re-tag a module it changes, which is the point of the cache-bust gate)
     (INDEX.match(/js\/\d+[a-z]?-coaching-[^"]*/g) || []).forEach(src =>
-      assert.match(src, /\?v=2026\.08-(coaching|academy)-[a-z0-9]+/, src));
+      /* any current-era phase tag: a later phase re-tags a module it changes */
+      assert.match(src, /\?v=2026\.08-[a-z]+-[a-z0-9]+/, src));
   });
 });

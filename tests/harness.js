@@ -184,6 +184,11 @@ function createSandbox() {
   run(src('js/36-academy-engine.js'), '36-academy-engine.js');
   run(src('js/37-academy-store.js'), '37-academy-store.js');
   run(src('js/38-academy-ui.js'), '38-academy-ui.js');
+  run(src('js/39-books-domain.js'), '39-books-domain.js');
+  run(src('js/40-books-catalogue.js'), '40-books-catalogue.js');
+  run(src('js/41-books-engine.js'), '41-books-engine.js');
+  run(src('js/42-books-store.js'), '42-books-store.js');
+  run(src('js/43-books-ui.js'), '43-books-ui.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;

@@ -36,6 +36,15 @@ function renderPage(){
       if(typeof academyLoadHome==='function') academyLoadHome().then(function(){
         if(tab==='academy' && ACADEMY_UI.view==='home') renderAcademyHome(); });
     },
+    /* PHASE 8: Kitaplık. Same shape as Akademi — paint, then refresh when the
+       bounded read lands, so the first frame is never a blank page. */
+    books:function(){
+      if(typeof renderBooksLibrary!=='function') return;
+      if(BOOKS_UI.view==='book' && BOOKS_UI.bookId){ renderBooksDetail(); return; }
+      renderBooksLibrary();
+      if(typeof booksLoadLibrary==='function') booksLoadLibrary().then(function(){
+        if(tab==='books' && BOOKS_UI.view==='home') renderBooksLibrary(); });
+    },
   };
   var fn=pages[tab];
   if(fn)fn();

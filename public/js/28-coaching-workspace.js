@@ -350,6 +350,18 @@ function coachingWorkspaceSelfCheck(){
       }
       coachingWorkspaceSelfCheck._navAcademy = true;
     }
+    /* Phase 8: Kitaplık, added once, after Akademi. Only live surfaces appear. */
+    if(!coachingWorkspaceSelfCheck._navBooks){
+      var hasBooks = false;
+      for(var c=0;c<items.length;c++){ if(items[c].id==='books'){ hasBooks = true; break; } }
+      if(!hasBooks){
+        var ai = -1;
+        for(var d=0;d<items.length;d++){ if(items[d].id==='academy'){ ai = d; break; } }
+        var bEntry = {id:'books', l:'Kitaplık', i:'bk'};
+        if(ai>=0) items.splice(ai+1, 0, bEntry); else items.push(bEntry);
+      }
+      coachingWorkspaceSelfCheck._navBooks = true;
+    }
     break;
   }
 })();
