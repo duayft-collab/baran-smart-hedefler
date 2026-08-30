@@ -68,7 +68,10 @@ function academyBuildReflection(unitId, text){
   var u = academyUnit(unitId);
   var body = _aeStr(text, ACADEMY_REFLECTION_MAX);
   if(!u || !body.trim()) return null;
-  return { id: academyRecordId('acr'), kind: ACADEMY_DEV_KINDS.reflection,
+  /* One reflection per unit, at a stable address, overwritten on each save.
+     A generated id would leave a duplicate behind every time a save was
+     retried after a write that had quietly queued. */
+  return { id: 'acr_'+u.unitId, kind: ACADEMY_DEV_KINDS.reflection,
     unitId: u.unitId, body: body, updatedAt: _aeNow() };
 }
 

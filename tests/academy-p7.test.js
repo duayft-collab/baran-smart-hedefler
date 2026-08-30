@@ -508,6 +508,23 @@ describe('G. Academy invents no storage and leaks nothing', () => {
     const html = (sb.__getElements().pinner || {}).innerHTML || '';
     assert.ok(html.indexOf('kaydedilecek') >= 0);
   });
+  test('G5e. retrying a reflection converges on one record per unit', async () => {
+    /* a queued offline write can still land; a retry must overwrite it rather
+       than leave the coach with two copies of the same thought */
+    const sb = ready(createSandbox());
+    sb.ACADEMY_UI.records = [];
+    sb.academyOpenUnit('CORE_LISTENING');
+    const TXT = 'Aynı düşünce, iki kez kaydedilmemeli.';
+    sb.ge('academy_reflect').value = TXT;
+    await sb.academySaveReflectionNow();
+    sb.ge('academy_reflect').value = TXT;
+    await sb.academySaveReflectionNow();
+    const reflections = devKeys(sb).map(k => dbOf(sb)._store[k])
+      .filter(r => r.kind === 'academy_reflection');
+    assert.equal(reflections.length, 1, 'one reflection per unit, not one per attempt');
+    assert.equal(reflections[0].body, TXT);
+    assert.equal(reflections[0].id, 'acr_CORE_LISTENING', 'stable address');
+  });
   test('G5d. a draft never leaks into another unit', async () => {
     const sb = ready(createSandbox());
     sb.ACADEMY_UI.records = [];
