@@ -399,6 +399,38 @@ describe('D. A timed-out completion keeps the form and offers another go', () =>
     assert.notEqual(sb.COACHING_UI.busy, true);
     assert.notEqual(sb.COACHING_UI.saving, true);
   });
+  test('D5. the screen and the view flag agree after a failure', async () => {
+    const sb = ready(createSandbox());
+    await openClose(sb);
+    sb.COACHING_UI.noteDirty = true;                  // there is something to flush
+    dbOf(sb)._store.__hang = true;                    // a real outage kills the note flush too
+    await within(DEADLINE * 20, sb.coachingSubmitClose());
+    delete dbOf(sb)._store.__hang;
+    assert.ok(pinner(sb).indexOf('coach_insight') >= 0, 'the close form is painted');
+    assert.equal(sb.COACHING_UI.view, 'close',
+      'the view flag must match what is on screen, or the next repaint throws the coach back to the live view');
+  });
+  test('D6. a clean note does not burn a second deadline before completing', async () => {
+    const sb = ready(createSandbox());
+    const s = await openClose(sb);
+    sb.COACHING_UI.noteDirty = false;                 // nothing typed since the last save
+    const before = (dbOf(sb)._store.__writes || []).filter(w => w.indexOf('/notes/') >= 0).length;
+    dbOf(sb)._store.__hangPaths = ['/commitments/'];
+    await within(DEADLINE * 20, sb.coachingSubmitClose());
+    const after = (dbOf(sb)._store.__writes || []).filter(w => w.indexOf('/notes/') >= 0).length;
+    assert.equal(after, before, 'there was nothing to flush — do not spend a deadline on it');
+    assert.equal(stored(sb, s.id).lifecycle, 'active');
+  });
+  test('D7. a dirty note is still flushed before completion', async () => {
+    const sb = ready(createSandbox());
+    await openClose(sb);
+    sb.ge('coach_note').value = 'kaydedilmemis not';
+    sb.COACHING_UI.note = 'kaydedilmemis not';
+    sb.COACHING_UI.noteDirty = true;
+    await within(DEADLINE * 20, sb.coachingSubmitClose());
+    assert.ok((dbOf(sb)._store.__writes || []).some(w => w.indexOf('/notes/current') >= 0),
+      'unsaved note text must not be dropped on the way out');
+  });
   test('D4. submitting again after reconnect completes it, once', async () => {
     const sb = ready(createSandbox());
     const s = await openClose(sb);

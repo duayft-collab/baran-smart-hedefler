@@ -319,6 +319,10 @@ async function coachingSaveNow(silent){
   if(_clNoteTimer){ clearTimeout(_clNoteTimer); _clNoteTimer = null; }
   var s = COACHING_UI.session; if(!s) return {ok:false};
   var el = ge('coach_note'); if(el) COACHING_UI.note = el.value;
+  /* Nothing changed since the last confirmed save: there is nothing to flush.
+     Offline this matters — a pointless write would burn a whole deadline
+     before the completion it is holding up even starts. */
+  if(silent && !COACHING_UI.noteDirty) return {ok:true, skipped:true};
   COACHING_UI.saving = true; _clSetSaveText('Kaydediliyor…');
   var res = await coachingSaveNote(s, COACHING_UI.note);
   COACHING_UI.saving = false;
@@ -332,7 +336,8 @@ async function coachingSaveNow(silent){
     COACHING_UI.savePending = (res.error==='connection_required' || res.error==='write_pending');
     COACHING_UI.error = coachingErrorText(res.error, res.reason);
     _clSetSaveText(COACHING_UI.savePending?'Kaydedilemedi — bağlantı yok':'Kaydedilemedi');
-    renderCoachingLive();
+    /* a silent flush belongs to whoever called it — it must not repaint over them */
+    if(!silent) renderCoachingLive();
   }
   return res;
 }
@@ -431,6 +436,10 @@ function coachingOpenClose(){ COACHING_UI.view = 'close'; coachingCloseDraft(); 
 window.coachingOpenClose = coachingOpenClose;
 function renderCoachingClose(){
   var s = COACHING_UI.session || {};
+  /* the flag must follow the paint: a failed silent note flush repaints the
+     live view on its way through, and the next repaint would otherwise throw
+     the coach back there with the close form half-finished */
+  COACHING_UI.view = 'close';
   var d = coachingCloseDraft();
   var h = '<div class="fade" style="max-width:640px">';
   h += coachingSectionHead('Görüşmeyi Kapat', _cue(s.title||''),
