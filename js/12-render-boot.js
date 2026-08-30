@@ -25,6 +25,17 @@ function renderPage(){
     coachsession:function(){ if(typeof renderCoachingLive==='function')renderCoachingLive(); },
     coachmirror:function(){ if(typeof renderCoachingMirror==='function')renderCoachingMirror(); },
     coachdev:function(){ if(typeof renderCoachingDevelopment==='function'){ if(typeof coachingLoadDevelopmentView==='function')coachingLoadDevelopmentView(); renderCoachingDevelopment(); } },
+    /* PHASE 7: Academy. The home screen loads its own bounded data and
+       re-renders when it lands, so the first paint is never a blank page. */
+    academy:function(){
+      if(typeof renderAcademyHome!=='function') return;
+      if(ACADEMY_UI.view==='unit' && ACADEMY_UI.unitId){ renderAcademyUnit(); return; }
+      if(ACADEMY_UI.view==='path' && ACADEMY_UI.pathId){ renderAcademyPath(); return; }
+      if(ACADEMY_UI.view==='icf'){ renderAcademyIcf(); return; }
+      renderAcademyHome();
+      if(typeof academyLoadHome==='function') academyLoadHome().then(function(){
+        if(tab==='academy' && ACADEMY_UI.view==='home') renderAcademyHome(); });
+    },
   };
   var fn=pages[tab];
   if(fn)fn();

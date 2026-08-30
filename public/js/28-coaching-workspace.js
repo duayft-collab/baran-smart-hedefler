@@ -324,6 +324,19 @@ function coachingWorkspaceSelfCheck(){
       if(items[j].id==='coaching'){ items[j] = {id:'coachhome', l:'Koçluk', i:'us'}; coachingWorkspaceSelfCheck._nav = true; break; }
     }
     if(!coachingWorkspaceSelfCheck._nav){ items.push({id:'coachhome', l:'Koçluk', i:'us'}); coachingWorkspaceSelfCheck._nav = true; }
+    /* Phase 7: Akademi is a real destination, added once, right after Koçluk.
+       Only live surfaces appear here — nothing is listed to fill the menu. */
+    if(!coachingWorkspaceSelfCheck._navAcademy){
+      var hasAcademy = false;
+      for(var a=0;a<items.length;a++){ if(items[a].id==='academy'){ hasAcademy = true; break; } }
+      if(!hasAcademy){
+        var at = -1;
+        for(var b=0;b<items.length;b++){ if(items[b].id==='coachhome'){ at = b; break; } }
+        var entry = {id:'academy', l:'Akademi', i:'bk'};
+        if(at>=0) items.splice(at+1, 0, entry); else items.push(entry);
+      }
+      coachingWorkspaceSelfCheck._navAcademy = true;
+    }
     break;
   }
 })();

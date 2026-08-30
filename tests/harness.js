@@ -178,6 +178,12 @@ function createSandbox() {
   run(src('js/30-coaching-mirror.js'), '30-coaching-mirror.js');
   run(src('js/31-coaching-practice.js'), '31-coaching-practice.js');
   run(src('js/32-coaching-mirror-ui.js'), '32-coaching-mirror-ui.js');
+  run(src('js/33-academy-domain.js'), '33-academy-domain.js');
+  run(src('js/34-academy-units-core.js'), '34-academy-units-core.js');
+  run(src('js/35-academy-units-craft.js'), '35-academy-units-craft.js');
+  run(src('js/36-academy-engine.js'), '36-academy-engine.js');
+  run(src('js/37-academy-store.js'), '37-academy-store.js');
+  run(src('js/38-academy-ui.js'), '38-academy-ui.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;

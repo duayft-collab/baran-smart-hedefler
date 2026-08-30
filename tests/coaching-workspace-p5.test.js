@@ -754,10 +754,10 @@ describe('G. Privacy, legacy and gates', () => {
     });
     assert.equal(INDEX, fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8'));
     ['26-coaching-archive.js', '12-render-boot.js', '17-coaching-domain.js'].forEach(f =>
-      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-[a-z0-9]+'), f));
+      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-[a-z0-9-]+'), f));
     ['27-coaching-session-store.js', '28-coaching-workspace.js', '17b-coaching-client.js',
      '29-coaching-live.js'].forEach(f =>
-      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-coaching-[a-z0-9]+'), f));
+      assert.match(INDEX, new RegExp(f.replace(/\./g, '\\.') + '\\?v=2026\\.08-[a-z0-9-]+'), f));
     assert.ok(INDEX.indexOf('17b-coaching-client.js') < INDEX.indexOf('27-coaching-session-store.js'));
     // load order: store before shell before live, all before render-boot
     assert.ok(INDEX.indexOf('27-coaching-session-store.js') < INDEX.indexOf('28-coaching-workspace.js'));
