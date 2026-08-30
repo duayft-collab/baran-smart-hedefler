@@ -122,9 +122,16 @@ function academyGatherEvidence(observations, records, activePractice){
 function academyEvidenceLanguage(sessionCount){
   var min = (typeof COACHING_PATTERN_MIN_SESSIONS!=='undefined') ? COACHING_PATTERN_MIN_SESSIONS : 3;
   var strong = (typeof COACHING_STRONG_PATTERN_MIN_SESSIONS!=='undefined') ? COACHING_STRONG_PATTERN_MIN_SESSIONS : 10;
-  if(sessionCount >= strong) return { band:'DAHA_GUCLU_ORUNTU', lead:'Aynı eğilim birden fazla görüşmede görülüyor' };
-  if(sessionCount >= min)    return { band:'OLUSAN_ORUNTU',      lead:'Son görüşmelerinde' };
-  return { band:'SINIRLI_KANIT', lead:'Bu görüşmede' };
+  var n = Number(sessionCount)||0;
+  /* Each band writes its own whole sentence. Stitching one lead onto a shared
+     tail produced sentences that were technically accurate and unreadable —
+     and an explanation the coach cannot read explains nothing. */
+  if(n >= strong) return { band:'DAHA_GUCLU_ORUNTU', lead:'Aynı eğilim birden fazla görüşmede görülüyor',
+    phrase:function(code){ return 'Aynı eğilim '+n+' görüşmede görüldüğü için ("'+code+'") bu çalışmayı öneriyoruz.'; } };
+  if(n >= min) return { band:'OLUSAN_ORUNTU', lead:'Son görüşmelerinde',
+    phrase:function(code){ return 'Son görüşmelerinde "'+code+'" gözlemi '+n+' görüşmede kaydedildiği için bu çalışmayı öneriyoruz.'; } };
+  return { band:'SINIRLI_KANIT', lead:'Bu görüşmede',
+    phrase:function(code){ return 'Bu görüşmede "'+code+'" gözlemi kaydedildiği için bu çalışmayı öneriyoruz.'; } };
 }
 
 /* Which unit answers which observation. A mapping, deliberately explicit —
@@ -193,8 +200,7 @@ function academyRecommend(evidence, records, opts){
     var lang = academyEvidenceLanguage(e.sessionCount);
     var unitId = ACADEMY_CODE_UNIT[e.code] || ACADEMY_CATEGORY_UNIT[e.category];
     push(unitId, lang.lead+' dikkat çeken bir örüntü var.',
-      lang.lead+' "'+_aeStr(e.code,48)+'" gözlemi '+e.sessionCount+' görüşmede kaydedildiği için bu çalışmayı öneriyoruz.',
-      50 + e.sessionCount, lang.band);
+      lang.phrase(_aeStr(e.code,48)), 50 + e.sessionCount, lang.band);
   });
 
   /* 3. a strength is worth deepening, not only a gap */
@@ -207,7 +213,9 @@ function academyRecommend(evidence, records, opts){
     var lang = academyEvidenceLanguage(e.sessionCount);
     var unitId = ACADEMY_CODE_UNIT[e.code] || ACADEMY_CATEGORY_UNIT[e.category];
     push(unitId, 'Güçlü olduğun alanı derinleştirmek için.',
-      lang.lead+' "'+_aeStr(e.code,48)+'" güçlü yönü göründüğü için bunun üzerine giden çalışmayı öneriyoruz.',
+      (lang.band==='SINIRLI_KANIT'
+        ? 'Bu görüşmede "'+_aeStr(e.code,48)+'" güçlü yönü göründüğü için bunun üzerine giden çalışmayı öneriyoruz.'
+        : 'Son görüşmelerinde "'+_aeStr(e.code,48)+'" güçlü yönü '+e.sessionCount+' görüşmede göründüğü için bunun üzerine giden çalışmayı öneriyoruz.'),
       20 + e.sessionCount, lang.band);
   });
 

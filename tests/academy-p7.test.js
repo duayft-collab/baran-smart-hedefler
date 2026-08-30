@@ -553,6 +553,13 @@ describe('H. Wiring, UI and regression', () => {
     ['ÖĞREN', 'FARK ET', 'DENE', 'DÜŞÜN', 'GERÇEK GÖRÜŞMEDE UYGULA', 'AYNA İLE BAĞLANTISI',
       'Kaynaklar ve kanıt düzeyi'].forEach(s =>
         assert.ok(html.indexOf(s) >= 0, 'missing section: ' + s));
+    /* authored teaching content must actually reach the screen */
+    const u = sb.academyUnit('CORE_SILENCE');
+    assert.ok(html.indexOf('Güçlü uygulama') >= 0 && html.indexOf('Zayıf uygulama') >= 0);
+    assert.ok(html.indexOf(u.goodPractice[0]) >= 0, 'goodPractice is never rendered');
+    assert.ok(html.indexOf(u.weakPractice[0]) >= 0, 'weakPractice is never rendered');
+    assert.ok(html.indexOf(u.objectives[0]) >= 0);
+    assert.ok(html.indexOf(u.principles[0]) >= 0);
   });
   test('H7. the ICF view carries the developmental disclaimer and no score', () => {
     const sb = ready(createSandbox());

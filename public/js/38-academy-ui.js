@@ -163,16 +163,18 @@ function renderAcademyUnit(){
   h += _auLines('İlkeler', u.principles);
   h += '</div>';
 
-  /* FARK ET — the weak/better pairs, each with its reason */
-  if(u.moments.length){
+  /* FARK ET — what stronger and weaker practice look like, then the pairs */
+  if(u.moments.length || u.goodPractice.length || u.weakPractice.length){
     h += '<div '+_AU_CARD+'><p '+_AU_MUTED+'>FARK ET</p>';
+    h += _auLines('Güçlü uygulama', u.goodPractice);
+    h += _auLines('Zayıf uygulama', u.weakPractice);
     u.moments.forEach(function(m){
-      h += '<div style="padding:10px 0;border-bottom:1px solid var(--s2)">'+
+      h += '<div style="padding:10px 0;border-top:1px solid var(--s2)">'+
         '<p style="font-size:12.5px"><span class="pill p-orange" style="font-size:10px">Zayıf</span> '+_aue(m.weak)+'</p>'+
         '<p style="font-size:12.5px;margin-top:6px"><span class="pill p-green" style="font-size:10px">Daha güçlü</span> '+_aue(m.better)+'</p>'+
         '<p '+_AU_MUTED+' style="margin-top:6px">'+_aue(m.why)+'</p></div>';
     });
-    h += '<p '+_AU_MUTED+' style="margin-top:8px">Bunlar örnektir, kalıp değil. Bir görüşmede güçlü olan cümle başka bir görüşmede yanlış olabilir.</p>';
+    if(u.moments.length) h += '<p '+_AU_MUTED+' style="margin-top:8px">Bunlar örnektir, kalıp değil. Bir görüşmede güçlü olan cümle başka bir görüşmede yanlış olabilir.</p>';
     h += '</div>';
   }
 
