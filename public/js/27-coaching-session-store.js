@@ -45,6 +45,14 @@ function _csvFail(code){ return {ok:false, error:code}; }
    backend call against a deadline and treat "no answer" as NOT SAVED. */
 var COACHING_WRITE_TIMEOUT_MS = 8000;
 function _csvRace(p, ms){
+  /* Callers hand in a thunk so the SDK call happens INSIDE the guard: a
+     terminated client throws synchronously, and an already-evaluated promise
+     would have thrown before this function was ever entered — escaping to the
+     UI as a raw Firebase error. */
+  if(typeof p === 'function'){
+    try{ p = p(); }
+    catch(e){ return Promise.resolve({ok:false, reason:'rejected'}); }
+  }
   return Promise.race([
     Promise.resolve(p).then(function(v){ return {ok:true, value:v}; },
                             function(){ return {ok:false, reason:'rejected'}; }),
@@ -73,7 +81,7 @@ async function coachingWriteConfirmed(ref){
   try{
     /* the read-back is a network call too: unbounded, it would hang exactly
        where the write it is confirming no longer can */
-    var r = await _csvRace(ref.get());
+    var r = await _csvRace(function(){ return ref.get(); });
     if(!r.ok) return false;                               // no answer → never claim it stored
     var snap = r.value;
     if(!snap || !snap.metadata) return true;              // no metadata surface → trust the resolve
@@ -81,16 +89,22 @@ async function coachingWriteConfirmed(ref){
   }catch(e){ return false; }
 }
 
+/* Building a reference is an SDK call too, and it throws synchronously on a
+   dead client. A null here is already handled everywhere as storage_unavailable,
+   which is the controlled answer; a raw Firebase error is not. */
 function coachingSessionDoc(sessionId){
-  var col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null;
-  if(!col || !coachingValidId(sessionId)) return null;
-  return col.doc(sessionId);
+  try{
+    var col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null;
+    if(!col || !coachingValidId(sessionId)) return null;
+    return col.doc(sessionId);
+  }catch(e){ return null; }
 }
 function coachingChildDoc(sessionId, kind, docId){
   if(COACHING_CHILD_COLLECTIONS.indexOf(kind)<0) return null;
   var d = coachingSessionDoc(sessionId);
   if(!d) return null;
-  return docId ? d.collection(kind).doc(String(docId)) : d.collection(kind);
+  try{ return docId ? d.collection(kind).doc(String(docId)) : d.collection(kind); }
+  catch(e){ return null; }
 }
 /* Single guard used by every writer here. `session`/`event` are handed to the
    Phase 2 gate so a live utterance is screened before it can be stored. */
@@ -126,10 +140,10 @@ async function coachingSessionCreate(input){
   var ref = coachingSessionDoc(rec.id);
   if(!ref) return _csvFail('storage_unavailable');
   try{
-    var probe = await _csvRace(ref.get());
+    var probe = await _csvRace(function(){ return ref.get(); });
     if(!probe.ok) return _csvFail(_csvIoError(probe.reason));
     if(probe.value && probe.value.exists) return _csvFail('id_conflict');
-    var w = await _csvRace(ref.set(rec));
+    var w = await _csvRace(function(){ return ref.set(rec); });
     if(!w.ok) return _csvFail(_csvIoError(w.reason));
   }catch(e){ return _csvFail('write_failed'); }
   var confirmed = await coachingWriteConfirmed(ref);
@@ -175,7 +189,7 @@ async function coachingApplyCounters(session, ops){
     }
   });
   if(!touched) return {ok:true, counters:current};
-  var w = await _csvRace(ref.update(payload));
+  var w = await _csvRace(function(){ return ref.update(payload); });
   if(!w.ok) return _csvFail(_csvIoError(w.reason));
   /* keep the caller's own object truthful, so anything it patches later agrees */
   session.counters = next;
@@ -203,7 +217,7 @@ async function coachingSessionPatch(session, patch, event){
   /* counters have their own authority — never let a patch payload carry them */
   var payload = JSON.parse(JSON.stringify(next));
   delete payload.counters;
-  var pw = await _csvRace(ref.set(payload, {merge:true}));
+  var pw = await _csvRace(function(){ return ref.set(payload, {merge:true}); });
   if(!pw.ok) return _csvFail(_csvIoError(pw.reason));
   return {ok:true, session:next, confirmed:await coachingWriteConfirmed(ref)};
 }
@@ -236,7 +250,7 @@ async function coachingRecordEvent(session, event){
     by: (typeof personalContext==='function') ? (personalContext().loginUid||null) : null };
   var ref = coachingChildDoc(session.id, 'events', rec.id);
   if(!ref) return _csvFail('storage_unavailable');
-  var ew = await _csvRace(ref.set(rec));
+  var ew = await _csvRace(function(){ return ref.set(rec); });
   if(!ew.ok) return _csvFail(_csvIoError(ew.reason));
   /* the record landed — now, and only now, does it count */
   await coachingApplyCounters(session, {events:{inc:1}});
@@ -260,7 +274,7 @@ async function coachingSaveNote(session, text){
   var ref = coachingChildDoc(session.id, 'notes', 'current');
   if(!ref) return _csvFail('storage_unavailable');
   var rec = { id:'current', body:body, updatedAt:_csvNow(), length:body.length };
-  var nw = await _csvRace(ref.set(rec));
+  var nw = await _csvRace(function(){ return ref.set(rec); });
   /* no server answer inside the deadline → NOT saved, and we say so */
   if(!nw.ok) return {ok:false, error:_csvIoError(nw.reason), note:rec, queued:false};
   var confirmed = await coachingWriteConfirmed(ref);
@@ -276,7 +290,7 @@ async function coachingLoadNote(sessionId){
   var ref = coachingChildDoc(sessionId, 'notes', 'current');
   if(!ref) return _csvFail('storage_unavailable');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
-  var r = await _csvRace(ref.get());
+  var r = await _csvRace(function(){ return ref.get(); });
   if(!r.ok) return _csvFail(_csvReadError(r.reason));   /* silence is not "no note" */
   var d = r.value;
   return {ok:true, note:(d&&d.exists)?d.data():null};
@@ -337,20 +351,20 @@ async function coachingCompleteSession(session, outcome){
     if(commitment){
       var cref = coachingChildDoc(session.id,'commitments',commitment.id);
       if(!cref) return _csvFail('storage_unavailable');
-      var cw = await _csvRace(cref.set(commitment));
+      var cw = await _csvRace(function(){ return cref.set(commitment); });
       if(!cw.ok) return _csvFail(_csvIoError(cw.reason));
       landed.commitments = {set:1};
     }
     if(String(outcome.reflection||'').trim() || String(outcome.insight||'').trim()){
       var rref = coachingChildDoc(session.id,'reflections','final');
       if(!rref) return _csvFail('storage_unavailable');
-      var rw = await _csvRace(rref.set({
+      var rw = await _csvRace(function(){ return rref.set({
         id:'final',
         insight:_csvStr(outcome.insight, COACHING_TEXT_MAX),          /* what became clearer */
         coachReflection:_csvStr(outcome.reflection, COACHING_TEXT_MAX), /* private to the coach */
         nextSessionNote:_csvStr(outcome.nextSessionNote, COACHING_TEXT_MAX),
         coachSuggestion:_csvStr(outcome.coachSuggestion, COACHING_TEXT_MAX), /* kept apart from the commitment */
-        createdAt:_csvNow() }));
+        createdAt:_csvNow() }); });
       if(!rw.ok) return _csvFail(_csvIoError(rw.reason));
       landed.reflections = {set:1};   /* reflections/final is one document, overwritten */
     }
@@ -380,11 +394,13 @@ async function coachingCancelSession(session){
    coach feedback are coach-level and live in their own owner-scoped collection. */
 var COACHING_DEV_ROOT = 'coachingDevelopment';
 function coachingDevelopmentCol(){
-  var db = (typeof coachingDb==='function') ? coachingDb() : null;
-  if(!db) return null;
-  var u = (typeof coachingResolveOwner==='function') ? coachingResolveOwner() : null;
-  if(!u) return null;
-  return db.collection('users').doc(u).collection(COACHING_DEV_ROOT);
+  try{
+    var db = (typeof coachingDb==='function') ? coachingDb() : null;
+    if(!db) return null;
+    var u = (typeof coachingResolveOwner==='function') ? coachingResolveOwner() : null;
+    if(!u) return null;
+    return db.collection('users').doc(u).collection(COACHING_DEV_ROOT);
+  }catch(e){ return null; }
 }
 async function coachingSaveObservations(session, observations, summary){
   if(!(await _csvClient())) return _csvFail('connection_required');
@@ -395,7 +411,7 @@ async function coachingSaveObservations(session, observations, summary){
   for(var i=0;i<list.length;i++){
     var ref = coachingChildDoc(session.id, 'observations', list[i].id);
     if(!ref) return _csvFail('storage_unavailable');
-    var w = await _csvRace(ref.set(list[i]));
+    var w = await _csvRace(function(){ return ref.set(list[i]); });
     if(!w.ok) return _csvFail(_csvIoError(w.reason));
   }
   var cw = await coachingApplyCounters(session, {observations:{set:list.length}});
@@ -409,7 +425,7 @@ async function coachingLoadObservations(sessionId){
   if(!(await _csvClient())) return _csvFail('connection_required');
   var col = coachingChildDoc(sessionId, 'observations');
   if(!col) return _csvFail('storage_unavailable');
-  var r = await _csvRace(col.limit(COACHING_PAGE_MAX).get());
+  var r = await _csvRace(function(){ return col.limit(COACHING_PAGE_MAX).get(); });
   if(!r.ok) return _csvFail(_csvIoError(r.reason));
   var out = []; r.value.forEach(function(d){ out.push(d.data()); });
   return {ok:true, observations:out};
@@ -419,7 +435,7 @@ async function coachingLoadEvents(sessionId, limit){
   var col = coachingChildDoc(sessionId, 'events');
   if(!col) return _csvFail('storage_unavailable');
   var n = Math.min(Math.max(1, Number(limit)||100), COACHING_PAGE_MAX);
-  var r = await _csvRace(col.limit(n).get());
+  var r = await _csvRace(function(){ return col.limit(n).get(); });
   if(!r.ok) return _csvFail(_csvIoError(r.reason));
   var out = []; r.value.forEach(function(d){ out.push(d.data()); });
   out.sort(function(a,b){ return String(a.at).localeCompare(String(b.at)); });
@@ -432,7 +448,7 @@ async function coachingSaveDevelopmentDoc(rec){
   if(typeof coachingEnabled==='function' && !coachingEnabled()) return {ok:false, error:'blocked', reason:'feature_disabled'};
   var col = coachingDevelopmentCol();
   if(!col) return _csvFail('storage_unavailable');
-  var w = await _csvRace(col.doc(String(rec.id)).set(rec));
+  var w = await _csvRace(function(){ return col.doc(String(rec.id)).set(rec); });
   if(!w.ok) return _csvFail(_csvIoError(w.reason));
   return {ok:true, record:rec};
 }
@@ -442,7 +458,7 @@ async function coachingLoadDevelopment(kind, limit){
   var col = coachingDevelopmentCol();
   if(!col) return _csvFail('storage_unavailable');
   var n = Math.min(Math.max(1, Number(limit)||50), COACHING_PAGE_MAX);
-  var r = await _csvRace(col.limit(n).get());
+  var r = await _csvRace(function(){ return col.limit(n).get(); });
   if(!r.ok) return _csvFail(_csvIoError(r.reason));
   var out = []; r.value.forEach(function(d){ var v = d.data(); if(!kind || v.kind===kind) out.push(v); });
   return {ok:true, records:out};
@@ -453,7 +469,7 @@ async function coachingPurgeDevelopment(ids){
   var col = coachingDevelopmentCol();
   if(!col) return _csvFail('storage_unavailable');
   var list = Array.isArray(ids) ? ids : [];
-  for(var i=0;i<list.length;i++){ await _csvRace(col.doc(String(list[i])).delete()); }
+  for(var i=0;i<list.length;i++){ await _csvRace(function(){ return col.doc(String(list[i])).delete(); }); }
   return {ok:true, purged:list.length};
 }
 
@@ -468,7 +484,7 @@ async function coachingLoadSession(sessionId){
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
   var ref = coachingSessionDoc(sessionId);
   if(!ref) return _csvFail('storage_unavailable');
-  var r = await _csvRace(ref.get());
+  var r = await _csvRace(function(){ return ref.get(); });
   /* only a settled read may say the session is missing */
   if(!r.ok) return _csvFail(_csvReadError(r.reason));
   var d = r.value;
@@ -479,11 +495,15 @@ async function coachingListSessions(opts){
   opts = opts || {};
   if(!(await _csvClient())) return _csvFail('connection_required');
   if(typeof coachingAssertReadable==='function' && !coachingAssertReadable().allowed) return _csvFail('not_authorized');
-  var col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null;
+  var col = null;
+  try{ col = (typeof coachingSessionsCol==='function') ? coachingSessionsCol() : null; }
+  catch(e){ col = null; }
   if(!col) return _csvFail('storage_unavailable');
   var limit = Math.min(Math.max(1, Number(opts.limit)||20), COACHING_PAGE_MAX);
-  var q = col.orderBy('updatedAt','desc').limit(limit);
-  var r = await _csvRace(q.get());
+  var q;
+  try{ q = col.orderBy('updatedAt','desc').limit(limit); }
+  catch(e){ return _csvFail('storage_unavailable'); }
+  var r = await _csvRace(function(){ return q.get(); });
   /* an empty array here would tell a coach with real history that they have
      none — the one lie this screen must never tell */
   if(!r.ok) return _csvFail(_csvReadError(r.reason));
@@ -508,15 +528,15 @@ async function coachingPurgeSession(session, opts){
   var doomed = [];
   for(var i=0;i<COACHING_CHILD_COLLECTIONS.length;i++){
     var kind = COACHING_CHILD_COLLECTIONS[i];
-    var er = await _csvRace(ref.collection(kind).limit(COACHING_PAGE_MAX).get());
+    var er = await _csvRace(function(){ return ref.collection(kind).limit(COACHING_PAGE_MAX).get(); });
     if(!er.ok) return _csvFail(_csvReadError(er.reason));   /* fail closed */
     er.value.forEach(function(d){ doomed.push(d.ref); });
   }
   for(var j=0;j<doomed.length;j++){
-    var dw = await _csvRace(doomed[j].delete());
+    var dw = await _csvRace(function(){ return doomed[j].delete(); });
     if(!dw.ok) return _csvFail(_csvIoError(dw.reason));
   }
-  var pw = await _csvRace(ref.delete());
+  var pw = await _csvRace(function(){ return ref.delete(); });
   if(!pw.ok) return _csvFail(_csvIoError(pw.reason));
   return {ok:true, purged:session.id, children:doomed.length};
 }
@@ -557,11 +577,11 @@ async function coachingRestoreSessions(records, opts){
     /* The collision check decides whether we are creating or overwriting.
        If it does not answer we know neither, and the safe answer is to leave
        the destination alone. */
-    var ex = await _csvRace(ref.get());
+    var ex = await _csvRace(function(){ return ref.get(); });
     if(!ex.ok){ failed.push({id:rec.id, reason:_csvReadError(ex.reason)}); continue; }
     if(ex.value && ex.value.exists){ skipped.push({id:rec.id, reason:'already_exists'}); continue; }
     rec.ownerUid = owner;
-    var rw = await _csvRace(ref.set(rec));
+    var rw = await _csvRace(function(){ return ref.set(rec); });
     if(!rw.ok){ failed.push({id:rec.id, reason:_csvIoError(rw.reason)}); continue; }
     written.push(rec.id);
     await coachingRecordEvent(rec, {type:'SESSION_RESTORED'});

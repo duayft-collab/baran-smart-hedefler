@@ -417,6 +417,33 @@ describe('F. The boundedness invariant is now true and enforced', () => {
     const notFoundLine = loadSession.split('\n').filter(l => /not_found/.test(l))[0] || '';
     assert.match(notFoundLine, /d\.exists|!d\b/, 'not_found must depend on an actual answer: ' + notFoundLine);
   });
+  test('F5b. a synchronous SDK throw becomes a controlled failure, not a raw error', async () => {
+    /* the SDK throws synchronously in real states (a terminated client does).
+       That throw happens BEFORE _csvRace can race anything, so without a guard
+       it escapes the store and reaches the UI as a raw FirebaseError. */
+    const sb = ready(createSandbox());
+    const s = await activeSession(sb);
+    const db = dbOf(sb);
+    const realCollection = db.collection;
+    db.collection = function () { const e = new Error('The client has already been terminated.'); e.name = 'FirebaseError'; throw e; };
+    const calls = {
+      loadSession: () => sb.coachingLoadSession(s.id),
+      loadNote: () => sb.coachingLoadNote(s.id),
+      listSessions: () => sb.coachingListSessions({ limit: 5 }),
+      loadEvents: () => sb.coachingLoadEvents(s.id, 10),
+      loadDevelopment: () => sb.coachingLoadDevelopment(null, 10),
+      saveNote: () => sb.coachingSaveNote(s, 'x'),
+      purge: () => sb.coachingPurgeSession(s, { confirmed: true })
+    };
+    for (const name of Object.keys(calls)) {
+      let threw = null, res = null;
+      try { res = await calls[name](); } catch (e) { threw = e && e.name; }
+      assert.equal(threw, null, name + ' let a raw ' + threw + ' escape');
+      assert.equal(res.ok, false, name);
+      assert.equal(/Firebase|terminated/i.test(JSON.stringify(res)), false, name + ': ' + JSON.stringify(res));
+    }
+    db.collection = realCollection;
+  });
   test('F5. the module stays under the size limit', () => {
     assert.ok(SRC27.split('\n').length < 900, SRC27.split('\n').length);
   });
