@@ -67,7 +67,11 @@ async function _csvClient(){
    the note is saved. Unknown counts as unconfirmed — we never over-claim. */
 async function coachingWriteConfirmed(ref){
   try{
-    var snap = await ref.get();
+    /* the read-back is a network call too: unbounded, it would hang exactly
+       where the write it is confirming no longer can */
+    var r = await _csvRace(ref.get());
+    if(!r.ok) return false;                               // no answer → never claim it stored
+    var snap = r.value;
     if(!snap || !snap.metadata) return true;              // no metadata surface → trust the resolve
     return snap.metadata.hasPendingWrites !== true;
   }catch(e){ return false; }
@@ -306,7 +310,10 @@ async function coachingCompleteSession(session, outcome){
       coachingRecordEvent(session, {type:'COMMITMENT_SOURCE_CORRECTED'});
       return _csvFail('commitment_must_be_coachee_owned');
     }
-    commitment = { id:'c_'+Date.now().toString(36)+'-'+_csvSeq().toString(36),
+    /* A completion carries at most ONE coachee commitment, so it lives at a
+       fixed address like reflections/final. A generated id would make every
+       retry of a timed-out completion write a second commitment. */
+    commitment = { id:'final',
       source:'coachee', text:_csvStr(outcome.commitment.text, COACHING_TEXT_MAX),
       dueAt:outcome.commitment.dueAt?_csvStr(outcome.commitment.dueAt,32):null,
       accountability:outcome.commitment.accountability?_csvStr(outcome.commitment.accountability,200):null,
@@ -315,24 +322,35 @@ async function coachingCompleteSession(session, outcome){
   var guard = coachingWriteGuard('write', session, {type:'complete'});
   if(!guard.allowed) return {ok:false, error:'blocked', reason:guard.reason, decision:guard.decision||null};
 
+  /* Required records first, lifecycle last: if any of these does not land,
+     the session stays active and nothing anywhere claims it was completed.
+     Both are written to fixed ids with `set`, so retrying converges on one
+     canonical record rather than accumulating. */
   var landed = {};
   try{
     if(commitment){
-      await coachingChildDoc(session.id,'commitments',commitment.id).set(commitment);
-      landed.commitments = {inc:1};
+      var cref = coachingChildDoc(session.id,'commitments',commitment.id);
+      if(!cref) return _csvFail('storage_unavailable');
+      var cw = await _csvRace(cref.set(commitment));
+      if(!cw.ok) return _csvFail(_csvIoError(cw.reason));
+      landed.commitments = {set:1};
     }
     if(String(outcome.reflection||'').trim() || String(outcome.insight||'').trim()){
-      await coachingChildDoc(session.id,'reflections','final').set({
+      var rref = coachingChildDoc(session.id,'reflections','final');
+      if(!rref) return _csvFail('storage_unavailable');
+      var rw = await _csvRace(rref.set({
         id:'final',
         insight:_csvStr(outcome.insight, COACHING_TEXT_MAX),          /* what became clearer */
         coachReflection:_csvStr(outcome.reflection, COACHING_TEXT_MAX), /* private to the coach */
         nextSessionNote:_csvStr(outcome.nextSessionNote, COACHING_TEXT_MAX),
         coachSuggestion:_csvStr(outcome.coachSuggestion, COACHING_TEXT_MAX), /* kept apart from the commitment */
-        createdAt:_csvNow() });
+        createdAt:_csvNow() }));
+      if(!rw.ok) return _csvFail(_csvIoError(rw.reason));
       landed.reflections = {set:1};   /* reflections/final is one document, overwritten */
     }
   }catch(e){ return _csvFail('write_failed'); }
-  await coachingApplyCounters(session, landed);
+  var cnt = await coachingApplyCounters(session, landed);
+  if(!cnt.ok) return cnt;
 
   var review = Object.assign({}, session.review, { completedAt:_csvNow(),
     selfRating:(typeof outcome.selfRating==='number')?outcome.selfRating:null });
