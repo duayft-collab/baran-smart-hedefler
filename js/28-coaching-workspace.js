@@ -362,6 +362,18 @@ function coachingWorkspaceSelfCheck(){
       }
       coachingWorkspaceSelfCheck._navBooks = true;
     }
+    /* Phase 9: Pratik Yap, added once, right after Koçluk. */
+    if(!coachingWorkspaceSelfCheck._navPractice){
+      var hasP = false;
+      for(var e=0;e<items.length;e++){ if(items[e].id==='practice'){ hasP = true; break; } }
+      if(!hasP){
+        var ci = -1;
+        for(var f=0;f<items.length;f++){ if(items[f].id==='coachhome'){ ci = f; break; } }
+        var pEntry = {id:'practice', l:'Pratik Yap', i:'us'};
+        if(ci>=0) items.splice(ci+1, 0, pEntry); else items.push(pEntry);
+      }
+      coachingWorkspaceSelfCheck._navPractice = true;
+    }
     break;
   }
 })();

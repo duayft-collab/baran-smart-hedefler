@@ -45,6 +45,17 @@ function renderPage(){
       if(typeof booksLoadLibrary==='function') booksLoadLibrary().then(function(){
         if(tab==='books' && BOOKS_UI.view==='home') renderBooksLibrary(); });
     },
+    /* PHASE 9: Pratik Yap. A live practice is kept if the coach navigates away
+       and back, so a half-finished conversation is not silently discarded. */
+    practice:function(){
+      if(typeof renderSimHome!=='function') return;
+      if(SIM_UI.view==='live' && SIM_UI.session){ renderSimLive(); return; }
+      if(SIM_UI.view==='debrief' && SIM_UI.debrief){ renderSimDebrief(); return; }
+      if(SIM_UI.view==='briefing' && SIM_UI.scenarioId){ renderSimBriefing(); return; }
+      renderSimHome();
+      if(typeof simLoadHome==='function') simLoadHome().then(function(){
+        if(tab==='practice' && SIM_UI.view==='home') renderSimHome(); });
+    },
   };
   var fn=pages[tab];
   if(fn)fn();

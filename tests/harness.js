@@ -189,6 +189,12 @@ function createSandbox() {
   run(src('js/41-books-engine.js'), '41-books-engine.js');
   run(src('js/42-books-store.js'), '42-books-store.js');
   run(src('js/43-books-ui.js'), '43-books-ui.js');
+  run(src('js/44-sim-domain.js'), '44-sim-domain.js');
+  run(src('js/45-sim-scenarios.js'), '45-sim-scenarios.js');
+  run(src('js/46-sim-engine.js'), '46-sim-engine.js');
+  run(src('js/47-sim-debrief.js'), '47-sim-debrief.js');
+  run(src('js/48-sim-store.js'), '48-sim-store.js');
+  run(src('js/49-sim-ui.js'), '49-sim-ui.js');
 
   sandbox.__getCapturedModals = () => capturedModals;
   sandbox.__getCapturedAlerts = () => capturedAlerts;
